@@ -1,0 +1,1660 @@
+<title>Walking Shops Sandbox</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=IBM+Plex+Mono:wght@400;600&family=Work+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a street-level stage on top, the tuning bench below it — instrument panel, not a landing page. */
+:root {
+  --bg: #E7EBF0;
+  --panel: #F7F9FB;
+  --ink: #17202B;
+  --muted: #586374;
+  --line: #D0D7E0;
+  --accent: #E6A200;      /* street-sign amber */
+  --accent-ink: #17202B;
+  --asphalt: #3A4350;
+  --curb: #C2C9D3;
+  --sky-top: #CFE1F0;
+  --sky-bot: #EDF2F7;
+  --chute: #2B78C6;
+  --danger: #D2462A;
+  --ok: #24935F;
+  --store-l: 56%;
+  --font-display: "Bungee", "Arial Black", Impact, sans-serif;
+  --font-body: "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F141B; --panel: #161D27; --ink: #E4E9EF; --muted: #93A0B1; --line: #283241;
+    --accent: #F2B731; --accent-ink: #17202B; --asphalt: #1D242E; --curb: #374251;
+    --sky-top: #0D1825; --sky-bot: #16222F; --chute: #5AA6F0; --danger: #F06A4E; --ok: #4CC58B;
+    --store-l: 52%; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F141B; --panel: #161D27; --ink: #E4E9EF; --muted: #93A0B1; --line: #283241;
+  --accent: #F2B731; --accent-ink: #17202B; --asphalt: #1D242E; --curb: #374251;
+  --sky-top: #0D1825; --sky-bot: #16222F; --chute: #5AA6F0; --danger: #F06A4E; --ok: #4CC58B;
+  --store-l: 52%; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(26px, 4vw, 38px); margin: 0; letter-spacing: 0.01em; line-height: 1.05; }
+h1 .sign { background: var(--accent); color: var(--accent-ink); padding: 0 0.22em; border-radius: 3px; }
+header.top p { margin: 0; color: var(--muted); }
+h2 { font-family: var(--font-display); font-weight: 400; font-size: 17px; margin: 0; letter-spacing: 0.02em; }
+h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0; font-weight: 600; }
+.mono, td, .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+.stage { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.hud { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.pill { font-family: var(--font-display); font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--ink); color: var(--panel); white-space: nowrap; }
+.pill.p2 { background: var(--chute); color: #fff; }
+.timer { font-family: var(--font-data); font-size: 15px; min-width: 4.5ch; }
+.bar { flex: 1 1 140px; height: 6px; background: var(--line); border-radius: 3px; position: relative; min-width: 100px; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 3px; }
+.bar b { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--chute); }
+.btns { display: flex; gap: 6px; flex-wrap: wrap; }
+button, select, input[type="number"] {
+  font: 500 14px var(--font-body); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
+button:focus-visible, select:focus-visible, input:focus-visible, canvas:focus-visible { outline: 2px solid var(--chute); outline-offset: 2px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 10px; background: transparent; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+canvas#cv { display: block; width: 100%; touch-action: none; }
+canvas#cv:focus-visible { outline-offset: -2px; }
+.under { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid var(--line); }
+.hint { color: var(--muted); font-size: 13px; }
+kbd { font-family: var(--font-data); font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--bg); }
+.pads { display: flex; gap: 10px; }
+.pads button { width: 72px; height: 48px; font-size: 20px; user-select: none; -webkit-user-select: none; touch-action: none; }
+.pads button.on { background: var(--ink); color: var(--panel); }
+
+.cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .cols2 { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.panel-head span { color: var(--muted); font-size: 13px; }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.metric { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.metric .v { font-family: var(--font-data); font-size: 20px; font-weight: 600; line-height: 1.2; }
+.metric .k { font-size: 12px; color: var(--muted); }
+
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font: 600 11px var(--font-body); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th.r, td.r { text-align: right; }
+tr.human td { font-weight: 600; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; border: 1px solid var(--ink); }
+.tag { font: 600 11px var(--font-body); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.board-scroll { max-height: 340px; overflow: auto; }
+
+.groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px 22px; }
+.group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ctl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; }
+.ctl label { font-size: 13px; }
+.ctl output { font-family: var(--font-data); font-size: 13px; color: var(--muted); }
+.ctl input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.ctl.check { grid-template-columns: auto minmax(0, 1fr); }
+.restart-mark { color: var(--accent); font-weight: 700; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+
+.batch-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.batch-row input[type="number"] { width: 90px; font-family: var(--font-data); }
+.prog { height: 6px; background: var(--line); border-radius: 3px; flex: 1 1 160px; overflow: hidden; }
+.prog i { display: block; height: 100%; width: 0; background: var(--chute); }
+.verdict { border-left: 3px solid var(--accent); padding: 6px 12px; margin: 0; font-size: 14px; }
+.rules { columns: 2 320px; column-gap: 32px; margin: 0; padding-left: 18px; }
+.rules li { break-inside: avoid; margin-bottom: 8px; }
+.rules b { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Walking <span class="sign">Shops</span></h1>
+    <p>Gameplay sandbox: cubes, bots, and your keyboard. Every rule is a slider.</p>
+  </header>
+
+  <section class="stage" aria-label="Street">
+    <div class="hud">
+      <span class="pill" id="phase">Walk-ins</span>
+      <span class="timer" id="timer">2:00</span>
+      <div class="bar" aria-hidden="true"><i id="barFill"></i><b id="barMark"></b></div>
+      <div class="btns">
+        <button class="primary" id="btnRestart" title="Restart round (R)">Restart</button>
+        <button id="btnPause" title="Pause (Space)">Pause</button>
+        <div class="seg" role="group" aria-label="Speed">
+          <button data-speed="1" aria-pressed="true">1×</button>
+          <button data-speed="2" aria-pressed="false">2×</button>
+          <button data-speed="4" aria-pressed="false">4×</button>
+        </div>
+      </div>
+    </div>
+    <canvas id="cv" tabindex="0" aria-label="Main street. Hold A or D to walk your store."></canvas>
+    <div class="under">
+      <div class="hint">Click the street, then hold <kbd>A</kbd>/<kbd>D</kbd> (P1) or <kbd>←</kbd>/<kbd>→</kbd> (P2). Release to sit. <kbd>Space</kbd> pause, <kbd>R</kbd> restart.</div>
+      <div class="pads" aria-label="P1 touch controls">
+        <button id="padL" aria-label="Walk left">◀</button>
+        <button id="padR" aria-label="Walk right">▶</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cols2">
+    <section class="panel" aria-labelledby="hRound">
+      <div class="panel-head"><h2 id="hRound">This round</h2><span id="roundMeta"></span></div>
+      <div class="metrics" id="liveMetrics"></div>
+      <div class="board-scroll tablewrap">
+        <table>
+          <thead><tr><th>Store</th><th>Type</th><th class="r">Walk-in</th><th class="r">Chute</th><th class="r">Total</th></tr></thead>
+          <tbody id="board"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="hTune">
+      <div class="panel-head"><h2 id="hTune">Tuning</h2><span><span class="restart-mark">●</span> applies on restart, the rest is live</span></div>
+      <div class="groups" id="groups"></div>
+      <div class="batch-row">
+        <button id="btnDefaults">Reset to defaults</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="hBatch">
+    <div class="panel-head"><h2 id="hBatch">Batch test</h2><span>Bots only, current settings, no rendering</span></div>
+    <div class="batch-row">
+      <label for="rounds">Rounds</label>
+      <input type="number" id="rounds" min="5" max="500" step="5" value="100">
+      <button class="primary" id="btnBatch">Run batch</button>
+      <button id="btnSweep">Column sweep (N+4, N, 0.75N)</button>
+      <button id="btnModes">Compare walk-in arrivals</button>
+      <button id="btnIdle">Idle shutters on vs off</button>
+      <button id="btnPay">Tower payout: top vs split vs all</button>
+      <div class="prog" aria-hidden="true"><i id="progFill"></i></div>
+      <span class="note" id="progText"></span>
+    </div>
+    <div id="batchOut"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="hRules">
+    <h2 id="hRules">Rules in this build</h2>
+    <ul class="rules">
+      <li><b>Walk or sit.</b> Hold a direction to walk, release to sit. Release before the half-cell mark and you spring back.</li>
+      <li><b>Walking stands one floor taller.</b> Legs grow from the underside of the store (height is a slider, default one full floor). Your legs reach one floor, so you climb a store one level above your feet.</li>
+      <li><b>One rule for neighbors.</b> Lower: step down. Level: walk across the roof. One up: climb. Two or more up: push.</li>
+      <li><b>Push to topple.</b> Hold against a tower for the push time and everything above your head falls to the far column, landing on top of whatever is there. Then you climb in.</li>
+      <li><b>Push back.</b> The store you're pushing can walk into you; that bumps you both and resets the push.</li>
+      <li><b>Toppled stores</b> are stunned briefly and can't be pushed again for the immunity time.</li>
+      <li><b>Head-on walkers bump.</b> Two walkers pressing toward each other within one floor bounce apart.</li>
+      <li><b>Carrying.</b> A walking store carries everything above it. Carried stores still count as sitting.</li>
+      <li><b>Walk-ins cross the street</b> toward the shop in front of them and enter the lowest open, sitting shop in that column. Walking shops get skipped; shoppers pass under the legs. With nowhere to go (within the sidestep range), they walk back in grey.</li>
+      <li><b>Crosswalk waves.</b> A crosswalk a few columns wide appears (dashed, with a countdown), a wave of shoppers crosses it, then it fades and reappears somewhere else after a pause. A thin trickle of walk-ins arrives anywhere, all the time.</li>
+      <li><b>Idle shutters.</b> A shop with no input for the idle time pulls its shutters down; the shutters drop visibly during the warning. Closed shops earn nothing: walk-ins go upstairs past them, parachuters pass them by. Any press reopens. Climb onto a closed shop and its customers come up to you.</li>
+      <li><b>Other arrival modes</b> from earlier builds are still in the menu: a drifting crowd band, and fixed crosswalks where shoppers walk to the nearest sitting shop anywhere.</li>
+      <li><b>Parachuters</b> fall in phase two, drift with the wind, and enter the first store they touch, walking or not. Parachuters see walking shops at their full height. Ones that reach the street become walk-ins.</li>
+      <li><b>Scoring.</b> A parachuter can be worth more than a walk-in, and phase 1 earnings can count for less. When a tower catches a parachuter, the payout goes to the top shop only, is split between floors, or pays every floor the full value. Walk-ins can optionally pay the tower the same way.</li>
+      <li><b>Decided for this build:</b> edge towers can't be toppled (nowhere to fall). Bots yield sometimes after a head-on bump.</li>
+    </ul>
+  </section>
+</div>
+
+<script>// Walking Shops — pure grid simulation. No DOM. Fixed tick.
+(function (root) {
+  'use strict';
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const BOT_TYPES = ['newcomer', 'climber', 'aggressor', 'random', 'sitter'];
+  const LETTER = { human: 'P', newcomer: 'N', climber: 'C', aggressor: 'A', random: 'R', sitter: 'S' };
+  const DT = 0.05;      // 20 Hz logic
+  const LEAN = 0.3;     // how far a blocked store leans into the next cell
+  const BUMP_GAP = 0.45;
+  const SKY = 7.2;      // parachute spawn height, in floors
+  const SHOPPER_SPEED = 5;   // cells per second along the sidewalk
+  const PARA_SPEED = 1.5;    // floors per second
+
+  const DEFAULTS = {
+    seed: 7,
+    humans: 1,
+    bots: { newcomer: 5, climber: 4, aggressor: 2, random: 2, sitter: 2 },
+    colsMode: 'auto',   // 'auto' = max(players + 4, players × 1.5), capped
+    colsCap: 18,
+    cols: 18,
+    roundTime: 120,
+    paraStart: 60,
+    groundInPhase2: true,
+    entries: 2,
+    entryLife: 16,
+    telegraph: 3,
+    shopperRate: 12,    // ground shoppers per player per minute
+    paraRate: 12,       // parachuters per player per minute (phase 2)
+    cellTime: 0.45,     // seconds to walk one cell
+    pushTime: 0.9,      // sustained push needed to topple
+    immuneTime: 2.0,
+    stunTime: 0.5,
+    bumpStun: 0.35,
+    botReaction: 1.0,   // multiplier on bot reaction delays
+    wind: 0.8,          // parachute sideways drift, cells per second (0 = straight down)
+    arrivalMode: 'waves', // 'waves' = crosswalk waves + background trickle; 'street' = drifting crowd band; 'crosswalk' = old point sources
+    bandWidth: 3,       // crowd band spread in columns (>= 12 means uniform)
+    bandDrift: 0.5,     // crowd band drift speed, cells per second
+    crossTime: 2.5,     // seconds a shopper takes to cross the street
+    sidestep: 0,        // columns a shopper will sidestep to find a sitting shop, else leaves
+    walkLift: 1.0,      // extra floors a walking store stands on its legs
+    botsSeeBand: false, // street mode: true = bots aim for the crowd band; false = bots react only to shoppers they can see crossing
+    botPerception: 0.4, // seconds before a bot notices a new shopper (reactive bots)
+    phase1Weight: 0.3,    // multiplier on everything earned before parachutes start
+    paraValue: 3,       // a parachuter is worth this many walk-ins
+    towerPay: 'top',    // who gets paid when a tower catches a parachuter: 'top' | 'split' (shared equally) | 'all' (every floor gets the full value)
+    shareWalkIns: false,// walk-ins entering a tower's ground shop pay the tower the same way
+    waveWidth: 4,       // columns a crosswalk wave spans
+    waveSize: 20,       // shoppers per wave
+    waveAnnounce: 2,    // seconds the crosswalk shows before shoppers step off
+    waveSpawn: 3,       // seconds over which the wave's shoppers step off
+    wavePause: 4,       // seconds between one wave's last shopper arriving and the next crosswalk appearing
+    trickleRate: 4,     // background walk-ins per player per minute, anywhere on the street (waves mode)
+    idleOn: true,       // shops with no input for idleTime pull their shutters down
+    idleTime: 12,       // seconds of no input before shutters close
+    idleWarn: 4,        // seconds of visible warning before they close
+  };
+
+  function shuffle(a, rng) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function reindex(g, c) {
+    const col = g.cols[c];
+    for (let i = 0; i < col.length; i++) { col[i].col = c; col[i].level = i; }
+  }
+
+  // The shop a walk-in enters in a column: the lowest open shop, going upstairs past closed ones.
+  // A walking shop blocks the way (shoppers pass under its legs), so the column is skipped.
+  function entryStore(col) {
+    for (const s of col) {
+      if (s.walking) return null;
+      if (!s.closed) return s;
+    }
+    return null;
+  }
+
+  // Can a bot take this column for walk-ins? Empty, already mine, or a lone closed shop it can climb onto.
+  function canTake(g, c, s) {
+    const col = g.cols[c];
+    if (col.length === 0) return true;
+    if (s.col === c) return entryStore(col) === s || col[0] === s;
+    return col.length === 1 && col[0].closed;
+  }
+
+  function makeStore(id, kind, label) {
+    return {
+      id, kind, label,
+      col: 0, level: 0, off: 0, input: 0, lastDir: 1,
+      walking: false, pressing: false,
+      stunT: 0, immuneT: 0, pushT: 0, pushCol: -1, contest: false, contestTarget: -1,
+      income: 0, incGround: 0, incPara: 0, idleT: 0, closed: false, closedTicks: 0,
+      sitGround: 0, ticks: 0,
+      hue: 0, flash: 0, popT: 0, vx: null, vy: null,
+      bot: kind === 'human' ? null : {
+        think: 0, target: -1, stuckT: 0, lastCol: -1,
+        reactAt: -1, defendUntil: -1, defendDir: 0, commitUntil: -1, yieldUntil: -1, wakeAt: -1, tapUntil: -1, tapDir: 1,
+      },
+    };
+  }
+
+  function createGame(p, opts) {
+    opts = opts || {};
+    const rng = mulberry32((p.seed >>> 0) || 1);
+    const stores = [];
+    let id = 0;
+    const humans = opts.noHumans ? 0 : (p.humans | 0);
+    for (let h = 0; h < humans; h++) stores.push(makeStore(id++, 'human', 'P' + (h + 1)));
+    for (const type of BOT_TYPES) {
+      const n = (p.bots[type] | 0);
+      for (let i = 0; i < n; i++) stores.push(makeStore(id++, type, LETTER[type] + (i + 1)));
+    }
+    const N = stores.length;
+    const C = p.colsMode === 'auto'
+      ? Math.max(6, Math.min(p.colsCap | 0, Math.max(N + 4, Math.round(N * 1.5))))
+      : Math.max(4, p.cols | 0);
+    stores.forEach((s, i) => { s.hue = Math.round((i * 137.508 + 20) % 360); });
+
+    const g = {
+      p, rng, t: 0, N, C, over: false,
+      cols: Array.from({ length: C }, () => []),
+      stores, entries: [], shoppers: [], paras: [],
+      humanInput: [0, 0],
+      band: { x: 0, v: 0 }, leavers: [],
+      wave: { state: 'pause', end: 1, col0: -99, start: 0, spawned: 0 },
+      stats: { closures: 0, paraCaught: 0, paraByTower: 0, spawned: 0, topples: 0, bumps: 0, pushbacks: 0, pushStarts: 0, dodged: 0, abandoned: 0, lost: 0, maxHeight: 0, toppleLog: [] },
+      fx: [],
+    };
+
+    // Spread players evenly; overflow stacks on top.
+    const order = shuffle(stores.slice(), rng);
+    order.forEach((s, i) => {
+      const c = N <= C ? Math.floor((i + 0.5) * C / N) : i % C;
+      g.cols[c].push(s);
+    });
+    for (let c = 0; c < C; c++) reindex(g, c);
+
+    g.band.x = rng() * (C - 1);
+    g.band.v = (rng() < 0.5 ? -1 : 1);
+
+    // Entry points, staggered so they don't all switch together.
+    const E = Math.max(1, p.entries | 0);
+    for (let i = 0; i < E; i++) {
+      const avoid = g.entries.map(e => e.col);
+      g.entries.push({ col: pickEntryCol(g, avoid), open: 0, close: p.entryLife * (i + 1) / E, next: false, acc: 0 });
+    }
+    return g;
+  }
+
+  function pickEntryCol(g, avoid) {
+    const gap = Math.max(2, Math.floor(g.C / (2 * Math.max(1, g.p.entries))));
+    for (let k = 0; k < 40; k++) {
+      const c = Math.floor(g.rng() * g.C);
+      if (avoid.every(a => Math.abs(a - c) >= gap)) return c;
+    }
+    return Math.floor(g.rng() * g.C);
+  }
+
+  // ---------- movement rules ----------
+  // Measured from the surface S the walker stands on (its level).
+  // Neighbor column height H:
+  //   H <= S      step down / walk across  (land on top)
+  //   H == S + 1  climb                    (land on top)
+  //   H >= S + 2  push the stores at S+1 and above; sustained push topples them to the far column
+  // Walkers pressing toward each other within one floor bump.
+  function classify(g, s, d) {
+    const t = s.col + d;
+    if (t < 0 || t >= g.C) return { type: 'wall' };
+    const S = s.level;
+    const colT = g.cols[t];
+    const H = colT.length;
+
+    // head-on: someone in the target column pressing toward us, bodies overlapping
+    for (const x of colT) {
+      if (x.pressing && x.input === -d && Math.abs(x.level - S) <= 1) {
+        const gap = Math.abs((t + x.off) - (s.col + s.off));
+        return gap <= BUMP_GAP ? { type: 'bump', other: x } : { type: 'wait' };
+      }
+    }
+    if (H <= S) return { type: 'free' };
+    const A = colT[S];
+    if (A.walking) return { type: 'wait' };
+    if (H === S + 1) return { type: 'free' };
+    const B = colT[S + 1];
+    if (B.walking || B.immuneT > 0) return { type: 'wait' };
+    const f = t + d;
+    if (f < 0 || f >= g.C) return { type: 'wall' };   // edge towers can't be toppled
+    return { type: 'push', B, t, f };
+  }
+
+  // ---------- scoring ----------
+  function pay(g, col, catcher, value, kind) {
+    const p = g.p;
+    const w = g.t < p.paraStart ? p.phase1Weight : 1;
+    const shared = p.towerPay !== 'top' && (kind === 'para' || p.shareWalkIns) && col.length > 1;
+    const who = shared ? col.filter(x => !x.closed) : [catcher];   // shuttered shops earn nothing
+    const each = value * w * (shared && p.towerPay === 'split' ? 1 / who.length : 1);
+    for (const x of who) {
+      x.income += each;
+      if (kind === 'para') x.incPara += each; else x.incGround += each;
+      x.flash = 0.4;
+    }
+    if (kind === 'para') {
+      g.stats.paraCaught++;
+      if (col.length > 1) g.stats.paraByTower++;
+    }
+  }
+
+  function doMove(g, s, d) {
+    const from = s.col, to = s.col + d;
+    const moving = g.cols[from].splice(s.level);
+    for (const m of moving) g.cols[to].push(m);
+    reindex(g, from); reindex(g, to);
+  }
+
+  function topple(g, s, c) {
+    const S = s.level;
+    const fallen = g.cols[c.t].splice(S + 1);
+    for (const x of fallen) {
+      x.off = 0; x.walking = false; x.pressing = false; x.pushT = 0;
+      x.stunT = g.p.stunTime; x.immuneT = g.p.immuneTime; x.popT = 0.45;
+    }
+    for (const x of fallen) g.cols[c.f].push(x);
+    reindex(g, c.t); reindex(g, c.f);
+    g.stats.topples++;
+    s.contest = false;
+    g.stats.toppleLog.push(g.t);
+    g.fx.push({ type: 'topple', col: c.t, level: S + 1, t: g.t });
+  }
+
+  function bump(g, s, x, d) {
+    const real = (s.contest && s.contestTarget === x.id) || (x.contest && x.contestTarget === s.id);
+    if (!real) {
+      if (s.contest) { s.contest = false; g.stats.abandoned++; }
+      if (x.contest) { x.contest = false; g.stats.abandoned++; }
+    }
+    if (real) {
+      s.contest = x.contest = false;
+      g.stats.pushbacks++;
+      g.fx.push({ type: 'pushback', col: x.col, level: x.level, t: g.t });
+    }
+    s.off = -d * 0.3; x.off = d * 0.3;
+    s.stunT = x.stunT = g.p.bumpStun;
+    s.pushT = x.pushT = 0;
+    s.pressing = x.pressing = false;
+    g.stats.bumps++;
+    for (const y of [s, x]) {
+      if (y.bot && g.rng() < (y.kind === 'newcomer' ? 0.6 : 0.3)) y.bot.yieldUntil = g.t + 0.5 + g.rng() * 0.6;
+    }
+  }
+
+  function moveStore(g, s, dt) {
+    const p = g.p;
+    const inp = s.stunT > 0 ? 0 : s.input;
+    s.pressing = inp !== 0;
+    if (s.contest && inp !== s.lastDir) { s.contest = false; g.stats.abandoned++; }
+    if (inp !== 0) {
+      s.lastDir = inp;
+      let off = s.off + inp * dt / p.cellTime;
+      let pushing = false;
+      if (off * inp > LEAN) {
+        const c = classify(g, s, inp);
+        if (c.type === 'free') {
+          if (s.contest) { s.contest = false; g.stats.dodged++; }
+          if (off * inp >= 0.5) { doMove(g, s, inp); off -= inp; }
+        } else if (c.type === 'bump') {
+          bump(g, s, c.other, inp);
+          s.walking = true; c.other.walking = true;
+          return;
+        } else if (c.type === 'push') {
+          off = inp * LEAN;
+          pushing = true;
+          if (s.pushCol !== c.t) { s.pushT = 0; s.pushCol = c.t; }
+          if (s.contest && s.contestTarget !== c.B.id) { g.stats.abandoned++; s.contest = false; }
+          if (!s.contest) { s.contest = true; s.contestTarget = c.B.id; g.stats.pushStarts++; }
+          s.pushT += dt;
+          if (s.pushT >= p.pushTime) { topple(g, s, c); s.pushT = 0; pushing = false; }
+        } else {
+          off = inp * LEAN;
+        }
+      }
+      if (!pushing) { s.pushT = 0; s.pushCol = -1; }
+      s.off = off;
+    } else {
+      s.pushT = 0; s.pushCol = -1;
+      const sp = dt / p.cellTime * 1.6;
+      s.off = Math.abs(s.off) <= sp ? 0 : s.off - Math.sign(s.off) * sp;
+    }
+    s.walking = inp !== 0 || s.off !== 0;
+  }
+
+  // ---------- bots ----------
+  function liveEntries(g) {
+    // active or announced, excluding ones about to close
+    return g.entries.filter(e => !e.next && e.close > g.t);
+  }
+
+  // Reactive: look only at shoppers already crossing. A shopper is worth chasing if I can sit within
+  // its sidestep range before it reaches the sidewalk.
+  function reactiveTarget(g, s) {
+    const p = g.p;
+    const val = new Float64Array(g.C);
+    for (const sh of g.shoppers) {
+      if (!sh.street || sh.rise <= 0) continue;
+      if (sh.cross - sh.rise < p.botPerception) continue;           // not noticed yet
+      for (let c = Math.max(0, sh.origin - p.sidestep); c <= Math.min(g.C - 1, sh.origin + p.sidestep); c++) {
+        const travel = Math.abs(c - s.col) * p.cellTime + (c === s.col ? 0 : 0.15);
+        if (travel <= sh.rise) val[c] += c === sh.origin ? 1 : 0.6;
+      }
+    }
+    // a crosswalk that has appeared (and been noticed) pulls bots toward it
+    const w = g.wave;
+    if (p.arrivalMode === 'waves' && (w.state === 'announce' || w.state === 'active') && g.t - w.start >= p.botPerception) {
+      const left = w.state === 'announce' ? (w.end - g.t) + p.waveSpawn + p.crossTime : (p.waveSize - w.spawned) / Math.max(1, p.waveSize) * p.waveSpawn + p.crossTime;
+      for (let c = w.col0; c < w.col0 + p.waveWidth; c++) {
+        if (c < 0 || c >= g.C) continue;
+        if (Math.abs(c - s.col) * p.cellTime + 0.15 <= left) val[c] += 2.5;
+      }
+    }
+    let best = s.col, bv = -1;
+    for (let c = 0; c < g.C; c++) {
+      if (!canTake(g, c, s)) continue;
+      const mine = c === s.col && entryStore(g.cols[c]) === s;
+      const v = val[c] - 0.15 * Math.abs(c - s.col) + (mine ? 0.6 : 0) + g.rng() * 0.05;
+      if (v > bv) { bv = v; best = c; }
+    }
+    return best;
+  }
+
+  function groundTarget(g, s) {
+    let score;
+    if (g.p.arrivalMode === 'waves' || (g.p.arrivalMode === 'street' && !g.p.botsSeeBand)) return reactiveTarget(g, s);
+    if (g.p.arrivalMode === 'street') {
+      const uniform = g.p.bandWidth >= 12;
+      const lead = g.band.x + g.band.v * g.p.bandDrift * (g.p.crossTime + 1);
+      score = c => (uniform ? 0 : Math.abs(c - lead) / Math.max(1, g.p.bandWidth * 0.5)) + 0.12 * Math.abs(c - s.col);
+    } else {
+      const ents = liveEntries(g);
+      score = c => {
+        let m = 0;
+        if (ents.length) { m = 1e9; for (const e of ents) m = Math.min(m, Math.abs(e.col - c)); }
+        return m + 0.12 * Math.abs(c - s.col);
+      };
+    }
+    let best = -1, bs = 1e9;
+    for (let c = 0; c < g.C; c++) {
+      if (!canTake(g, c, s)) continue;
+      const sc = score(c) + g.rng() * 0.5;
+      if (sc < bs) { bs = sc; best = c; }
+    }
+    if (s.level === 0 && score(s.col) <= bs + 1.0) return s.col;
+    return best < 0 ? s.col : best;
+  }
+
+  function towerTarget(g, s) {
+    // 'top' pay: be the top of the tallest column. Shared pay: being anywhere in a tall tower counts.
+    const shared = g.p.towerPay !== 'top';
+    const own = g.cols[s.col];
+    const ownTop = own.length - 1 === s.level;
+    let best = s.col;
+    let bv = (shared || ownTop) ? own.length + 0.3 : -1;   // small bias to stay put
+    for (let c = 0; c < g.C; c++) {
+      if (c === s.col) continue;
+      const v = g.cols[c].length + 1 - 0.15 * Math.abs(c - s.col);
+      if (v > bv) { bv = v; best = c; }
+    }
+    return best;
+  }
+
+  function nearestTower(g, s, minH) {
+    let best = -1, bd = 1e9;
+    for (let c = 0; c < g.C; c++) {
+      if (c === s.col) continue;
+      if (g.cols[c].length >= minH) {
+        const d = Math.abs(c - s.col) + g.rng() * 0.3;
+        if (d < bd) { bd = d; best = c; }
+      }
+    }
+    return best;
+  }
+
+  function botThink(g, s) {
+    const b = s.bot, p = g.p, rng = g.rng;
+    const phase2 = g.t >= p.paraStart;
+    const r = p.botReaction;
+    let next;
+    switch (s.kind) {
+      case 'newcomer':
+        b.target = groundTarget(g, s);
+        next = (p.arrivalMode === 'waves' || (p.arrivalMode === 'street' && !p.botsSeeBand)) ? 0.3 + rng() * 0.3 : 1.2 + rng() * 0.8;
+        break;
+      case 'climber':
+        b.target = phase2 ? towerTarget(g, s) : groundTarget(g, s);
+        next = 0.5 + rng() * 0.4;
+        break;
+      case 'aggressor': {
+        if (phase2) b.target = towerTarget(g, s);
+        else {
+          const tw = rng() < 0.6 ? nearestTower(g, s, 2) : -1;
+          b.target = tw >= 0 ? tw : groundTarget(g, s);
+        }
+        next = 0.5 + rng() * 0.4;
+        break;
+      }
+      case 'sitter':
+        b.target = -1;
+        next = 1e9;
+        break;
+      case 'random': {
+        const roll = rng();
+        b.target = roll < 0.3 ? -1 : Math.floor(rng() * g.C);
+        next = 0.4 + rng() * 2.0;
+        break;
+      }
+    }
+    b.think = g.t + next * r;
+  }
+
+  function botUpdate(g, s, dt) {
+    const b = s.bot;
+    if (g.t >= b.think && g.t >= b.commitUntil) botThink(g, s);
+
+    // defend: if I'm the store directly above someone being pushed, push back after a reaction delay
+    if (s.kind === 'climber' || s.kind === 'aggressor') {
+      let attacker = null;
+      for (const a of g.stores) {
+        if (a.pushT > 0 && a.pushCol === s.col && a.level + 1 === s.level) { attacker = a; break; }
+      }
+      if (attacker) {
+        if (b.reactAt < 0) b.reactAt = g.t + (0.45 + g.rng() * 0.6) * g.p.botReaction;
+        if (g.t >= b.reactAt && b.defendUntil < g.t) {
+          b.defendUntil = g.t + 0.4;
+          b.defendDir = Math.sign(attacker.col - s.col);
+        }
+      } else b.reactAt = -1;
+    }
+
+    if (g.t < b.defendUntil) { s.input = b.defendDir; return; }
+
+    // keep-alive: notice the shutters starting to drop and tap a direction (a lean that springs back)
+    if (s.kind !== 'sitter' && g.p.idleOn && s.idleT > g.p.idleTime - g.p.idleWarn) {
+      if (b.wakeAt < 0) b.wakeAt = g.t + (0.5 + g.rng() * 2.5) * g.p.botReaction;
+      if (g.t >= b.wakeAt) { b.wakeAt = -1; b.tapUntil = g.t + 0.12; b.tapDir = s.col === 0 ? 1 : s.col === g.C - 1 ? -1 : (g.rng() < 0.5 ? -1 : 1); }
+    } else b.wakeAt = -1;
+    if (g.t < b.tapUntil) { s.input = b.tapDir; return; }
+
+    if (g.t < b.yieldUntil) { s.input = 0; return; }
+
+    s.input = b.target < 0 ? 0 : Math.sign(b.target - s.col);
+
+    // stuck: pressing but not getting anywhere and not mid-push
+    if (s.input !== 0 && s.col === b.lastCol && s.pushT === 0) b.stuckT += dt; else b.stuckT = 0;
+    b.lastCol = s.col;
+    if (b.stuckT > 3 && s.kind !== 'aggressor') {
+      b.stuckT = 0;
+      b.target = Math.floor(g.rng() * g.C);
+      b.commitUntil = g.t + 1.5;
+    }
+  }
+
+  // ---------- step ----------
+  function step(g, dt) {
+    if (g.over) return;
+    dt = dt || DT;
+    const p = g.p, rng = g.rng;
+    g.t += dt;
+    if (g.t >= p.roundTime) g.over = true;
+    const phase2 = g.t >= p.paraStart;
+
+    for (const s of g.stores) {
+      if (s.stunT > 0) s.stunT = Math.max(0, s.stunT - dt);
+      if (s.immuneT > 0) s.immuneT = Math.max(0, s.immuneT - dt);
+    }
+
+    const street = p.arrivalMode !== 'crosswalk';   // shoppers cross toward the shop in front of them
+    const band = p.arrivalMode === 'street';
+    const waves = p.arrivalMode === 'waves';
+    // crowd band drifts along the street, bouncing at the ends and sometimes turning around
+    const B = g.band;
+    B.x += B.v * p.bandDrift * dt;
+    if (B.x < 0) { B.x = 0; B.v = 1; }
+    if (B.x > g.C - 1) { B.x = g.C - 1; B.v = -1; }
+    if (rng() < dt / 14) B.v = -B.v;
+
+    // entries: announce a replacement `telegraph` seconds before one closes
+    for (const e of (street ? [] : g.entries)) {
+      if (!e.next && g.t >= e.close - p.telegraph) {
+        e.next = true;
+        const avoid = g.entries.filter(x => x.close > g.t).map(x => x.col);
+        g.entries.push({ col: pickEntryCol(g, avoid), open: e.close, close: e.close + p.entryLife, next: false, acc: 0 });
+      }
+    }
+    g.entries = g.entries.filter(e => g.t < e.close);
+
+    // inputs
+    let hi = 0;
+    for (const s of g.stores) {
+      if (s.kind === 'human') s.input = g.humanInput[hi++] || 0;
+      else botUpdate(g, s, dt);
+    }
+    // idle shutters: any press reopens; no input for idleTime closes the shop
+    for (const s of g.stores) {
+      if (s.input !== 0) s.idleT = 0; else s.idleT += dt;
+      const was = s.closed;
+      s.closed = !!p.idleOn && s.idleT >= p.idleTime;
+      if (s.closed && !was) { g.stats.closures++; g.fx.push({ type: 'closed', col: s.col, level: s.level, t: g.t }); }
+      if (s.closed) s.closedTicks++;
+    }
+
+    // movement, fair order
+    const order = shuffle(g.stores.slice(), rng);
+    for (const s of order) moveStore(g, s, dt);
+
+    // ground shoppers
+    const groundOn = !phase2 || p.groundInPhase2;
+    const crossShopper = c => {
+      g.shoppers.push({ x: c, origin: c, rise: p.crossTime, cross: p.crossTime, street: true, life: 3 });
+      g.stats.spawned++;
+    };
+    const W = g.wave;
+    if (waves) {
+      // crosswalk wave cycle: pause -> announce -> active (shoppers step off) -> crossing -> pause
+      const width = Math.max(1, Math.min(g.C, p.waveWidth | 0));
+      if (W.state === 'pause' && g.t >= W.end && groundOn) {
+        let c0 = 0;
+        for (let k = 0; k < 30; k++) {
+          c0 = Math.floor(rng() * (g.C - width + 1));
+          if (Math.abs(c0 - W.col0) >= width) break;
+        }
+        W.col0 = c0; W.state = 'announce'; W.start = g.t; W.end = g.t + p.waveAnnounce; W.spawned = 0;
+      } else if (W.state === 'announce' && g.t >= W.end) {
+        W.state = 'active'; W.end = g.t + p.waveSpawn;
+      } else if (W.state === 'active') {
+        const due = Math.min(p.waveSize, Math.ceil(p.waveSize * (1 - Math.max(0, W.end - g.t) / Math.max(0.05, p.waveSpawn))));
+        while (W.spawned < due) { crossShopper(W.col0 + Math.floor(rng() * width)); W.spawned++; }
+        if (W.spawned >= p.waveSize) { W.state = 'crossing'; W.end = g.t + p.crossTime; }
+      } else if (W.state === 'crossing' && g.t >= W.end) {
+        W.state = 'pause'; W.end = g.t + p.wavePause;
+      }
+      if (groundOn) {
+        const n = Math.floor(g.N * p.trickleRate / 60 * dt + rng());
+        for (let k = 0; k < n; k++) crossShopper(Math.floor(rng() * g.C));
+      }
+    } else if (band && groundOn) {
+      const n = Math.floor(g.N * p.shopperRate / 60 * dt + rng());
+      for (let k = 0; k < n; k++) {
+        let c;
+        if (p.bandWidth >= 12) c = Math.floor(rng() * g.C);
+        else {
+          const gs = Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng());
+          c = Math.round(B.x + gs * p.bandWidth);
+          while (c < 0 || c >= g.C) c = c < 0 ? -c - 1 : 2 * g.C - c - 1;
+          c = Math.max(0, Math.min(g.C - 1, c));
+        }
+        crossShopper(c);
+      }
+    } else if (!street && groundOn) {
+      const act = g.entries.filter(e => e.open <= g.t);
+      const rate = g.N * p.shopperRate / 60 / Math.max(1, act.length);
+      for (const e of act) {
+        const n = Math.floor(rate * dt + rng());
+        for (let k = 0; k < n; k++) { g.shoppers.push({ x: e.col, rise: 0.6, life: 8, bias: rng() < 0.5 ? -1 : 1 }); g.stats.spawned++; }
+      }
+    }
+    // parachuters
+    if (phase2) {
+      const n = Math.floor(g.N * p.paraRate / 60 * dt + rng());
+      let maxH = 0; for (const col of g.cols) maxH = Math.max(maxH, col.length);
+      const sky = Math.max(SKY, maxH + 2.2);
+      for (let k = 0; k < n; k++) g.paras.push({
+        x: rng() * (g.C - 1), y: sky + rng() * 0.6,
+        vx: p.wind * (0.5 + rng() * 0.5) * (rng() < 0.5 ? -1 : 1),
+      });
+    }
+
+    // shoppers walk to the nearest column with an open, sitting shop to enter (upstairs past closed ones)
+    const entries = g.cols.map(entryStore);
+    const keep = [];
+    for (const sh of g.shoppers) {
+      if (sh.rise > 0) { sh.rise -= dt; keep.push(sh); continue; }
+      if (sh.street) {
+        // enter the shop in front if it's sitting on the ground; else sidestep up to `sidestep` columns; else leave
+        let best = null, bd = 1e9;
+        for (let c = Math.max(0, sh.origin - p.sidestep); c <= Math.min(g.C - 1, sh.origin + p.sidestep); c++) {
+          const e = entries[c];
+          if (!e) continue;
+          const d = Math.abs(c - sh.x) + Math.abs(c - sh.origin) * 0.01;
+          if (d < bd) { bd = d; best = e; }
+        }
+        sh.life -= dt;
+        if (!best || sh.life <= 0) {
+          g.stats.lost++;
+          g.leavers.push({ x: sh.x, t: 0 });
+          continue;
+        }
+        const dx = best.col - sh.x, stp = SHOPPER_SPEED * dt;
+        if (Math.abs(dx) <= stp) pay(g, g.cols[best.col], best, 1, 'ground');
+        else { sh.x += Math.sign(dx) * stp; keep.push(sh); }
+        continue;
+      }
+      sh.life -= dt;
+      let best = null, bd = 1e9;
+      for (let c = 0; c < g.C; c++) {
+        const e = entries[c];
+        if (!e) continue;
+        const d = Math.abs(c - sh.x) + ((c - sh.x) * sh.bias >= 0 ? 0 : 0.001);
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (!best) {
+        if (sh.life > 0) keep.push(sh); else g.stats.lost++;
+        continue;
+      }
+      const dx = best.col - sh.x, stp = SHOPPER_SPEED * dt;
+      if (Math.abs(dx) <= stp) {
+        pay(g, g.cols[best.col], best, 1, 'ground');
+      } else { sh.x += Math.sign(dx) * stp; keep.push(sh); }
+    }
+    g.shoppers = keep;
+
+    // parachuters land on the first (highest) store they touch; walkers stand one floor taller
+    const keepP = [];
+    for (const pa of g.paras) {
+      pa.y -= PARA_SPEED * dt;
+      pa.x += pa.vx * dt;
+      if (pa.x < 0) { pa.x = 0; pa.vx = -pa.vx; }
+      if (pa.x > g.C - 1) { pa.x = g.C - 1; pa.vx = -pa.vx; }
+      const pc = Math.round(pa.x);
+      const col = g.cols[pc];
+      const H = col.length;
+      if (H > 0) {
+        const top = H + (col.some(s => s.walking) ? p.walkLift : 0);
+        if (pa.y <= top) {
+          let c = null;
+          for (let L = H - 1; L >= 0; L--) if (!col[L].closed) { c = col[L]; break; }
+          if (c) { pay(g, col, c, p.paraValue, 'para'); continue; }
+          // every shop in the column is shuttered: the parachuter lands on the sidewalk and walks
+          g.stats.spawned++;
+          g.shoppers.push(street ? { x: pc, origin: pc, rise: 0, cross: p.crossTime, street: true, life: 3 } : { x: pc, rise: 0, life: 8, bias: rng() < 0.5 ? -1 : 1 });
+          continue;
+        }
+      } else if (pa.y <= 0) {
+        g.stats.spawned++;
+        if (street) g.shoppers.push({ x: pc, origin: pc, rise: 0, cross: p.crossTime, street: true, life: 3 });
+        else g.shoppers.push({ x: pc, rise: 0, life: 8, bias: rng() < 0.5 ? -1 : 1 });
+        continue;
+      }
+      keepP.push(pa);
+    }
+    g.paras = keepP;
+
+    for (const l of g.leavers) l.t += dt;
+    g.leavers = g.leavers.filter(l => l.t < 1);
+
+    // stats
+    let maxH = 0;
+    for (const col of g.cols) maxH = Math.max(maxH, col.length);
+    g.stats.maxHeight = Math.max(g.stats.maxHeight, maxH);
+    for (const s of g.stores) {
+      s.ticks++;
+      if (s.level === 0 && !s.walking) s.sitGround++;
+    }
+    if (g.fx.length > 40) g.fx.splice(0, g.fx.length - 40);
+  }
+
+  function checkInvariants(g) {
+    const seen = new Set();
+    for (let c = 0; c < g.C; c++) {
+      g.cols[c].forEach((s, i) => {
+        if (s.col !== c || s.level !== i) throw new Error('index mismatch ' + s.label);
+        if (seen.has(s.id)) throw new Error('duplicate ' + s.label);
+        seen.add(s.id);
+      });
+    }
+    if (seen.size !== g.N) throw new Error('lost a store: ' + seen.size + '/' + g.N);
+  }
+
+  function summarize(g) {
+    const types = {};
+    for (const s of g.stores) {
+      const k = s.kind;
+      const T = types[k] || (types[k] = { n: 0, income: 0, ground: 0, para: 0, sit: 0, ticks: 0, closed: 0 });
+      T.n++; T.income += s.income; T.ground += s.incGround; T.para += s.incPara;
+      T.sit += s.sitGround; T.ticks += s.ticks; T.closed += s.closedTicks;
+    }
+    const mins = Math.max(1e-9, g.t / 60);
+    let total = 0; for (const s of g.stores) total += s.income;
+    const nw = g.stores.filter(s => s.kind === 'newcomer').map(s => s.income);
+    let newcomerCV = null;
+    if (nw.length > 1) {
+      const m = nw.reduce((a, b) => a + b, 0) / nw.length;
+      const sd = Math.sqrt(nw.reduce((a, v) => a + (v - m) * (v - m), 0) / (nw.length - 1));
+      newcomerCV = m > 0 ? sd / m : 0;
+    }
+    return {
+      newcomerCV,
+      types,
+      totalIncome: total,
+      meanIncome: total / g.N,
+      topplesPerMin: g.stats.topples / mins,
+      closuresPerMin: g.stats.closures / mins,
+      bumpsPerMin: g.stats.bumps / mins,
+      pushbacksPerMin: g.stats.pushbacks / mins,
+      pushStartsPerMin: g.stats.pushStarts / mins,
+      dodgedPerMin: g.stats.dodged / mins,
+      abandonedPerMin: g.stats.abandoned / mins,
+      maxHeight: g.stats.maxHeight,
+      lost: g.stats.lost,
+      lostShare: g.stats.lost / Math.max(1, g.stats.spawned),
+      towerCatchShare: g.stats.paraCaught ? g.stats.paraByTower / g.stats.paraCaught : 0,
+      minutes: mins,
+    };
+  }
+
+  function runRound(p, opts) {
+    const g = createGame(p, opts);
+    while (!g.over) step(g, DT);
+    return { g, sum: summarize(g) };
+  }
+
+  const api = { DEFAULTS, BOT_TYPES, LETTER, DT, LEAN, SKY, entryStore, createGame, step, summarize, runRound, checkInvariants, classify };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.WalkSim = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>(function () {
+  'use strict';
+  const S = window.WalkSim;
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const $ = id => document.getElementById(id);
+  const TYPE_NAME = { human: 'You', newcomer: 'Newcomer', climber: 'Climber', aggressor: 'Aggressor', random: 'Random', sitter: 'Sitter' };
+  const TYPE_ORDER = ['human', 'newcomer', 'climber', 'aggressor', 'random', 'sitter'];
+
+  // ---------- params ----------
+  const STORE_KEY = 'walking-shops-params-v2';
+  let P = clone(S.DEFAULTS);
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (saved) P = Object.assign(clone(S.DEFAULTS), saved, { bots: Object.assign(clone(S.DEFAULTS.bots), saved.bots || {}) });
+  } catch (e) {}
+  const hotData = window.claude?.hot?.data;
+  if (hotData && hotData.P) P = Object.assign(clone(S.DEFAULTS), hotData.P);
+  window.claude?.hot?.snapshot?.(() => ({ P }));
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(P)); } catch (e) {} }
+
+  const CONTROLS = [
+    { group: 'Players', items: [
+      { k: 'humans', label: 'Humans on keyboard', min: 0, max: 2, step: 1, restart: true },
+      { k: 'bots.newcomer', label: 'Newcomer bots (walk & sit)', min: 0, max: 20, step: 1, restart: true },
+      { k: 'bots.climber', label: 'Climber bots', min: 0, max: 20, step: 1, restart: true },
+      { k: 'bots.aggressor', label: 'Aggressor bots', min: 0, max: 20, step: 1, restart: true },
+      { k: 'bots.random', label: 'Random bots', min: 0, max: 20, step: 1, restart: true },
+      { k: 'bots.sitter', label: 'Sitter bots (never touch the phone)', min: 0, max: 20, step: 1, restart: true },
+      { k: 'botsSeeBand', label: 'Bots aim for the crowd band (off: react to visible shoppers)', type: 'check', on: true, off: false },
+      { k: 'botPerception', label: 'Bot delay before noticing a shopper', min: 0, max: 1.5, step: 0.1, fmt: v => v.toFixed(1) + 's' },
+      { k: 'botReaction', label: 'Bot reaction (× slower)', min: 0.5, max: 3, step: 0.1, fmt: v => v.toFixed(1) + '×' },
+      { k: 'seed', label: 'Seed', min: 1, max: 999, step: 1, restart: true },
+    ] },
+    { group: 'Street', items: [
+      { k: 'colsMode', label: 'Columns = 1.5 × players (at least +4)', type: 'check', on: 'auto', off: 'fixed', restart: true },
+      { k: 'colsCap', label: 'Column cap (auto mode)', min: 6, max: 30, step: 1, restart: true },
+      { k: 'cols', label: 'Columns (fixed mode)', min: 4, max: 40, step: 1, restart: true },
+      { k: 'roundTime', label: 'Round length', min: 30, max: 240, step: 10, restart: true, fmt: v => v + 's' },
+      { k: 'paraStart', label: 'Parachutes start at', min: 0, max: 240, step: 5, fmt: v => v + 's' },
+      { k: 'walkLift', label: 'Walking height (extra floors)', min: 0.3, max: 1, step: 0.05, fmt: v => '+' + v.toFixed(2) },
+      { k: 'cellTime', label: 'Time to walk one cell', min: 0.15, max: 1.2, step: 0.05, fmt: v => v.toFixed(2) + 's' },
+    ] },
+    { group: 'Shoppers', items: [
+      { k: 'arrivalMode', label: 'How walk-ins arrive', type: 'select', restart: true, options: [['waves', 'Crosswalk waves + trickle'], ['street', 'Drifting crowd band'], ['crosswalk', 'Fixed crosswalks (first build)']] },
+      { k: 'waveWidth', label: 'Wave: crosswalk width', min: 1, max: 10, step: 1, fmt: v => v + ' cols' },
+      { k: 'waveSize', label: 'Wave: shoppers per wave', min: 2, max: 60, step: 1 },
+      { k: 'waveAnnounce', label: 'Wave: crosswalk shows before shoppers step off', min: 0, max: 6, step: 0.5, fmt: v => v + 's' },
+      { k: 'waveSpawn', label: 'Wave: shoppers step off over', min: 0.5, max: 10, step: 0.5, fmt: v => v + 's' },
+      { k: 'wavePause', label: 'Wave: pause before the next crosswalk', min: 0, max: 15, step: 0.5, fmt: v => v + 's' },
+      { k: 'trickleRate', label: 'Trickle: walk-ins per player / min anywhere', min: 0, max: 20, step: 1 },
+      { k: 'shopperRate', label: 'Band / crosswalks: walk-ins per player / min', min: 0, max: 40, step: 1 },
+      { k: 'bandWidth', label: 'Crowd band width', min: 1, max: 12, step: 0.5, fmt: v => v >= 12 ? 'uniform' : v + ' cols' },
+      { k: 'bandDrift', label: 'Crowd band drift', min: 0, max: 3, step: 0.1, fmt: v => v.toFixed(1) + ' cells/s' },
+      { k: 'crossTime', label: 'Time to cross the street', min: 0.5, max: 6, step: 0.25, fmt: v => v.toFixed(2) + 's' },
+      { k: 'sidestep', label: 'Walk-ins sidestep up to', min: 0, max: 4, step: 1, fmt: v => v + (v === 1 ? ' col' : ' cols') },
+      { k: 'entries', label: 'Crosswalks open at once', min: 1, max: 5, step: 1, restart: true },
+      { k: 'entryLife', label: 'Crosswalk lifetime', min: 4, max: 60, step: 1, fmt: v => v + 's' },
+      { k: 'telegraph', label: 'Crosswalk announced ahead by', min: 0, max: 10, step: 0.5, fmt: v => v + 's' },
+      { k: 'groundInPhase2', label: 'Walk-ins continue in phase 2', type: 'check', on: true, off: false },
+      { k: 'paraRate', label: 'Parachuters per player / min', min: 0, max: 40, step: 1 },
+      { k: 'wind', label: 'Parachute drift', min: 0, max: 3, step: 0.1, fmt: v => v.toFixed(1) + ' cells/s' },
+    ] },
+    { group: 'Scoring', items: [
+      { k: 'towerPay', label: 'When a tower catches a parachuter', type: 'select', options: [['top', 'Top shop gets it'], ['split', 'Split equally between floors'], ['all', 'Every floor gets the full value']] },
+      { k: 'shareWalkIns', label: 'Walk-ins into a tower pay the tower the same way', type: 'check', on: true, off: false },
+      { k: 'paraValue', label: 'Parachuter worth', min: 1, max: 5, step: 0.5, fmt: v => v + (v === 1 ? ' walk-in' : ' walk-ins') },
+      { k: 'phase1Weight', label: 'Phase 1 earnings count', min: 0, max: 1, step: 0.05, fmt: v => '×' + v.toFixed(2) },
+    ] },
+    { group: 'Idle shutters', items: [
+      { k: 'idleOn', label: 'Shops with no input pull their shutters down', type: 'check', on: true, off: false },
+      { k: 'idleTime', label: 'Closed after no input for', min: 3, max: 40, step: 1, fmt: v => v + 's' },
+      { k: 'idleWarn', label: 'Shutters start dropping', min: 0, max: 10, step: 0.5, fmt: v => v + 's before' },
+    ] },
+    { group: 'Push & topple', items: [
+      { k: 'pushTime', label: 'Push needed to topple', min: 0.2, max: 3, step: 0.05, fmt: v => v.toFixed(2) + 's' },
+      { k: 'stunTime', label: 'Stun after topple', min: 0, max: 2, step: 0.1, fmt: v => v.toFixed(1) + 's' },
+      { k: 'immuneTime', label: 'Topple immunity', min: 0, max: 6, step: 0.25, fmt: v => v.toFixed(2) + 's' },
+      { k: 'bumpStun', label: 'Stun after bump', min: 0, max: 1.5, step: 0.05, fmt: v => v.toFixed(2) + 's' },
+    ] },
+  ];
+
+  const getK = k => k.split('.').reduce((o, x) => o[x], P);
+  const setK = (k, v) => { const ks = k.split('.'); const last = ks.pop(); ks.reduce((o, x) => o[x], P)[last] = v; };
+
+  function buildControls() {
+    const root = $('groups');
+    root.innerHTML = '';
+    for (const grp of CONTROLS) {
+      const g = document.createElement('div'); g.className = 'group';
+      g.innerHTML = '<h3>' + grp.group + '</h3>';
+      for (const c of grp.items) {
+        const id = 'ctl_' + c.k.replace('.', '_');
+        const w = document.createElement('div');
+        const mark = c.restart ? ' <span class="restart-mark" title="Applies on restart">●</span>' : '';
+        if (c.type === 'select') {
+          w.className = 'ctl';
+          w.innerHTML = '<label for="' + id + '">' + c.label + mark + '</label><span></span>' +
+            '<select id="' + id + '" style="grid-column:1/-1">' + c.options.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('') + '</select>';
+          const sel = w.querySelector('select');
+          sel.value = getK(c.k);
+          sel.addEventListener('change', () => { setK(c.k, sel.value); save(); });
+        } else if (c.type === 'check') {
+          w.className = 'ctl check';
+          w.innerHTML = '<input type="checkbox" id="' + id + '"><label for="' + id + '">' + c.label + mark + '</label>';
+          const inp = w.querySelector('input');
+          inp.checked = getK(c.k) === c.on;
+          inp.addEventListener('change', () => { setK(c.k, inp.checked ? c.on : c.off); save(); });
+        } else {
+          w.className = 'ctl';
+          w.innerHTML = '<label for="' + id + '">' + c.label + mark + '</label><output for="' + id + '"></output>' +
+            '<input type="range" id="' + id + '" min="' + c.min + '" max="' + c.max + '" step="' + c.step + '">';
+          const inp = w.querySelector('input'), out = w.querySelector('output');
+          const show = v => { out.textContent = c.fmt ? c.fmt(v) : String(v); };
+          inp.value = getK(c.k); show(+inp.value);
+          inp.addEventListener('input', () => { const v = +inp.value; setK(c.k, v); show(v); save(); });
+        }
+        g.appendChild(w);
+      }
+      root.appendChild(g);
+    }
+  }
+
+  // ---------- game ----------
+  let G = null, paused = false, speed = 1, acc = 0, lastTs = 0;
+  const keys = new Set();
+  let pad = 0;
+
+  function restart() {
+    G = S.createGame(clone(P));
+    G.p = P; // tunables stay live
+    acc = 0; paused = false; $('btnPause').textContent = 'Pause';
+    lastBoard = 0;
+    sizeCanvas(true);
+  }
+
+  // ---------- input ----------
+  window.addEventListener('keydown', e => {
+    const tg = e.target && e.target.tagName;
+    if (tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA') return;
+    const k = e.key.toLowerCase();
+    if (tg === 'BUTTON' && (k === ' ' || k === 'enter')) return;
+    if (['a', 'd', 'arrowleft', 'arrowright'].includes(k)) { keys.add(k); e.preventDefault(); }
+    else if (k === ' ') { togglePause(); e.preventDefault(); }
+    else if (k === 'r' && !e.metaKey && !e.ctrlKey) { restart(); }
+  });
+  window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+  window.addEventListener('blur', () => { keys.clear(); setPad(0); });
+
+  function setPad(d) {
+    pad = d;
+    $('padL').classList.toggle('on', d === -1);
+    $('padR').classList.toggle('on', d === 1);
+  }
+  for (const [id, d] of [['padL', -1], ['padR', 1]]) {
+    const b = $(id);
+    b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture?.(e.pointerId); setPad(d); });
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => { if (pad === d) setPad(0); });
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  function readHumans() {
+    const ad = (keys.has('d') ? 1 : 0) - (keys.has('a') ? 1 : 0);
+    const ar = (keys.has('arrowright') ? 1 : 0) - (keys.has('arrowleft') ? 1 : 0);
+    const solo = (P.humans | 0) <= 1;
+    G.humanInput[0] = ad || pad || (solo ? ar : 0);
+    G.humanInput[1] = ar;
+  }
+
+  function togglePause() { paused = !paused; $('btnPause').textContent = paused ? 'Resume' : 'Pause'; }
+  $('btnPause').addEventListener('click', togglePause);
+  $('btnRestart').addEventListener('click', () => { restart(); $('cv').focus(); });
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    speed = +b.dataset.speed;
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  $('btnDefaults').addEventListener('click', () => { P = clone(S.DEFAULTS); save(); buildControls(); restart(); });
+
+  // ---------- canvas ----------
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  let geo = null, tok = {}, tokAt = -1e9;
+  const VIS_MIN = 7;
+
+  function readTokens() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const n of ['bg', 'panel', 'ink', 'muted', 'line', 'accent', 'accent-ink', 'asphalt', 'curb', 'sky-top', 'sky-bot', 'chute', 'danger', 'ok', 'store-l'])
+      tok[n] = cs.getPropertyValue('--' + n).trim();
+  }
+
+  function sizeCanvas(force) {
+    if (!G) return;
+    const W = cv.clientWidth || cv.parentElement.clientWidth;
+    const cellW = W / G.C;
+    const cellH = Math.max(24, Math.min(cellW * 0.82, 60));
+    const vis = Math.max(VIS_MIN, G.stats.maxHeight + 1.5 + P.walkLift);
+    const streetH = Math.max(44, cellH * Math.min(2.6, 1.1 + 0.25 * P.crossTime));
+    const H = Math.round(vis * cellH + streetH);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (force || !geo || geo.W !== W || geo.H !== H || geo.dpr !== dpr) {
+      cv.style.height = H + 'px';
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    geo = { W, H, dpr, cellW, cellH, streetH, groundY: H - streetH };
+  }
+  window.addEventListener('resize', () => sizeCanvas(true));
+
+  const storeFill = (s, a) => 'hsla(' + s.hue + ',62%,' + tok['store-l'] + ',' + (a == null ? 1 : a) + ')';
+
+  function draw(frameDt, now) {
+    if (now - tokAt > 500) { readTokens(); tokAt = now; }
+    sizeCanvas(false);
+    const { W, H, cellW, cellH, streetH, groundY } = geo;
+    const g = G, p = P;
+    const k = Math.min(1, frameDt * 16);
+
+    // sky
+    const sky = ctx.createLinearGradient(0, 0, 0, groundY);
+    sky.addColorStop(0, tok['sky-top']); sky.addColorStop(1, tok['sky-bot']);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, groundY);
+    // sidewalk + asphalt
+    const swH = streetH * 0.32;
+    ctx.fillStyle = tok.curb; ctx.fillRect(0, groundY, W, swH);
+    ctx.fillStyle = tok.asphalt; ctx.fillRect(0, groundY + swH, W, streetH - swH);
+    // column ticks on the curb
+    ctx.fillStyle = tok.muted; ctx.globalAlpha = 0.35;
+    for (let c = 1; c < g.C; c++) ctx.fillRect(c * cellW - 0.5, groundY, 1, swH * 0.5);
+    ctx.globalAlpha = 1;
+
+    const street = p.arrivalMode === 'street';
+    const wavesMode = p.arrivalMode === 'waves';
+    // crosswalk wave
+    const Wv = g.wave;
+    if (wavesMode && Wv && Wv.state !== 'pause') {
+      const x0 = Wv.col0 * cellW + cellW * 0.06, w = (p.waveWidth | 0) * cellW - cellW * 0.12;
+      const y0 = groundY + swH + 3, h = streetH - swH - 6;
+      if (Wv.state === 'announce') {
+        ctx.save();
+        ctx.setLineDash([6, 5]); ctx.lineWidth = 2;
+        ctx.strokeStyle = tok.accent; ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(now / 160));
+        ctx.strokeRect(x0, y0, w, h);
+        ctx.restore();
+        ctx.fillStyle = tok.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '600 ' + Math.round(Math.min(18, h * 0.4)) + 'px ' + getComputedStyle(document.body).getPropertyValue('--font-data');
+        ctx.fillText(Math.ceil(Wv.end - g.t), x0 + w / 2, y0 + h / 2);
+      } else {
+        const fade = Wv.state === 'crossing' ? Math.max(0.15, (Wv.end - g.t) / Math.max(0.1, p.crossTime)) : 1;
+        ctx.globalAlpha = 0.85 * fade; ctx.fillStyle = tok.accent;
+        const n = Math.max(3, Math.round(w / 12)), sw = w / (n * 2 - 1);
+        for (let i = 0; i < n; i++) ctx.fillRect(x0 + i * 2 * sw, y0, sw, h);   // zebra bars run the way people walk
+        ctx.globalAlpha = 1;
+      }
+    }
+    // crowd band glow on the asphalt
+    if (street && p.bandWidth < 12) {
+      const bx = (g.band.x + 0.5) * cellW, bwid = Math.max(cellW, p.bandWidth * cellW * 1.6);
+      const grad = ctx.createLinearGradient(bx - bwid, 0, bx + bwid, 0);
+      grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(0.5, tok.accent); grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = 0.24; ctx.fillStyle = grad;
+      ctx.fillRect(bx - bwid, groundY + swH, bwid * 2, streetH - swH);
+      ctx.globalAlpha = 1;
+    }
+
+    // crosswalks
+    for (const e of (p.arrivalMode === 'crosswalk' ? g.entries : [])) {
+      const x0 = e.col * cellW + cellW * 0.12, w = cellW * 0.76;
+      const y0 = groundY + swH + 3, h = streetH - swH - 6;
+      const upcoming = e.open > g.t;
+      if (upcoming) {
+        const left = e.open - g.t;
+        ctx.save();
+        ctx.setLineDash([5, 4]); ctx.lineWidth = 2;
+        ctx.strokeStyle = tok.accent; ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(now / 180));
+        ctx.strokeRect(x0, y0, w, h);
+        ctx.restore();
+        ctx.fillStyle = tok.accent; ctx.font = '600 ' + Math.round(Math.min(16, h * 0.6)) + 'px ' + getComputedStyle(document.body).getPropertyValue('--font-data');
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(Math.ceil(left), x0 + w / 2, y0 + h / 2);
+      } else {
+        const fading = e.next ? Math.max(0.15, (e.close - g.t) / Math.max(0.01, p.telegraph)) : 1;
+        ctx.globalAlpha = fading;
+        ctx.fillStyle = tok.accent;
+        const n = 4, sw = w / (n * 2 - 1);
+        for (let i = 0; i < n; i++) ctx.fillRect(x0 + i * 2 * sw, y0, sw, h);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // strain map from active pushes
+    const strain = new Map();
+    for (const a of g.stores) {
+      if (a.pushT > 0 && a.pushCol >= 0) {
+        const col = g.cols[a.pushCol];
+        for (let L = a.level + 1; L < col.length; L++) strain.set(col[L].id, Math.max(strain.get(col[L].id) || 0, a.pushT / p.pushTime));
+      }
+    }
+
+    // stores
+    const bw = cellW * 0.84, bh = cellH * 0.8;
+    const fontData = getComputedStyle(document.body).getPropertyValue('--font-data');
+    const labelSize = Math.max(8, Math.min(15, cellW * 0.26));
+    for (let c = 0; c < g.C; c++) {
+      const col = g.cols[c];
+      let offSum = 0, base = 0;
+      for (let L = 0; L < col.length; L++) {
+        const s = col[L];
+        offSum += s.off;
+        // vl: animated leg extension 0..1, so legs grow and retract
+        if (s.vl == null) s.vl = s.walking ? 1 : 0;
+        s.vl += ((s.walking ? 1 : 0) - s.vl) * Math.min(1, frameDt * 14);
+        const legs = s.vl * p.walkLift;           // in floors
+        const tx = c + offSum, ty = base;          // ty = where my feet stand
+        base += legs + 1;
+        if (s.vx == null) { s.vx = tx; s.vy = ty; }
+        s.vx += (tx - s.vx) * k;
+        s.vy += (ty - s.vy) * Math.min(1, frameDt * 11);
+        if (s.popT > 0) s.popT = Math.max(0, s.popT - frameDt);
+        if (s.flash > 0) s.flash = Math.max(0, s.flash - frameDt);
+        const arc = s.popT > 0 ? Math.sin((s.popT / 0.45) * Math.PI) * 0.7 : 0;
+        let cx = (s.vx + 0.5) * cellW;
+        if (s.stunT > 0) cx += Math.sin(now / 25) * 2;
+        const bottom = groundY - (s.vy + arc) * cellH - 1;   // feet
+        const st = strain.get(s.id) || 0;
+
+        ctx.save();
+        ctx.translate(cx, bottom);
+        if (st > 0) ctx.rotate(Math.sin(now / 30) * 0.08 * st);
+        if (s.immuneT > 0) ctx.globalAlpha = 0.55 + 0.25 * Math.sin(now / 70);
+
+        const lift = s.vl * p.walkLift * cellH;   // body bottom sits this far above the feet
+        const y0 = -lift - bh;
+        // legs hang from the underside of the body down to the feet
+        if (lift > 1) {
+          const ph = Math.sin(s.vx * Math.PI * 4);
+          const lw = Math.max(1.5, cellW * 0.045);
+          ctx.strokeStyle = tok.ink; ctx.lineWidth = lw; ctx.lineCap = 'butt';
+          ctx.beginPath();
+          for (const side of [-1, 1]) {
+            const hipX = side * bw * 0.24, footX = hipX + side * ph * bw * 0.1;
+            const kneeY = -lift * 0.5, kneeX = (hipX + footX) / 2 + side * bw * 0.06;
+            ctx.moveTo(hipX, -lift); ctx.lineTo(kneeX, kneeY); ctx.lineTo(footX, 0);
+          }
+          ctx.stroke();
+          ctx.fillStyle = tok.ink;
+          for (const side of [-1, 1]) {
+            const footX = side * bw * 0.24 + side * ph * bw * 0.1;
+            ctx.fillRect(footX - lw * 1.6, -lw * 0.8, lw * 3.2, lw * 0.8);
+          }
+        }
+        // body
+        ctx.fillStyle = storeFill(s);
+        ctx.fillRect(-bw / 2, y0, bw, bh);
+        // awning strip
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.fillRect(-bw / 2, y0, bw, bh * 0.2);
+        // shutters: drop during the warning, fully down when closed
+        if (p.idleOn) {
+          const f = s.closed ? 1 : Math.max(0, Math.min(1, (s.idleT - (p.idleTime - p.idleWarn)) / Math.max(0.01, p.idleWarn)));
+          if (f > 0) {
+            const top = y0 + bh * 0.2, full = bh * 0.8, hh = full * f;
+            ctx.fillStyle = s.closed ? '#AEB5BF' : '#C9CED6';
+            ctx.fillRect(-bw / 2, top, bw, hh);
+            ctx.strokeStyle = '#7E8794'; ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let yy = top + 4; yy < top + hh; yy += 4) { ctx.moveTo(-bw / 2 + 1, yy); ctx.lineTo(bw / 2 - 1, yy); }
+            ctx.stroke();
+          }
+        }
+        // outline
+        ctx.lineWidth = s.kind === 'human' ? 3 : 1.25;
+        ctx.strokeStyle = st > 0 ? tok.danger : (s.kind === 'human' ? tok.accent : tok.ink);
+        ctx.strokeRect(-bw / 2, y0, bw, bh);
+        if (s.kind === 'human') { ctx.lineWidth = 1; ctx.strokeStyle = tok.ink; ctx.strokeRect(-bw / 2 - 2.5, y0 - 2.5, bw + 5, bh + 5); }
+        // income flash
+        if (s.flash > 0) {
+          ctx.globalAlpha = s.flash / 0.4;
+          ctx.fillStyle = tok.accent;
+          ctx.fillRect(-bw / 2, y0 - 4, bw, 3);
+          ctx.globalAlpha = 1;
+        }
+        // label
+        ctx.fillStyle = '#10161E';
+        ctx.font = '600 ' + labelSize + 'px ' + fontData;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(s.label, 0, y0 + bh * 0.6);
+        // push meter on the attacker
+        if (s.pushT > 0) {
+          const f = Math.min(1, s.pushT / p.pushTime);
+          ctx.fillStyle = tok.danger;
+          ctx.fillRect(-bw / 2, y0 - 7, bw * f, 3);
+        }
+        ctx.restore();
+      }
+    }
+
+    // shoppers
+    const r = Math.max(2.2, cellW * 0.07);
+    ctx.fillStyle = tok.panel; ctx.strokeStyle = tok.ink; ctx.lineWidth = 1.2;
+    for (const sh of g.shoppers) {
+      const x = (sh.x + 0.5) * cellW;
+      const yWalk = groundY + swH * 0.55;
+      const span = streetH - swH * 0.55 - r - 2;
+      const y = sh.rise > 0 ? yWalk + (sh.rise / (sh.cross || 0.6)) * span : yWalk;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    // shoppers who found no sitting shop walk back across the street
+    for (const l of g.leavers) {
+      ctx.globalAlpha = 0.6 * (1 - l.t);
+      ctx.fillStyle = tok.muted;
+      const y = groundY + swH * 0.55 + l.t * (streetH - swH * 0.55 - r - 2);
+      ctx.beginPath(); ctx.arc((l.x + 0.5) * cellW, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // parachuters
+    for (const pa of g.paras) {
+      const x = (pa.x + 0.5) * cellW, y = groundY - pa.y * cellH;
+      const cr = Math.max(5, cellW * 0.16);
+      ctx.fillStyle = tok.chute;
+      ctx.beginPath(); ctx.arc(x, y - cr * 1.6, cr, Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = tok.chute; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x - cr, y - cr * 1.6); ctx.lineTo(x, y); ctx.moveTo(x + cr, y - cr * 1.6); ctx.lineTo(x, y); ctx.stroke();
+      ctx.fillStyle = tok.ink; ctx.beginPath(); ctx.arc(x, y, r * 0.9, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // event callouts
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.font = '400 ' + Math.max(11, Math.min(16, cellW * 0.3)) + 'px ' + getComputedStyle(document.body).getPropertyValue('--font-display');
+    for (const f of g.fx) {
+      const age = g.t - f.t;
+      if (age > 0.9 || age < 0) continue;
+      ctx.globalAlpha = 1 - age / 0.9;
+      ctx.fillStyle = f.type === 'topple' ? tok.danger : f.type === 'closed' ? tok.muted : tok.ok;
+      ctx.fillText(f.type === 'topple' ? 'TOPPLE' : f.type === 'closed' ? 'CLOSED' : 'BLOCKED', (f.col + 0.5) * cellW, groundY - (f.level + 1.4 + age) * cellH);
+    }
+    ctx.globalAlpha = 1;
+
+    if (g.over) {
+      ctx.fillStyle = tok.panel; ctx.globalAlpha = 0.82;
+      ctx.fillRect(0, 0, W, groundY);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = tok.ink; ctx.textBaseline = 'middle';
+      ctx.font = '400 ' + Math.max(18, Math.min(34, W * 0.04)) + 'px ' + getComputedStyle(document.body).getPropertyValue('--font-display');
+      const best = g.stores.slice().sort((a, b) => b.income - a.income)[0];
+      ctx.fillText('Round over · ' + best.label + ' wins with ' + best.income, W / 2, groundY * 0.42);
+      ctx.font = '500 14px ' + getComputedStyle(document.body).getPropertyValue('--font-body');
+      ctx.fillText('Press R or Restart for another round', W / 2, groundY * 0.42 + 30);
+    } else if (paused) {
+      ctx.fillStyle = tok.ink; ctx.textBaseline = 'middle';
+      ctx.font = '400 26px ' + getComputedStyle(document.body).getPropertyValue('--font-display');
+      ctx.fillText('PAUSED', W / 2, groundY * 0.4);
+    }
+  }
+
+  // ---------- HUD + board ----------
+  let lastBoard = 0;
+  const fmtTime = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+  function updateHud() {
+    const g = G, p = P;
+    const phase2 = g.t >= p.paraStart;
+    const pill = $('phase');
+    pill.textContent = phase2 ? 'Parachutes' : 'Walk-ins';
+    pill.classList.toggle('p2', phase2);
+    $('timer').textContent = fmtTime(p.roundTime - g.t);
+    $('barFill').style.width = Math.min(100, 100 * g.t / p.roundTime) + '%';
+    $('barMark').style.left = Math.min(100, 100 * p.paraStart / p.roundTime) + '%';
+  }
+
+  function typeAgg(stores) {
+    const T = {};
+    for (const s of stores) {
+      const a = T[s.kind] || (T[s.kind] = { n: 0, inc: 0, sit: 0, ticks: 0 });
+      a.n++; a.inc += s.income; a.sit += s.sitGround; a.ticks += s.ticks;
+    }
+    return T;
+  }
+
+  const fmtN = v => Math.abs(v - Math.round(v)) < 1e-6 ? String(Math.round(v)) : v.toFixed(1);
+  function updateBoard() {
+    const g = G;
+    const mins = Math.max(1 / 60, g.t / 60);
+    const sum = S.summarize(g);
+    const T = typeAgg(g.stores);
+    const nm = T.newcomer ? (T.newcomer.inc / T.newcomer.n) / Math.max(1e-9, sum.meanIncome) : null;
+    const allSit = g.stores.reduce((a, s) => a + s.sitGround, 0) / Math.max(1, g.stores.reduce((a, s) => a + s.ticks, 0));
+    const m = [
+      ['Topples / min', (g.stats.topples / mins).toFixed(1)],
+      ['Pushes held off', g.stats.pushStarts ? Math.round(100 * (g.stats.pushbacks + g.stats.dodged) / g.stats.pushStarts) + '%' : '—'],
+      ['Walk-ins lost', g.stats.spawned ? Math.round(100 * g.stats.lost / g.stats.spawned) + '%' : '—'],
+      ['Chutes caught by towers', g.stats.paraCaught ? Math.round(100 * g.stats.paraByTower / g.stats.paraCaught) + '%' : '—'],
+      ['Sitting on ground', Math.round(allSit * 100) + '%'],
+      ['Tallest tower', String(g.stats.maxHeight)],
+      ['Shops shuttered now', String(g.stores.filter(s => s.closed).length)],
+      ['Newcomer vs mean', nm == null ? '—' : nm.toFixed(2) + '×'],
+    ];
+    $('liveMetrics').innerHTML = m.map(([k, v]) => '<div class="metric"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>').join('');
+    $('roundMeta').textContent = g.N + ' players · ' + g.C + ' columns · seed ' + P.seed;
+    const rows = g.stores.slice().sort((a, b) => b.income - a.income || a.id - b.id);
+    $('board').innerHTML = rows.map(s =>
+      '<tr class="' + (s.kind === 'human' ? 'human' : '') + '"><td><span class="sw" style="background:' + storeFill(s) + '"></span>' + s.label +
+      '</td><td class="tag">' + TYPE_NAME[s.kind] + '</td><td class="r">' + fmtN(s.incGround) + '</td><td class="r">' + fmtN(s.incPara) + '</td><td class="r">' + fmtN(s.income) + '</td></tr>').join('');
+  }
+
+  // ---------- loop ----------
+  function frame(ts) {
+    const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0;
+    lastTs = ts;
+    if (G && !paused && !G.over) {
+      readHumans();
+      acc += dt * speed;
+      let n = 0;
+      while (acc >= S.DT && n < 40) { S.step(G, S.DT); acc -= S.DT; n++; }
+    }
+    if (G) {
+      draw(dt, ts);
+      updateHud();
+      if (ts - lastBoard > 250) { updateBoard(); lastBoard = ts; }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- batch ----------
+  let batchRunning = false;
+  function runBatches(configs, rounds, render) {
+    if (batchRunning) return;
+    batchRunning = true;
+    $('btnBatch').disabled = $('btnSweep').disabled = $('btnModes').disabled = $('btnPay').disabled = $('btnIdle').disabled = true;
+    const results = configs.map(() => []);
+    const total = configs.length * rounds;
+    let done = 0, ci = 0, r = 0;
+    const t0 = performance.now();
+    function chunk() {
+      const until = performance.now() + 30;
+      while (ci < configs.length && performance.now() < until) {
+        const q = clone(configs[ci].p); q.seed = (P.seed | 0) + r * 7919;
+        results[ci].push(S.runRound(q, { noHumans: true }));
+        r++; done++;
+        if (r >= rounds) { r = 0; ci++; }
+      }
+      $('progFill').style.width = (100 * done / total) + '%';
+      $('progText').textContent = done + ' / ' + total + ' rounds';
+      if (ci < configs.length) setTimeout(chunk, 0);
+      else {
+        batchRunning = false;
+        $('btnBatch').disabled = $('btnSweep').disabled = $('btnModes').disabled = $('btnPay').disabled = $('btnIdle').disabled = false;
+        $('progText').textContent = total + ' rounds in ' + ((performance.now() - t0) / 1000).toFixed(1) + 's';
+        render(results);
+      }
+    }
+    chunk();
+  }
+
+  function aggregate(list) {
+    const T = {};
+    let ps = 0, dg = 0, ab = 0, lostS = 0, cvS = 0, cvN = 0;
+    let top = 0, bump = 0, pb = 0, maxH = 0, mean = 0, sit = 0, ticks = 0, heights = 0;
+    for (const { g, sum } of list) {
+      top += sum.topplesPerMin; bump += sum.bumpsPerMin; pb += sum.pushbacksPerMin;
+      ps += sum.pushStartsPerMin; dg += sum.dodgedPerMin; ab += sum.abandonedPerMin;
+      lostS += sum.lostShare; if (sum.newcomerCV != null) { cvS += sum.newcomerCV; cvN++; }
+      maxH = Math.max(maxH, sum.maxHeight); heights += sum.maxHeight; mean += sum.meanIncome;
+      for (const s of g.stores) { sit += s.sitGround; ticks += s.ticks; }
+      for (const k in sum.types) {
+        const b = sum.types[k];
+        const a = T[k] || (T[k] = { n: 0, inc: 0, ground: 0, para: 0, sit: 0, ticks: 0, perRound: [] });
+        a.n += b.n; a.inc += b.income; a.ground += b.ground; a.para += b.para; a.sit += b.sit; a.ticks += b.ticks;
+        a.perRound.push(b.income / b.n);
+      }
+    }
+    const R = list.length;
+    for (const k in T) {
+      const a = T[k], m = a.inc / a.n;
+      a.mean = m;
+      a.sd = Math.sqrt(a.perRound.reduce((x, v) => x + (v - m) * (v - m), 0) / Math.max(1, a.perRound.length - 1));
+    }
+    return {
+      T, R, topples: top / R, pushStarts: ps / R, dodged: dg / R, abandoned: ab / R, bumps: bump / R, pushbacks: pb / R, maxH, avgMaxH: heights / R,
+      mean: mean / R, sitAll: sit / Math.max(1, ticks), lost: lostS / R, luck: cvN ? cvS / cvN : null,
+      mode: list[0].g.p.arrivalMode, payMode: list[0].g.p.towerPay,
+      towerCatch: list.reduce((a, x) => a + x.sum.towerCatchShare, 0) / R,
+      N: list[0].g.N, C: list[0].g.C,
+    };
+  }
+
+  function verdict(A) {
+    const out = [];
+    const nw = A.T.newcomer;
+    if (nw) {
+      const ratio = nw.mean / A.mean;
+      if (ratio < 0.7) out.push('Newcomers earn ' + ratio.toFixed(2) + '× the average. The simple walk-and-sit player is getting crushed.');
+      else if (ratio > 1.3) out.push('Newcomers earn ' + ratio.toFixed(2) + '× the average. Walk-and-sit beats the fancy play; climbing and toppling are not paying off.');
+      else out.push('Newcomers earn ' + ratio.toFixed(2) + '× the average. A player who only walks and sits holds their own.');
+    }
+    const decided = A.topples + A.pushbacks + A.dodged;
+    if (decided > 0.3) {
+      const share = (A.pushbacks + A.dodged) / decided;
+      const pct = Math.round(share * 100);
+      out.push(share > 0.85 ? 'Defenders win ' + pct + '% of decided pushes, so towers are nearly safe.' :
+        share < 0.3 ? 'Defenders win only ' + pct + '% of decided pushes, so towers rarely survive.' :
+        'Defenders win ' + pct + '% of decided pushes.');
+    }
+    return out.join(' ');
+  }
+
+  const pctOf = (a, b) => b > 0 ? Math.round(100 * a / b) + '%' : '—';
+  function renderBatch(results) {
+    const A = aggregate(results[0]);
+    const types = TYPE_ORDER.filter(k => A.T[k]);
+    const head = '<div class="metrics">' + [
+      ['Topples / min', A.topples.toFixed(2)],
+      ['Pushes / min', A.pushStarts.toFixed(1)],
+      ['Pushed back / dodged / given up', pctOf(A.pushbacks, A.pushStarts) + ' / ' + pctOf(A.dodged, A.pushStarts) + ' / ' + pctOf(A.abandoned, A.pushStarts)],
+      ['Walk-ins lost', Math.round(A.lost * 100) + '%'],
+      ['Newcomer spread (luck)', A.luck == null ? '—' : A.luck.toFixed(2)],
+      ['Sitting on ground', Math.round(A.sitAll * 100) + '%'],
+      ['Tallest tower (avg / max)', A.avgMaxH.toFixed(1) + ' / ' + A.maxH],
+      ['Mean income', A.mean.toFixed(1)],
+    ].map(([k, v]) => '<div class="metric"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>').join('') + '</div>';
+    const table = '<div class="tablewrap"><table><thead><tr><th>Bot type</th><th class="r">Stores</th><th class="r">Income</th><th class="r">± sd</th><th class="r">Walk-in</th><th class="r">Chute</th><th class="r">Sitting on ground</th></tr></thead><tbody>' +
+      types.map(k => {
+        const a = A.T[k], n = a.n;
+        return '<tr><td>' + TYPE_NAME[k] + '</td><td class="r">' + (n / A.R) + '</td><td class="r">' + a.mean.toFixed(1) + '</td><td class="r">' + a.sd.toFixed(1) +
+          '</td><td class="r">' + (a.ground / n).toFixed(1) + '</td><td class="r">' + (a.para / n).toFixed(1) + '</td><td class="r">' + Math.round(100 * a.sit / a.ticks) + '%</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    $('batchOut').innerHTML = '<p class="verdict">' + verdict(A) + '</p>' + head + table +
+      '<p class="note">' + A.R + ' rounds · ' + A.N + ' bots · ' + A.C + ' columns. Humans are left out of batches.</p>';
+  }
+
+  function renderSweep(results) {
+    const rows = results.map(list => aggregate(list));
+    $('batchOut').innerHTML = '<div class="tablewrap"><table><thead><tr><th>Columns</th><th class="r">Players</th><th class="r">Topples / min</th><th class="r">Pushes / min</th><th class="r">Held off</th><th class="r">Sitting on ground</th><th class="r">Tallest (avg)</th><th class="r">Newcomer vs mean</th></tr></thead><tbody>' +
+      rows.map(A => '<tr><td>' + A.C + '</td><td class="r">' + A.N + '</td><td class="r">' + A.topples.toFixed(2) + '</td><td class="r">' + A.pushStarts.toFixed(1) + '</td><td class="r">' + pctOf(A.pushbacks + A.dodged, A.topples + A.pushbacks + A.dodged) +
+        '</td><td class="r">' + Math.round(A.sitAll * 100) + '%</td><td class="r">' + A.avgMaxH.toFixed(1) + '</td><td class="r">' + (A.T.newcomer ? (A.T.newcomer.mean / A.mean).toFixed(2) + '×' : '—') + '</td></tr>').join('') +
+      '</tbody></table></div><p class="note">' + rows[0].R + ' rounds per row, fixed column counts, everything else from your current settings.</p>';
+  }
+
+  function renderPay(results) {
+    const rows = results.map(list => aggregate(list));
+    const name = { top: 'Top shop only', split: 'Split between floors', all: 'Every floor, full value' };
+    const types = TYPE_ORDER.filter(k => rows[0].T[k]);
+    $('batchOut').innerHTML = '<div class="tablewrap"><table><thead><tr><th>Tower payout</th>' + types.map(k => '<th class="r">' + TYPE_NAME[k] + '</th>').join('') +
+      '<th class="r">Topples / min</th><th class="r">Chutes caught by towers</th></tr></thead><tbody>' +
+      rows.map(A => '<tr><td>' + name[A.payMode] + '</td>' + types.map(k => '<td class="r">' + (A.T[k].mean / A.mean).toFixed(2) + '×</td>').join('') +
+        '<td class="r">' + A.topples.toFixed(1) + '</td><td class="r">' + Math.round(A.towerCatch * 100) + '%</td></tr>').join('') +
+      '</tbody></table></div><p class="note">' + rows[0].R + ' rounds per row. Each bot type\'s income relative to the round average; 1.00× means that strategy breaks even. Everything else from your current settings.</p>';
+  }
+
+  function renderCompare(results, firstCol, nameOf, note) {
+    const rows = results.map(list => aggregate(list));
+    const types = TYPE_ORDER.filter(k => rows.some(A => A.T[k]));
+    $('batchOut').innerHTML = '<div class="tablewrap"><table><thead><tr><th>' + firstCol + '</th>' + types.map(k => '<th class="r">' + TYPE_NAME[k] + '</th>').join('') +
+      '<th class="r">Walk-ins lost</th><th class="r">Newcomer spread (luck)</th><th class="r">Topples / min</th></tr></thead><tbody>' +
+      rows.map((A, i) => '<tr><td>' + nameOf(i, A) + '</td>' + types.map(k => '<td class="r">' + (A.T[k] ? (A.T[k].mean / A.mean).toFixed(2) + '×' : '—') + '</td>').join('') +
+        '<td class="r">' + Math.round(A.lost * 100) + '%</td><td class="r">' + (A.luck == null ? '—' : A.luck.toFixed(2)) + '</td><td class="r">' + A.topples.toFixed(1) + '</td></tr>').join('') +
+      '</tbody></table></div><p class="note">' + rows[0].R + ' rounds per row. Bot-type columns show income relative to the round average (1.00× breaks even). ' + note + '</p>';
+  }
+
+  function renderModes(results) {
+    const rows = results.map(list => aggregate(list));
+    const name = { street: 'Crossing the street', crosswalk: 'Crosswalks' };
+    $('batchOut').innerHTML = '<div class="tablewrap"><table><thead><tr><th>Walk-ins</th><th class="r">Newcomer spread (luck)</th><th class="r">Walk-ins lost</th><th class="r">Sitting on ground</th><th class="r">Topples / min</th><th class="r">Newcomer vs mean</th></tr></thead><tbody>' +
+      rows.map(A => '<tr><td>' + name[A.mode] + '</td><td class="r">' + (A.luck == null ? '—' : A.luck.toFixed(2)) + '</td><td class="r">' + Math.round(A.lost * 100) + '%</td><td class="r">' + Math.round(A.sitAll * 100) +
+        '%</td><td class="r">' + A.topples.toFixed(2) + '</td><td class="r">' + (A.T.newcomer ? (A.T.newcomer.mean / A.mean).toFixed(2) + '×' : '—') + '</td></tr>').join('') +
+      '</tbody></table></div><p class="note">' + rows[0].R + ' rounds per row. Newcomer spread is the standard deviation of newcomer income divided by its mean, within a round: identical bots, so a higher number means position luck decides more.</p>';
+  }
+
+  function botCount() { return Object.values(P.bots).reduce((a, b) => a + (b | 0), 0); }
+  $('btnBatch').addEventListener('click', () => {
+    if (botCount() === 0) { $('batchOut').innerHTML = '<p class="verdict">Add at least one bot to run a batch.</p>'; return; }
+    const rounds = Math.max(5, Math.min(500, +$('rounds').value || 100));
+    runBatches([{ p: clone(P) }], rounds, renderBatch);
+  });
+  $('btnSweep').addEventListener('click', () => {
+    const N = botCount();
+    if (N === 0) { $('batchOut').innerHTML = '<p class="verdict">Add at least one bot to run a sweep.</p>'; return; }
+    const rounds = Math.max(5, Math.min(200, Math.round((+$('rounds').value || 100) / 3)));
+    const cfg = [N + 4, N, Math.max(4, Math.round(N * 0.75))].map(c => { const q = clone(P); q.colsMode = 'fixed'; q.cols = c; return { p: q }; });
+    runBatches(cfg, rounds, renderSweep);
+  });
+  $('btnPay').addEventListener('click', () => {
+    if (botCount() === 0) { $('batchOut').innerHTML = '<p class="verdict">Add at least one bot to compare.</p>'; return; }
+    const rounds = Math.max(5, Math.min(200, Math.round((+$('rounds').value || 100) / 3)));
+    const cfg = ['top', 'split', 'all'].map(m => { const q = clone(P); q.towerPay = m; return { p: q }; });
+    runBatches(cfg, rounds, renderPay);
+  });
+  $('btnModes').addEventListener('click', () => {
+    if (botCount() === 0) { $('batchOut').innerHTML = '<p class="verdict">Add at least one bot to compare.</p>'; return; }
+    const rounds = Math.max(5, Math.min(250, Math.round((+$('rounds').value || 100) / 2)));
+    const modes = ['waves', 'street', 'crosswalk'];
+    const label = { waves: 'Crosswalk waves + trickle', street: 'Drifting crowd band', crosswalk: 'Fixed crosswalks' };
+    const cfg = modes.map(m => { const q = clone(P); q.arrivalMode = m; return { p: q }; });
+    runBatches(cfg, Math.max(5, Math.round(rounds * 2 / 3)), res => renderCompare(res, 'Walk-ins', i => label[modes[i]], 'Newcomer spread is how much identical walk-and-sit bots differ within a round; higher means position luck decides more.'));
+  });
+  $('btnIdle').addEventListener('click', () => {
+    if (botCount() === 0) { $('batchOut').innerHTML = '<p class="verdict">Add at least one bot to compare.</p>'; return; }
+    const rounds = Math.max(5, Math.min(250, Math.round((+$('rounds').value || 100) / 2)));
+    const cfg = [false, true].map(v => { const q = clone(P); q.idleOn = v; return { p: q }; });
+    runBatches(cfg, rounds, res => renderCompare(res, 'Idle shutters', i => i ? 'On' : 'Off', 'Sitters never touch their phone, standing in for idle or disconnected players.'));
+  });
+
+  // ---------- boot ----------
+  buildControls();
+  restart();
+  requestAnimationFrame(frame);
+})();
+</script>
