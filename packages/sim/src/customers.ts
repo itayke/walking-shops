@@ -31,7 +31,7 @@ export function spawnWalkIns(g: GameState, dt: number, groundOn: boolean): void 
   const { WAVES, WALK_INS } = g.config;
   const rng = g.rng.world;
   const W = g.wave;
-  const width = Math.max(1, Math.min(g.C, Math.floor(WAVES.waveWidth)));
+  const width = crosswalkWidth(g);
   if (W.state === 'pause' && g.t >= W.end && groundOn) {
     let c0 = 0;
     for (let k = 0; k < PLACE_TRIES; k++) {
@@ -67,6 +67,11 @@ export function spawnWalkIns(g: GameState, dt: number, groundOn: boolean): void 
   }
 }
 
+/** Columns a crosswalk spans, starting at wave.col0. */
+export function crosswalkWidth(g: GameState): number {
+  return Math.max(1, Math.min(g.C, Math.floor(g.config.WAVES.waveWidth)));
+}
+
 /** Telegraph bars drawn on the current crosswalk, bottom to top: one per waveLineInterval, all of them once it's live. */
 export function telegraphBars(g: GameState): number {
   const { WAVES } = g.config;
@@ -77,11 +82,17 @@ export function telegraphBars(g: GameState): number {
   return Math.max(0, Math.min(WAVES.waveLines, drawn));
 }
 
+/** Where parachuters start (before jitter): sky floors up, or skyClearance above the tallest tower. */
+export function parachuteSky(g: GameState): number {
+  const { PARACHUTES: P } = g.config;
+  return Math.max(P.sky, maxHeight(g) + P.skyClearance);
+}
+
 export function spawnParachuters(g: GameState, dt: number): void {
   const { PARACHUTES: P } = g.config;
   const rng = g.rng.world;
   const n = Math.floor(((g.N * P.paraRate) / SECONDS_PER_MINUTE) * dt + rand(rng));
-  const sky = Math.max(P.sky, maxHeight(g) + P.skyClearance);
+  const sky = parachuteSky(g);
   for (let k = 0; k < n; k++) {
     const x = rand(rng) * (g.C - 1);
     const y = sky + rand(rng) * P.skyJitter;

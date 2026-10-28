@@ -18,7 +18,7 @@
 ## Stack
 
 - **Vite + React + TypeScript** for both the screen app and the phone app. npm workspaces: `packages/sim`, `packages/screen`, `packages/phone`. Vitest for tests; Node runs the bench's TypeScript directly (no build step).
-- **Rendering:** Canvas 2D or PixiJS for the street. The prototype's Canvas 2D renderer is a fine starting point.
+- **Rendering:** Canvas 2D, grown from the prototype's renderer (`packages/screen/src/render`). It only reads the game state: a `StreetView` eases each shop toward its grid position and turns each tick's sim events into animation (topple arcs, coins, callouts, shoppers walking away). Visual-only constants live in `render/look.ts`; gameplay numbers always come from the sim config. Colors are CSS tokens shared by the canvas and the HUD, with a dark theme.
 - **Server:** Cloudflare Durable Objects with **PartyServer** (not the hosted PartyKit platform, which stopped taking deployments on Oct 23, 2026). Free tier covers this load: incoming WebSocket messages bill as one request per 20, outgoing are free.
 
 ## Simulation

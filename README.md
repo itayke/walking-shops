@@ -7,7 +7,7 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 | Path | What |
 |---|---|
 | `packages/sim` | The game simulation: pure, deterministic TypeScript. All tunables in `src/config.ts` |
-| `packages/screen` | Big-screen app (Vite + React). For now: a bot round, a scoreboard and the live tuning panel |
+| `packages/screen` | Big-screen app (Vite + React, Canvas 2D street). For now offline: you play one shop from the keyboard, bots play the rest |
 | `packages/phone` | Phone controller (Vite + React). For now: the two hold-to-walk halves, not yet connected |
 | `reference/` | The JavaScript prototype the sim was ported from. Behavior to match, not code to ship |
 
@@ -26,6 +26,18 @@ npm run dev:screen             # http://localhost:7320
 npm run dev:phone              # http://localhost:7321 (also on the LAN, for a real phone)
 npm run build
 ```
+
+## Playing the screen offline
+
+| Key | Does |
+|---|---|
+| `A` / `D` or `←` / `→` | Hold to walk your shop (the one with the arrow over it) |
+| `Space` | Pause |
+| `B` | Scoreboard |
+| `T` | Tuning panel |
+| `R` | New round |
+
+URL parameters for debugging: `?seed=N` replays the same round, `?at=S` fast-forwards the first round to S seconds (for example `http://localhost:7320/?seed=7&at=70`).
 
 ## Tuning
 

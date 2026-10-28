@@ -1,0 +1,272 @@
+/* Theme tokens. The canvas reads the same tokens (render/theme.ts), so the street and the HUD always match. */
+:root {
+  --bg: #e7ebf0;
+  --panel: #f7f9fb;
+  --ink: #17202b;
+  --muted: #586374;
+  --line: #d0d7e0;
+  --accent: #e6a200;
+  --accent-ink: #17202b;
+  --asphalt: #3a4350;
+  --curb: #c2c9d3;
+  --sky-top: #cfe1f0;
+  --sky-bot: #edf2f7;
+  --chute: #2b78c6;
+  --danger: #d2462a;
+  --ok: #24935f;
+  --shutter: #c9ced6;
+  --shutter-line: #7e8794;
+  --awning: #f7f9fb;
+  --shopper: #ffffff;
+  --shopper-line: #17202b;
+  --hud-height: 48px;
+  --shop-sat: 62%;
+  --shop-light: 56%;
+  --font-display: 'Bungee', 'Arial Black', Impact, sans-serif;
+  --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0f141b;
+    --panel: #161d27;
+    --ink: #e4e9ef;
+    --muted: #93a0b1;
+    --line: #283241;
+    --accent: #f2b731;
+    --asphalt: #1d242e;
+    --curb: #374251;
+    --sky-top: #0d1825;
+    --sky-bot: #16222f;
+    --chute: #5aa6f0;
+    --danger: #f06a4e;
+    --ok: #4cc58b;
+    --shutter: #8a929e;
+    --shutter-line: #545c68;
+    --awning: #e4e9ef;
+    --shopper: #e4e9ef;
+    --shopper-line: #0f141b;
+    --shop-light: 52%;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* HUD: one strip above the street */
+.hud {
+  height: var(--hud-height);
+  display: flex;
+  align-items: center;
+  gap: 12px 18px;
+  padding: 10px 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.pill {
+  font-family: var(--font-display);
+  font-size: 15px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--panel);
+  white-space: nowrap;
+}
+
+.pill.phase2 {
+  background: var(--chute);
+  color: #fff;
+}
+
+.timer {
+  font-family: var(--font-data);
+  font-size: 20px;
+  font-weight: 600;
+  min-width: 5ch;
+}
+
+.progress {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line);
+}
+
+.progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+.progress b {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  background: var(--chute);
+}
+
+.you {
+  font-family: var(--font-data);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.you strong {
+  color: var(--accent);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+kbd {
+  font-family: var(--font-data);
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  background: var(--bg);
+}
+
+/* Tweakpane's panel sits below the HUD, not over it */
+.tp-dfwv {
+  top: calc(var(--hud-height) + 8px) !important;
+}
+
+/* Overlays on the street: pause, scoreboard, results */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.overlay.dim {
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+.overlay h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(28px, 4vw, 56px);
+  margin: 0;
+}
+
+.card {
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-height: 90%;
+  overflow: auto;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.board {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  font: 600 11px var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-align: left;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+td {
+  font-family: var(--font-data);
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+td.num,
+th.num {
+  text-align: right;
+}
+
+tr.me td {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+tr.closed td {
+  opacity: 0.45;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border: 1px solid var(--ink);
+}
