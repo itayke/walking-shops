@@ -2,7 +2,7 @@
 
 Each milestone ends with something you can run and look at.
 
-1. **Simulation core.** Port `reference/sim.js` to TypeScript. Rules, waves (with the bar telegraph), parachutes, idle shutters, scoring, bots. Unit tests per movement rule, invariant checks, golden replays. A headless bench script that matches the prototype's numbers within noise.
+1. **Simulation core.** ✓ Done: tick-for-tick parity with the prototype, bench within noise. Port `reference/sim.js` to TypeScript. Rules, waves (with the bar telegraph), parachutes, idle shutters, scoring, bots. Unit tests per movement rule, invariant checks, golden replays. A headless bench script that matches the prototype's numbers within noise.
 2. **Screen renderer, offline.** Street, shops with legs, shutters, crosswalk bars, shoppers, parachuters, strain wobble, topple arcs. Keyboard plays one shop; bots play the rest. Debug panel with every tunable.
 3. **Networking.** PartyServer room on Cloudflare. Phone controller (two halves, hold to walk). Reconnect tokens. Fake-phone load test with 50 clients.
 4. **Join flow.** QR, name entry, 4 random designs, tint, shop appears on screen as you join.

@@ -1,0 +1,21 @@
+{
+  "name": "walking-shops",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "npm run typecheck --workspaces",
+    "build": "npm run build --workspaces --if-present",
+    "bench": "node packages/sim/bench/bench.ts",
+    "bench:compare": "node packages/sim/bench/bench.ts --compare",
+    "dev:screen": "npm run dev -w @walking-shops/screen",
+    "dev:phone": "npm run dev -w @walking-shops/phone"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

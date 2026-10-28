@@ -9,6 +9,12 @@ A Jackbox-style room game: 10–30 people join from their phones, their business
 - `docs/MILESTONES.md`: build order.
 - `reference/`: the working prototype. `sim.js` is the behavior to match; `sandbox.html` runs it in a browser; `bench.js` runs headless bot comparisons.
 
+## Layout and commands
+
+- `packages/sim` (pure sim, config in `src/config.ts`), `packages/screen`, `packages/phone`. See `README.md` for commands.
+- `npm test`, `npm run typecheck`, `npm run bench` (add `:compare` to run the prototype alongside).
+- Config sections are rewritten line by line by the screen's save plugin: one `key: value,` per line, keys unique across sections.
+
 ## Principles
 
 - **The big screen carries everything.** The phone is a blind controller: two halves, hold to walk. No UI that makes people look down during play.

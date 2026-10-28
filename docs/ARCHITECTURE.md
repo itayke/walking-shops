@@ -17,14 +17,17 @@
 
 ## Stack
 
-- **Vite + React + TypeScript** for both the screen app and the phone app (one repo, two entry points).
+- **Vite + React + TypeScript** for both the screen app and the phone app. npm workspaces: `packages/sim`, `packages/screen`, `packages/phone`. Vitest for tests; Node runs the bench's TypeScript directly (no build step).
 - **Rendering:** Canvas 2D or PixiJS for the street. The prototype's Canvas 2D renderer is a fine starting point.
 - **Server:** Cloudflare Durable Objects with **PartyServer** (not the hosted PartyKit platform, which stopped taking deployments on Oct 23, 2026). Free tier covers this load: incoming WebSocket messages bill as one request per 20, outgoing are free.
 
 ## Simulation
 
-- Port `reference/sim.js` to TypeScript as a **pure, deterministic module**: `step(state, inputs, dt)`, seeded RNG, no DOM, no timers.
-- All tunables in one `config.ts`, exposed in a debug panel on the screen app.
+- `packages/sim` is a **pure, deterministic module** ported from `reference/sim.js`: `step(state, inputs, dt)` at a fixed `TICK`, seeded RNG, no DOM, no timers. Its tsconfig has no DOM or Node types, so it can't reach for them.
+- **State is plain data.** Columns hold shop indices, RNG state is a number, and `step` returns the tick's events (topple, bump, pushback, closed, reopened, paid, lost) instead of keeping effects in the state. A JSON round trip of the state carries on identically.
+- **Two RNG streams:** world (placement, movement order, waves, trickle, parachuters) and bots. Human input can't change where customers appear.
+- **Inputs** are the held direction per human shop id. `setController` hands a shop between a phone and a bot mid-round (the network-down fallback).
+- **Config:** every tunable lives in `packages/sim/src/config.ts`, in named sections (`export const WAVES = { … }`). The game holds the config by reference, so the screen's tuning panel (Tweakpane, `T`) edits it live; sections read at round start (street size, bot mix) apply on restart (`R`). In dev, **Save to config.ts** posts the values to a Vite middleware (`packages/screen/tools/saveTuningPlugin.ts`) that rewrites the `key: value,` lines, so keep one key per line and keys unique across sections.
 - Keep the bot players. They are the offline fallback, the load-test clients, and the balance harness.
 
 ## Reliability

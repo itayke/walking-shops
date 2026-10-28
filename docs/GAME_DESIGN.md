@@ -55,13 +55,13 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 | At or below your feet | Step across / step down onto it |
 | One floor above your feet | **Climb** onto it |
 | Two or more floors above your feet | **Push.** Hold for `pushTime` and everything above your first floor **topples** to the far side, landing on top of whatever is there. You can then climb what is left |
-| A walker pressing toward you at your level | **Bump:** both bounce back |
+| A walker pressing toward you, within one floor of your level | **Bump:** both bounce back |
 
 - **Spring-back:** release before crossing half a cell and you snap back. Past half a cell you commit.
-- **Push-back defense:** a shop being pushed can walk into the attacker. That is a bump, which resets the push. This is the only defense and needs no extra rule.
+- **Push-back defense:** a shop being pushed can walk into the attacker. That is a bump (the pushed shop stands one floor above its attacker, which is why bumps reach one floor), which resets the push. This is the only defense and needs no extra rule.
 - **After a topple:** fallen shops are stunned for `stunTime` and immune to being pushed for `immuneTime` (shown by a dizzy wobble).
 - **Edge towers can't be toppled** (nowhere to fall).
-- **Carrying:** a walking shop carries everything above it. Carried shops count as sitting (they can still catch parachuters). A rider can step off at any time.
+- **Carrying:** a walking shop carries everything above it. Carried shops count as sitting, so they can still catch parachuters, but walk-ins can't get past the walker's legs to reach them. A rider can step off at any time.
 - **Strain telegraph:** a tower being pushed wobbles visibly before it goes. That wobble is also the cue for the defender to look up.
 
 ## 7. Customers
@@ -69,7 +69,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 ### Walk-ins (from the bottom, both phases)
 
 - Shoppers **cross the street** from the bottom edge toward the shop **directly in front of them** (`sidestep = 0`).
-- They enter the **lowest open, sitting shop** in that column. Walking shops are skipped: shoppers walk under the legs. Closed shops are skipped: shoppers go upstairs past them.
+- They enter the **lowest open, sitting shop** in that column. Closed shops are skipped: shoppers go upstairs past them. A walking shop blocks the column: shoppers walk under its legs and don't reach anything riding on it.
 - With nowhere to go, they turn around and walk back (shown in grey). Missed customers should be visible.
 - Crossing takes `crossTime` (≈2.5s). Below ~1.5s nobody can react in time; above ~3s it stops mattering.
 
@@ -77,7 +77,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 - **Trickle:** a thin stream of walk-ins anywhere, all the time, so every shop earns something and everyone learns "sitting earns, walking gets skipped".
 - **Waves:** a crosswalk `waveWidth` columns wide appears somewhere on the street.
-  - **Telegraph (decided after the prototype):** no numeric countdown. Draw the crosswalk's horizontal bars one per `waveLineInterval` second, bottom to top (4 bars by default). When the last bar is drawn, the wave starts.
+  - **Telegraph (decided after the prototype):** no numeric countdown. The crosswalk appears empty, then its `waveLines` horizontal bars are drawn bottom to top, one every `waveLineInterval`. The wave steps off as the last bar is drawn (4 bars at 0.5 s: the same 2 s warning the prototype tested).
   - `waveSize` shoppers then cross over `waveSpawn` seconds.
   - The crosswalk fades, waits `wavePause`, and appears somewhere else (at least one width away).
 - Why waves: they reduce position luck compared to a drifting crowd, and they give a reason to look up.
@@ -118,7 +118,8 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 | sidestep | 0 | Columns a walk-in will sidestep |
 | trickleRate | 4 / player / min | Background walk-ins |
 | waveWidth | 4 columns | Crosswalk width |
-| waveLineInterval | 1 s | Time per telegraph bar (4 bars) |
+| waveLines | 4 | Telegraph bars, drawn bottom to top |
+| waveLineInterval | 0.5 s | Time per telegraph bar |
 | waveSize | 20 | Shoppers per wave |
 | waveSpawn | 3 s | Time over which a wave steps off |
 | wavePause | 4 s | Gap before the next crosswalk |
@@ -130,7 +131,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 | phase1Weight | 0.3 | Phase 1 score multiplier |
 | paraValue | 3 | Parachuter worth in walk-ins |
 
-All tunables live in one config object and should be adjustable live in a debug panel.
+All tunables live in `packages/sim/src/config.ts`, together with the constants the prototype hard-coded (lean, bump gap, speeds, bot timings). The screen's tuning panel edits them live and, in dev, saves them back into that file.
 
 ## 11. What bot testing showed
 

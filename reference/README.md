@@ -8,6 +8,6 @@ Behavior to match, not code to ship.
 
 ## Differences from the locked design
 
-- The crosswalk telegraph here is a dashed outline with a countdown (`waveAnnounce`). The design replaces it with 4 horizontal bars drawn one per second, bottom to top; the wave starts when the last bar is drawn.
+- The crosswalk telegraph here is a dashed outline with a countdown (`waveAnnounce`). The design replaces it with 4 horizontal bars drawn one per 0.5 s, bottom to top; the wave starts when the last bar is drawn (the same 2 s, so bench numbers carry over).
 - `arrivalMode` still includes the rejected `street` (drifting band) and `crosswalk` (fixed) modes, and `towerPay` still includes the rejected `split` and `all` options. They're kept for comparison only. Ship `waves` and `top`.
 - Bots are simple. They react to visible shoppers and crosswalks, tap to keep shutters open, and defend towers with a delay. They don't plan.
