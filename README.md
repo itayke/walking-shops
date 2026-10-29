@@ -11,7 +11,7 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 | `packages/phone` | Phone controller (Vite + React): two tap-to-step, hold-to-walk halves in your shop's tint |
 | `packages/net` | Shared networking: message protocol, the screen's `Host` (seats phones in shops), the PartySocket client, the load test |
 | `packages/server` | The relay: a PartyServer Durable Object on Cloudflare, one per room. Checks and forwards; the screen is the authority |
-| `reference/` | The JavaScript prototype the sim was ported from. Behavior to match, not code to ship |
+| `reference/` | The JavaScript prototype the sim was ported from, and the pixel-art look mockup. Behavior and look to match, not code to ship |
 
 ## Commands
 
@@ -47,7 +47,7 @@ Without the relay, the screen still plays offline: keyboard and bots.
 
 | Key | Does |
 |---|---|
-| `A` / `D` or `←` / `→` | Tap to step your shop (the one with the arrow over it) one column, hold to keep walking or to push |
+| `A` / `D` or `←` / `→` | Tap to step your shop (the one signed YOU) one column, hold to keep walking or to push |
 | `Space` | Pause |
 | `B` | Scoreboard |
 | `T` | Tuning panel |

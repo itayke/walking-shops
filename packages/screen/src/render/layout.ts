@@ -1,15 +1,26 @@
 import { maxHeight, parachuteSky, type GameState } from '@walking-shops/sim';
-import { STREET_LOOK } from './look.ts';
+import { GRID, STREET_LOOK } from './look.ts';
 
-/** Street geometry in CSS pixels. Columns run left to right; floors count up from groundY (the sidewalk's top edge). */
+/**
+ * Street geometry. The street is drawn in art pixels (GRID per cell) and scaled up by P device pixels per art pixel.
+ * Art x = 0 is the left edge of column 0 and art y = 0 the sidewalk's top edge, with floors going up (negative y).
+ */
 export interface Layout {
+  // The canvas, in device pixels
   width: number;
   height: number;
-  cellW: number;
-  cellH: number;
+  P: number;
+  // Device pixel of art (0, 0)
+  ox: number;
   groundY: number;
-  sidewalkH: number;
+  // Art pixels: the columns' width, the street below the ground line and its sidewalk
+  gridW: number;
   streetH: number;
+  sidewalkH: number;
+  // The canvas edges in art pixels
+  left: number;
+  right: number;
+  top: number;
 }
 
 /** Floors of sky the view needs: a walking shop on the tallest tower, and the highest a parachuter can start. */
@@ -20,19 +31,40 @@ export function floorsNeeded(g: GameState): number {
   return Math.max(tallest, sky) + STREET_LOOK.skyHeadroom;
 }
 
+/** The largest scale that fits every column across and `floors` of sky over the street, centered across. */
 export function layoutStreet(width: number, height: number, columns: number, floors: number): Layout {
-  const cellW = width / columns;
-  const cellH = Math.min(cellW * STREET_LOOK.cellAspect, height / (floors + STREET_LOOK.streetDepth));
-  const streetH = cellH * STREET_LOOK.streetDepth;
-  return { width, height, cellW, cellH, streetH, sidewalkH: streetH * STREET_LOOK.sidewalkShare, groundY: height - streetH };
+  const { cellW, cellH } = GRID;
+  const streetH = Math.round(STREET_LOOK.streetDepth * cellH);
+  const gridW = columns * cellW;
+  const P = Math.min(width / gridW, height / (floors * cellH + streetH));
+  const ox = Math.round((width - gridW * P) / 2);
+  const groundY = Math.round(height - streetH * P);
+  return {
+    width,
+    height,
+    P,
+    ox,
+    groundY,
+    gridW,
+    streetH,
+    sidewalkH: Math.round(streetH * STREET_LOOK.sidewalkShare),
+    left: -ox / P,
+    right: (width - ox) / P,
+    top: -groundY / P,
+  };
 }
 
-/** Pixel x of a column position's center (fractional columns while walking). */
-export function colX(L: Layout, x: number): number {
-  return (x + 0.5) * L.cellW;
+/** Art x of a column position's center (fractional columns while walking). */
+export function colX(x: number): number {
+  return (x + 0.5) * GRID.cellW;
 }
 
-/** Pixel y of a height in floors above the sidewalk. */
-export function floorY(L: Layout, y: number): number {
-  return L.groundY - y * L.cellH;
+/** Art y of a height in floors above the sidewalk. */
+export function floorY(y: number): number {
+  return -y * GRID.cellH;
+}
+
+/** The device pixel of an art position, rounded. */
+export function device(L: Layout, x: number, y: number): [number, number] {
+  return [Math.round(L.ox + x * L.P), Math.round(L.groundY + y * L.P)];
 }

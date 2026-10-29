@@ -7,7 +7,7 @@ A Jackbox-style room game: 10–30 people join from their phones, their business
 - `docs/GAME_DESIGN.md`: rules, tunables, and decisions. The movement rules, idle shutters, and scoring are **locked**. Ask before changing any of them.
 - `docs/ARCHITECTURE.md`: screen-as-host, relay server, stack.
 - `docs/MILESTONES.md`: build order.
-- `reference/`: the working prototype. `sim.js` is the behavior to match; `sandbox.html` runs it in a browser; `bench.js` runs headless bot comparisons.
+- `reference/`: the working prototype. `sim.js` is the behavior to match; `sandbox.html` runs it in a browser; `bench.js` runs headless bot comparisons; `pixel-street.html` is the pixel-art look to match.
 
 ## Layout and commands
 

@@ -74,6 +74,8 @@ export interface Shopper {
 }
 
 export interface Parachuter {
+  // Spawn order, unique per round: lets the renderer keep one parachuter's look
+  id: number;
   x: number;
   y: number;
   vx: number;
@@ -135,6 +137,7 @@ export interface GameState {
   shoppers: Shopper[];
   nextShopper: number;
   paras: Parachuter[];
+  nextPara: number;
   wave: Wave;
   stats: Stats;
   // World events (spawns, waves, parachutes) and bot decisions draw from separate streams, so a human's input or a

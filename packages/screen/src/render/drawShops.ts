@@ -1,18 +1,20 @@
 import { shutterDrop, type GameState, type Shop } from '@walking-shops/sim';
-import { shopFill, shopHue } from './colors.ts';
-import { colX, floorY, type Layout } from './layout.ts';
-import { MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
-import { strainsByColumn } from './strain.ts';
-import type { Theme } from './theme.ts';
+import { PALETTE, shopHue, shopTint } from './colors.ts';
+import { drawLegs, legPose, strideFrame, type LegPose } from './legs.ts';
+import { colX, device, floorY, type Layout } from './layout.ts';
+import { GRID, MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
+import { Pix } from './pix.ts';
+import { SHOP, shopDesign, shopSprite, shutterRows } from './shopArt.ts';
+import { strainsByColumn, type Strain } from './strain.ts';
 import type { ShopAnim, StreetView } from './view.ts';
 
-// Draw order: still shops, then pressing ones (and what they carry), then shops in the air; yours on top of each
+// Draw order: still shops, then pressing ones (and what they carry), then shops in the air
 const LAYER_STILL = 0;
 const LAYER_PRESSING = 1;
 const LAYER_FLYING = 2;
 
-/** A strained tower rotates as one piece about the bottom corner it will fall over. */
-interface Tilt {
+/** A leaning stack rotates as one piece about a point on the ground under it, in art pixels. */
+interface Lean {
   x: number;
   y: number;
   angle: number;
@@ -20,61 +22,86 @@ interface Tilt {
 
 interface Item {
   s: Shop;
-  // The shop played at this screen: highlighted and drawn on top of its layer
-  mine: boolean;
   index: number;
   a: ShopAnim;
   layer: number;
-  tilt: Tilt | null;
+  lean: Lean | null;
+  // Part of a tower about to fall
+  danger: boolean;
+  // Feet in art pixels, with the body raised over them on its legs
+  fx: number;
+  fy: number;
+  pose: LegPose;
 }
 
-export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: StreetView, L: Layout, theme: Theme, now: number): void {
+/** How far a strained tower leans toward its fall, shaking harder as the push nears its end. */
+function strainAngle(st: Strain, now: number): number {
+  const m = MOTION_LOOK;
+  return st.dir * st.amount * m.strainLean + Math.sin(now * m.strainRate) * m.strainWobble * st.amount;
+}
+
+export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: StreetView, L: Layout, now: number): void {
   const strains = strainsByColumn(g);
-  const bw = L.cellW * SHOP_LOOK.bodyWidth;
+  const { walkLift } = g.config.MOVEMENT;
   const items: Item[] = [];
   for (let c = 0; c < g.C; c++) {
     const st = strains.get(c);
-    let tilt: Tilt | null = null;
+    let lean: Lean | null = null;
+    let danger = false;
     let layer = LAYER_STILL;
+    // A striding walker bobs a pixel on each pass, and what it carries bobs with it
+    let bob = 0;
     for (const i of g.cols[c]) {
       const s = g.shops[i];
       const a = view.anim(s);
       // A walker brings its riders forward with it
       if (s.pressing) layer = LAYER_PRESSING;
-      if (st && s.level >= st.level && !tilt) {
-        const wobble = Math.sin(now * MOTION_LOOK.strainRate) * MOTION_LOOK.strainWobble;
-        tilt = { x: colX(L, a.x) + (st.dir * bw) / 2, y: floorY(L, a.y), angle: st.dir * st.amount * MOTION_LOOK.strainLean + wobble * st.amount };
+      const shake = s.stunT > 0 ? Math.sin(now * MOTION_LOOK.stunRate) * MOTION_LOOK.stunShake * GRID.cellW : 0;
+      const fx = Math.round(colX(a.x) + shake);
+      const fy = Math.round(floorY(a.y + a.carried)) - bob;
+      const lift = a.legs * walkLift * GRID.cellH;
+      const pose = legPose(lift, SHOP.W, a.moving, strideFrame(a.x), a.dir);
+      bob += pose.raise - Math.round(lift);
+      if (st && s.level >= st.level && !danger) {
+        // The tower turns about the bottom corner it falls over
+        lean = { x: fx + SHOP.left + (st.dir > 0 ? SHOP.W : 0), y: fy, angle: strainAngle(st, now) };
+        danger = true;
       }
-      items.push({ s, mine: s.id === view.you, index: i, a, layer: a.arc ? LAYER_FLYING : layer, tilt: st && s.level >= st.level ? tilt : null });
+      // A pusher leans into the tower pulse for pulse, carrying its riders with it
+      const pushing = s.pushT > 0 ? strains.get(s.pushCol) : undefined;
+      if (pushing && !lean) lean = { x: fx, y: fy, angle: strainAngle(pushing, now) };
+      items.push({ s, index: i, a, layer: a.arc ? LAYER_FLYING : layer, lean, danger, fx, fy, pose });
     }
   }
-  items.sort((p, q) => p.layer - q.layer || Number(p.mine) - Number(q.mine));
-  for (const it of items) drawShop(ctx, g, it, L, theme, now);
+  items.sort((p, q) => p.layer - q.layer);
+  const halfText = L.P >= GRID.halfPixelMinScale;
+  for (const it of items) drawShop(ctx, g, it, L, halfText, now);
+  // Meters and dizzy stars stay upright, over every shop
+  const px = new Pix(ctx, L.P, L.ox, L.groundY);
+  for (const it of items) {
+    const top = it.fy - it.pose.raise - SHOP.spriteH;
+    if (it.s.pushT > 0) drawPushMeter(px, it.fx, top, it.s.pushT / g.config.MOVEMENT.pushTime);
+    if (it.s.immuneT > 0) drawDizzy(px, it.fx, top, now);
+  }
 }
 
-function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, theme: Theme, now: number): void {
-  const { s, a, tilt, mine: human } = it;
-  const { MOVEMENT } = g.config;
-  const look = SHOP_LOOK;
-  const bw = L.cellW * look.bodyWidth;
-  const bh = L.cellH * look.bodyHeight;
-  const lift = a.legs * MOVEMENT.walkLift * L.cellH;
-  const y0 = -lift - bh;
-  let cx = colX(L, a.x);
-  if (s.stunT > 0) cx += Math.sin(now * MOTION_LOOK.stunRate) * MOTION_LOOK.stunShake * L.cellW;
-
+function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, halfText: boolean, now: number): void {
+  const { s, a, lean, pose } = it;
+  const { P } = L;
   ctx.save();
-  if (tilt) {
-    ctx.translate(tilt.x, tilt.y);
-    ctx.rotate(tilt.angle);
-    ctx.translate(-tilt.x, -tilt.y);
+  if (lean) {
+    const [x, y] = device(L, lean.x, lean.y);
+    ctx.translate(x, y);
+    ctx.rotate(lean.angle);
+    ctx.translate(-x, -y);
   }
-  // Origin at the feet, centered
-  ctx.translate(cx, floorY(L, a.y));
+  // Origin at the feet, centered; spin about the body's middle, sway and squash about the feet
+  ctx.translate(...device(L, it.fx, it.fy));
   if (a.spin) {
-    ctx.translate(0, y0 + bh / 2);
+    const mid = (-pose.raise - GRID.cellH / 2) * P;
+    ctx.translate(0, mid);
     ctx.rotate(a.spin);
-    ctx.translate(0, -(y0 + bh / 2));
+    ctx.translate(0, -mid);
   }
   if (s.immuneT > 0 && !a.arc) ctx.rotate(Math.sin(now * MOTION_LOOK.dizzyRate) * MOTION_LOOK.dizzyAngle);
   if (a.squash > 0) {
@@ -82,139 +109,60 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
     ctx.scale(1 + q / 2, 1 - q);
   }
 
-  if (lift > look.minLegPixels) drawLegs(ctx, a, bw, lift, L, theme);
-
-  const hue = shopHue(it.index);
-  ctx.fillStyle = shopFill(theme, hue);
-  ctx.fillRect(-bw / 2, y0, bw, bh);
-  const awningH = bh * look.awningShare;
-  drawAwning(ctx, theme, hue, bw, y0, awningH);
-
-  const inset = bw * look.windowInset;
-  const winTop = y0 + bh * look.windowTop;
-  const winH = y0 + bh - inset - winTop;
-  ctx.globalAlpha = look.windowAlpha;
-  ctx.fillStyle = theme.panel;
-  ctx.fillRect(-bw / 2 + inset, winTop, bw - 2 * inset, winH);
-  ctx.globalAlpha = 1;
-
-  // Shutters drop over the last idleWarn seconds, and stay down while closed
-  const drop = shutterDrop(g, s);
-  if (drop > 0) {
-    const top = y0 + awningH;
-    const hh = (bh - awningH) * drop;
-    ctx.fillStyle = theme.shutter;
-    ctx.fillRect(-bw / 2, top, bw, hh);
-    ctx.strokeStyle = theme['shutter-line'];
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    const gap = (bh - awningH) / look.shutterSlats;
-    for (let y = top + gap; y < top + hh; y += gap) {
-      ctx.moveTo(-bw / 2, y);
-      ctx.lineTo(bw / 2, y);
-    }
-    ctx.stroke();
-  }
-
-  // The name stays readable over the shutters, so a closed shop can still find itself
-  ctx.fillStyle = theme.ink;
-  ctx.font = `600 ${Math.min(L.cellW * look.labelSize, bh * look.labelMaxShare)}px ${theme['font-data']}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(s.label, 0, winTop + winH / 2, bw - 2 * inset);
-
-  ctx.lineWidth = human ? look.humanOutline : look.outline;
-  ctx.strokeStyle = it.tilt ? theme.danger : human ? theme.accent : theme.ink;
-  ctx.strokeRect(-bw / 2, y0, bw, bh);
+  const px = new Pix(ctx, P);
+  drawLegs(px, pose, SHOP.W, a.dir, PALETTE.ink);
+  const sprite = shopSprite({
+    design: shopDesign(it.index),
+    tint: shopTint(shopHue(it.index)),
+    label: s.label,
+    shutter: Math.round(shutterRows() * Math.min(1, shutterDrop(g, s))),
+    danger: it.danger,
+    halfText,
+    t: now,
+  });
+  const x0 = SHOP.left - 1;
+  const y0 = -pose.raise - SHOP.spriteH;
+  const X = Math.round(x0 * P);
+  const Y = Math.round(y0 * P);
+  ctx.drawImage(sprite, X, Y, Math.round((x0 + SHOP.spriteW) * P) - X, Math.round((y0 + SHOP.spriteH) * P) - Y);
 
   if (a.flash > 0) {
-    ctx.globalAlpha = a.flash / look.flashTime;
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = look.flashWidth;
-    const pad = look.flashWidth + look.outline;
-    ctx.strokeRect(-bw / 2 - pad, y0 - pad, bw + 2 * pad, bh + 2 * pad);
+    ctx.globalAlpha = a.flash / SHOP_LOOK.flashTime;
+    frame(px, x0 - 1, y0 - 1, SHOP.spriteW + 2, SHOP.spriteH + 1, PALETTE.accent);
     ctx.globalAlpha = 1;
   }
-
-  // Push meter over the attacker: full means the tower goes
-  if (s.pushT > 0) {
-    const mh = L.cellH * look.pushMeterHeight;
-    const my = y0 - L.cellH * look.pushMeterGap - mh;
-    ctx.globalAlpha = look.pushTrackAlpha;
-    ctx.fillStyle = theme.ink;
-    ctx.fillRect(-bw / 2, my, bw, mh);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = theme.danger;
-    ctx.fillRect(-bw / 2, my, bw * Math.min(1, s.pushT / MOVEMENT.pushTime), mh);
-  }
-
-  if (s.immuneT > 0) drawDizzy(ctx, theme, bw, y0, L, now);
-  if (human) drawMarker(ctx, theme, y0, L, now);
   ctx.restore();
 }
 
-/** Two legs from the underside of the body to the feet, swinging with the distance walked. */
-function drawLegs(ctx: CanvasRenderingContext2D, a: ShopAnim, bw: number, lift: number, L: Layout, theme: Theme): void {
-  const look = SHOP_LOOK;
-  const swing = Math.sin(a.x * TAU * look.stridesPerCell);
-  const lw = Math.max(look.legMinWidth, L.cellW * look.legWidth);
-  ctx.strokeStyle = theme.ink;
-  ctx.lineWidth = lw;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  for (const side of [-1, 1]) {
-    const hipX = side * bw * look.hipSpread;
-    const footX = hipX + side * swing * bw * look.strideReach;
-    const kneeX = (hipX + footX) / 2 + side * bw * look.kneeOut;
-    ctx.moveTo(hipX, -lift);
-    ctx.lineTo(kneeX, -lift / 2);
-    ctx.lineTo(footX, 0);
-  }
-  ctx.stroke();
-  ctx.lineCap = 'butt';
+/** A one-pixel ring just inside the box. */
+function frame(px: Pix, x: number, y: number, w: number, h: number, col: string): void {
+  px.r(x, y, w, 1, col);
+  px.r(x, y + h - 1, w, 1, col);
+  px.r(x, y, 1, h, col);
+  px.r(x + w - 1, y, 1, h, col);
 }
 
-/** Striped awning with a scalloped edge. */
-function drawAwning(ctx: CanvasRenderingContext2D, theme: Theme, hue: number, bw: number, y0: number, h: number): void {
-  const n = SHOP_LOOK.awningStripes;
-  const sw = bw / n;
-  for (let k = 0; k < n; k++) {
-    ctx.fillStyle = k % 2 === 0 ? shopFill(theme, hue, SHOP_LOOK.stripeDarken) : theme.awning;
-    const x = -bw / 2 + k * sw;
-    ctx.fillRect(x, y0, sw, h);
-    ctx.beginPath();
-    ctx.arc(x + sw / 2, y0 + h, sw / 2, 0, Math.PI);
-    ctx.fill();
-  }
+/** Push meter over the attacker: full means the tower goes. */
+function drawPushMeter(px: Pix, cx: number, top: number, frac: number): void {
+  const L = SHOP_LOOK;
+  const h = Math.max(L.minPushMeter, Math.round(GRID.cellH * L.pushMeterHeight));
+  const y = top - Math.round(GRID.cellH * L.pushMeterGap) - h;
+  const x = cx + SHOP.left;
+  px.r(x - 1, y - 1, SHOP.W + 2, h + 2, PALETTE.ink);
+  px.r(x, y, SHOP.W, h, PALETTE.shutterLo);
+  px.r(x, y, Math.round(SHOP.W * Math.min(1, frac)), h, PALETTE.danger);
 }
 
-/** Dots circling the roof while a toppled shop can't be pushed again. */
-function drawDizzy(ctx: CanvasRenderingContext2D, theme: Theme, bw: number, y0: number, L: Layout, now: number): void {
+/** Stars circling the roof while a toppled shop can't be pushed again; the ones in front catch the light. */
+function drawDizzy(px: Pix, cx: number, top: number, now: number): void {
   const m = MOTION_LOOK;
-  const cy = y0 - L.cellH * m.dizzyHeight;
-  const r = Math.max(1, L.cellW * m.dizzyDotSize);
-  ctx.fillStyle = theme.accent;
-  for (let k = 0; k < m.dizzyDots; k++) {
-    const ang = now * m.dizzyRate + (k * TAU) / m.dizzyDots;
-    ctx.beginPath();
-    ctx.arc(Math.cos(ang) * bw * m.dizzyOrbitX, cy + Math.sin(ang) * L.cellH * m.dizzyOrbitY, r, 0, TAU);
-    ctx.fill();
+  const cy = top - Math.round(GRID.cellH * m.dizzyHeight);
+  for (let k = 0; k < m.dizzyStars; k++) {
+    const ang = now * m.dizzyRate + (k * TAU) / m.dizzyStars;
+    const sx = Math.round(cx + Math.cos(ang) * SHOP.W * m.dizzyOrbitX);
+    const sy = Math.round(cy + Math.sin(ang) * GRID.cellH * m.dizzyOrbitY);
+    px.r(sx - 1, sy, 3, 1, PALETTE.accent);
+    px.r(sx, sy - 1, 1, 3, PALETTE.accent);
+    if (Math.sin(ang) > 0) px.r(sx, sy, 1, 1, PALETTE.white);
   }
-}
-
-/** A bouncing arrow over your own shop, so you can find it in a crowd. */
-function drawMarker(ctx: CanvasRenderingContext2D, theme: Theme, y0: number, L: Layout, now: number): void {
-  const look = SHOP_LOOK;
-  const size = L.cellW * look.markerSize;
-  const tip = y0 - L.cellH * look.markerGap - Math.abs(Math.sin(now * look.markerBobRate)) * L.cellH * look.markerBob;
-  ctx.beginPath();
-  ctx.moveTo(0, tip);
-  ctx.lineTo(-size, tip - size * look.markerAspect);
-  ctx.lineTo(size, tip - size * look.markerAspect);
-  ctx.closePath();
-  ctx.fillStyle = theme.accent;
-  ctx.fill();
-  ctx.lineWidth = look.outline;
-  ctx.strokeStyle = theme.ink;
-  ctx.stroke();
 }

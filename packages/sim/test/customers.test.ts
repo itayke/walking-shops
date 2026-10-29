@@ -9,7 +9,7 @@ function arrive(g: GameState, c: number): void {
 }
 
 function dropParachuter(g: GameState, c: number, y: number): void {
-  g.paras.push({ x: c, y, vx: 0 });
+  g.paras.push({ id: g.nextPara++, x: c, y, vx: 0 });
 }
 
 // Shutters on, so a test can close a shop by making it idle

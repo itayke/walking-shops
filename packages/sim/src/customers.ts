@@ -97,7 +97,7 @@ export function spawnParachuters(g: GameState, dt: number): void {
     const x = rand(rng) * (g.C - 1);
     const y = sky + rand(rng) * P.skyJitter;
     const speed = P.wind * (P.windMin + rand(rng) * (1 - P.windMin));
-    g.paras.push({ x, y, vx: rand(rng) < 0.5 ? -speed : speed });
+    g.paras.push({ id: g.nextPara++, x, y, vx: rand(rng) < 0.5 ? -speed : speed });
   }
 }
 

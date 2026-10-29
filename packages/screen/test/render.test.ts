@@ -1,8 +1,12 @@
 import { parachuteSky, TICK, type GameState, type SimEvent } from '@walking-shops/sim';
 import { describe, expect, it } from 'vitest';
 import { run, shop, street } from '../../sim/test/helpers.ts';
+import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN } from '../src/render/colors.ts';
+import { kneeIK, legPose, strideFrame } from '../src/render/legs.ts';
 import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
-import { PEOPLE_LOOK } from '../src/render/look.ts';
+import { GRID, PEOPLE_LOOK, SHOP_LOOK } from '../src/render/look.ts';
+import { fitLines } from '../src/render/pix.ts';
+import { SHOP } from '../src/render/shopArt.ts';
 import { strainsByColumn } from '../src/render/strain.ts';
 import { PHASE2_BANNER, StreetView } from '../src/render/view.ts';
 
@@ -115,9 +119,107 @@ describe('layout', () => {
       [3840, 1080],
     ]) {
       const L = layoutStreet(w, h, g.C, floors);
-      expect(L.groundY - floors * L.cellH).toBeGreaterThanOrEqual(-NEAR);
-      expect(L.groundY + L.streetH).toBeCloseTo(h);
-      expect(L.cellW * g.C).toBeCloseTo(w);
+      // Within a device pixel of rounding: the street on the bottom edge, the sky above it, every column across
+      expect(Math.abs(L.groundY + L.streetH * L.P - h)).toBeLessThanOrEqual(1);
+      expect(L.groundY - floors * GRID.cellH * L.P).toBeGreaterThanOrEqual(-1);
+      expect(L.ox).toBeGreaterThanOrEqual(0);
+      expect(L.ox + L.gridW * L.P).toBeLessThanOrEqual(w + 1);
+      // As large as fits: either the columns or the floors fill the canvas
+      const fill = Math.max((L.gridW * L.P) / w, ((floors * GRID.cellH + L.streetH) * L.P) / h);
+      expect(fill).toBeCloseTo(1);
+    }
+  });
+
+  it('fills each floor with one shop, so stacked shops touch', () => {
+    expect(SHOP.H + SHOP.roof).toBe(GRID.cellH);
+    expect(SHOP.W).toBeLessThan(GRID.cellW);
+  });
+});
+
+describe('riders', () => {
+  it('stand on the walker under them as its legs come up, with no lag', () => {
+    const g = street([['A', 'B'], []]);
+    const view = new StreetView();
+    view.reset(g);
+    play(g, view, SHOP_LOOK.standTime / 2, { A: 1 });
+    const a = view.anim(shop(g, 'A'));
+    const b = view.anim(shop(g, 'B'));
+    expect(a.legs).toBeGreaterThan(0);
+    expect(b.carried).toBeCloseTo(a.legs * g.config.MOVEMENT.walkLift);
+  });
+
+  it('stand up within standTime', () => {
+    const g = street([['A'], []]);
+    const view = new StreetView();
+    view.reset(g);
+    play(g, view, SHOP_LOOK.standTime + TICK, { A: 1 });
+    expect(view.anim(shop(g, 'A')).legs).toBe(1);
+  });
+});
+
+describe('legs', () => {
+  const lift = GRID.cellH;
+
+  it('stride forward both ways: walking left mirrors the frames walking right', () => {
+    for (let f = 0; f < 4; f++) {
+      const right = legPose(lift, SHOP.W, true, f, 1).feet!;
+      const left = legPose(lift, SHOP.W, true, (4 - f) % 4, -1).feet!;
+      expect(left.map((ft) => [-ft.dx, ft.up])).toEqual(right.map((ft) => [ft.dx, ft.up]));
+    }
+  });
+
+  it('keep both segments their length, folding the knee out as the hip comes down', () => {
+    const seg = GRID.cellH / 2;
+    for (const hipY of [-GRID.cellH / 2, -4]) {
+      for (const side of [-1, 1]) {
+        const k = kneeIK(0, hipY, 0, 0, seg, side);
+        expect(Math.hypot(k.x, k.y - hipY)).toBeCloseTo(seg);
+        expect(Math.hypot(k.x, k.y)).toBeCloseTo(seg);
+        expect(Math.sign(k.x)).toBe(side);
+      }
+    }
+  });
+
+  it('keep the stride frame in range left of column 0, where a leaning shop goes', () => {
+    for (const x of [-0.3, -0.01, 0, 2.7]) {
+      expect(strideFrame(x)).toBeGreaterThanOrEqual(0);
+      expect(strideFrame(x)).toBeLessThan(4);
+    }
+  });
+
+  it('plant the feet while standing up, and stride only once fully up', () => {
+    const g = street([['A'], []]);
+    const view = new StreetView();
+    view.reset(g);
+    const a = view.anim(shop(g, 'A'));
+    let strode = false;
+    for (let i = 0; i < Math.round(g.config.MOVEMENT.cellTime / TICK); i++) {
+      play(g, view, TICK, { A: 1 });
+      if (a.moving) expect(a.legs).toBe(1);
+      strode ||= a.moving;
+    }
+    expect(strode).toBe(true);
+  });
+
+  it('are hidden while sitting', () => {
+    expect(legPose(0, SHOP.W, false, 0, 1).feet).toBeNull();
+  });
+});
+
+describe('signs', () => {
+  it('wrap words onto lines, and end a cut-off name with a dot', () => {
+    expect(fitLines('Hair Force One', 10, 2)).toEqual(['HAIR FORCE', 'ONE']);
+    expect(fitLines('Espresso Yourself Today', 10, 2)).toEqual(['ESPRESSO', 'YOURSELF.']);
+    expect(fitLines('Supercalifragilistics', 10, 2)).toEqual(['SUPERCALIF', 'RAGILISTI.']);
+    expect(fitLines('YOU', 10, 2)).toEqual(['YOU']);
+  });
+});
+
+describe('people', () => {
+  it('never wear a shirt too close to their skin', () => {
+    for (const [i, shirts] of SHIRTS_FOR_SKIN.entries()) {
+      expect(shirts.length).toBeGreaterThan(0);
+      expect(shirts.every((c) => colorDistance(c, SKIN[i]) >= SHIRT_SKIN_MIN)).toBe(true);
     }
   });
 });

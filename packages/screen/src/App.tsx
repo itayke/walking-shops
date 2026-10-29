@@ -6,9 +6,8 @@ import { createTuningPanel } from './dev/tuningPanel.ts';
 import { Board, Hud, Paused, Results } from './hud/Hud.tsx';
 import { createKeyboard } from './input/keyboard.ts';
 import { currentRoom, isRoomTaken, newRoom, PARTY_HOST, type RoomInfo } from './net/room.ts';
-import { shopFill, shopHue } from './render/colors.ts';
+import { shopHue, shopTint } from './render/colors.ts';
 import { drawFrame } from './render/draw.ts';
-import { onThemeChange, readTheme, type Theme } from './render/theme.ts';
 import { StreetView } from './render/view.ts';
 
 // Most ticks run in one frame after a stall (a background tab), so the sim never spirals
@@ -54,10 +53,8 @@ export function App() {
   net.current ??= { link: null, room: currentRoom(), online: false };
   // The game holds CONFIG by reference, so tuning applies live
   const host = useRef<Host>(null!);
-  // Phones get their shop's tint as a plain color, resolved from the screen's theme tokens
-  const theme = useRef<Theme>(null!);
-  theme.current ??= readTheme();
-  host.current ??= new Host({ config: CONFIG, local: [YOU], seed, tint: (i) => shopFill(theme.current, shopHue(i)), send: (m) => net.current.link?.send(m) });
+  // Phones get their shop's tint as a plain color, the same one the street draws it in
+  host.current ??= new Host({ config: CONFIG, local: [YOU], seed, tint: (i) => shopTint(shopHue(i)).base, send: (m) => net.current.link?.send(m) });
   const paused = useRef(false);
   const [board, setBoard] = useState(false);
   // Re-renders the HUD a few times a second; the canvas redraws every frame on its own
@@ -67,7 +64,6 @@ export function App() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const view = new StreetView();
-    view.you = YOU.id;
     view.reset(host.current.game);
     fastForward(host.current.game, view, START_AT);
     const connect = () => {
@@ -88,18 +84,13 @@ export function App() {
       });
     };
     connect();
-    const offTheme = onThemeChange(() => (theme.current = readTheme()));
 
-    let width = 0;
-    let height = 0;
-    let ratio = 1;
+    // The street draws in device pixels, so art pixels land on whole ones
     const resize = () => {
       const r = canvas.getBoundingClientRect();
-      ratio = Math.min(MAX_PIXEL_RATIO, devicePixelRatio || 1);
-      width = r.width;
-      height = r.height;
-      canvas.width = Math.round(width * ratio);
-      canvas.height = Math.round(height * ratio);
+      const ratio = Math.min(MAX_PIXEL_RATIO, devicePixelRatio || 1);
+      canvas.width = Math.round(r.width * ratio);
+      canvas.height = Math.round(r.height * ratio);
     };
     // Resizing clears the canvas, so redraw straight away rather than wait for the next frame
     const observer = new ResizeObserver(() => {
@@ -136,10 +127,7 @@ export function App() {
     // Animation clock: stands still while paused, so wobbles and bobs freeze too
     let clock = 0;
     let raf = 0;
-    const draw = () => {
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      drawFrame(ctx, host.current.game, view, width, height, theme.current, clock);
-    };
+    const draw = () => drawFrame(ctx, host.current.game, view, canvas.width, canvas.height, clock);
     const frame = (now: number) => {
       const dt = Math.min(MAX_FRAME_SECONDS, (now - last) / MS_PER_SECOND);
       last = now;
@@ -175,7 +163,6 @@ export function App() {
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
-      offTheme();
       disposePanel();
       keyboard.dispose();
       net.current.link?.close();

@@ -1,4 +1,4 @@
-/* Theme tokens. The canvas reads the same tokens (render/theme.ts), so the street and the HUD always match. */
+/* Theme tokens for the HUD and overlays. The street canvas has its own daylight palette (render/colors.ts). */
 :root {
   --bg: #e7ebf0;
   --panel: #f7f9fb;
@@ -7,21 +7,10 @@
   --line: #d0d7e0;
   --accent: #e6a200;
   --accent-ink: #17202b;
-  --asphalt: #3a4350;
-  --curb: #c2c9d3;
-  --sky-top: #cfe1f0;
-  --sky-bot: #edf2f7;
   --chute: #2b78c6;
   --danger: #d2462a;
   --ok: #24935f;
-  --shutter: #c9ced6;
-  --shutter-line: #7e8794;
-  --awning: #f7f9fb;
-  --shopper: #ffffff;
-  --shopper-line: #17202b;
   --hud-height: 48px;
-  --shop-sat: 62%;
-  --shop-light: 56%;
   --font-display: 'Bungee', 'Arial Black', Impact, sans-serif;
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -35,19 +24,9 @@
     --muted: #93a0b1;
     --line: #283241;
     --accent: #f2b731;
-    --asphalt: #1d242e;
-    --curb: #374251;
-    --sky-top: #0d1825;
-    --sky-bot: #16222f;
     --chute: #5aa6f0;
     --danger: #f06a4e;
     --ok: #4cc58b;
-    --shutter: #8a929e;
-    --shutter-line: #545c68;
-    --awning: #e4e9ef;
-    --shopper: #e4e9ef;
-    --shopper-line: #0f141b;
-    --shop-light: 52%;
     color-scheme: dark;
   }
 }

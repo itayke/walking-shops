@@ -44,6 +44,20 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 - Column count: `max(players + 4, 1.5 × players)`, capped by readability (about 18 on a 1080p screen). At 30 players the street is full and stacking is forced. That is accepted.
 - Shop size is uniform: every shop is one floor tall.
 
+### Look (pixel art, decided)
+
+The mockup is `reference/pixel-street.html`, and the screen renderer draws it. Visual only: none of this changes a rule.
+
+- **Grid:** 32 art pixels per column, a 32×26 cell. Daylight palette.
+- **Shops** are drawn in code from parts (sign, awning, wall, window, door) in a pool of designs, colored by the player's three-shade tint ramp. A shop fills its whole floor (27×23 body plus a 3-pixel roof ledge), so stacked shops touch.
+- **Signs:** a 3×5 pixel font at half-pixel size, up to two lines of about 10 characters, with a row of padding under the roof line.
+- **Motion:** lean, dizzy sway, topple spin and the landing squash rotate and scale the drawn shop, even where pixels leave the grid. A pusher leans with the tower's strain pulses; the push meter stays put.
+- **Legs:** thin ink legs with a side-view four-frame stride, frames flipped when walking left. Two equal segments per leg: standing up and sitting down bend the knees out sideways (about 0.125 s) instead of stretching the legs.
+- **People** (walk-ins, parachuters) are hand-drawn pixel maps, 5×10 with a one-pixel outline. A shirt is never paired with a skin tone too close to it.
+- **No marker over your own shop:** everyone shares one screen, and each phone shows its shop's tint.
+- **Scale:** the street scales by whatever fits every column and the sky (centered when the height is what limits it), and eases as towers grow. At a scale that isn't a whole number, some art pixels are a device pixel wider than others. Sign text drops to whole art pixels below 2 device pixels per art pixel.
+- **Open:** whether to step the zoom between whole-number scales instead; tints for 30 players (hues snap to 15°, which gives 24).
+
 ## 6. Movement rules (locked)
 
 **Your height:** a sitting shop is 1 floor. A walking shop stands on legs one floor tall, so it is 2 floors high and carries everything stacked on its roof. Heights are measured from the surface under your feet.

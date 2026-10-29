@@ -1,6 +1,6 @@
 import type { Dir, GameState, Shop, SimEvent } from '@walking-shops/sim';
 import { floorsNeeded } from './layout.ts';
-import { FX_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
+import { FX_LOOK, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
 
 /** A toppled shop flying from where it was drawn to its new place. */
 interface Arc {
@@ -10,12 +10,19 @@ interface Arc {
   dir: Exclude<Dir, 0>;
 }
 
-/** How a shop is drawn right now: smoothed toward its grid position. x in columns, y (feet) in floors. */
+/**
+ * How a shop is drawn right now: smoothed toward its grid position. x in columns, y (feet) in floors counting one per
+ * shop below; `carried` adds what the walkers below stand up on their legs, live, so riders never lag their walker.
+ */
 export interface ShopAnim {
   x: number;
   y: number;
+  carried: number;
   // Leg extension, 0 sitting to 1 standing
   legs: number;
+  // Facing, and whether the legs are striding
+  dir: Exclude<Dir, 0>;
+  moving: boolean;
   spin: number;
   flash: number;
   squash: number;
@@ -27,7 +34,7 @@ export type CalloutColor = 'danger' | 'ok' | 'muted';
 // Effects live in world units (columns, floors), so they stay put while the view zooms
 export type Effect =
   | { kind: 'callout'; text: string; color: CalloutColor; x: number; y: number; age: number }
-  | { kind: 'coin'; para: boolean; x: number; y: number; age: number }
+  | { kind: 'coin'; text: string; x: number; y: number; age: number }
   | { kind: 'burst'; x: number; y: number; age: number }
   | { kind: 'leaver'; x: number; shopper: number; age: number }
   | { kind: 'banner'; text: string; age: number };
@@ -62,8 +69,6 @@ export class StreetView {
   effects: Effect[] = [];
   // Floors of sky shown, eased toward what the street needs
   floors = 0;
-  // The shop played at this screen (the keyboard), drawn highlighted with a marker; phones' shops are not
-  you: string | null = null;
   private phase2 = false;
 
   reset(g: GameState): void {
@@ -76,19 +81,19 @@ export class StreetView {
   anim(s: Shop): ShopAnim {
     let a = this.anims.get(s.id);
     if (!a) {
-      a = { x: s.col, y: s.level, legs: 0, spin: 0, flash: 0, squash: 0, arc: null };
+      a = { x: s.col, y: s.level, carried: 0, legs: 0, dir: 1, moving: false, spin: 0, flash: 0, squash: 0, arc: null };
       this.anims.set(s.id, a);
     }
     return a;
   }
 
-  /** The middle of a shop's body, in floors, for effects that start on it. */
+  /** The middle of a shop's body, in floors, for effects that start on it. A shop with its roof is one floor tall. */
   private bodyMid(g: GameState, a: ShopAnim): number {
-    return a.y + a.legs * g.config.MOVEMENT.walkLift + SHOP_LOOK.bodyHeight / 2;
+    return this.roof(g, a) - 1 / 2;
   }
 
   private roof(g: GameState, a: ShopAnim): number {
-    return a.y + a.legs * g.config.MOVEMENT.walkLift + SHOP_LOOK.bodyHeight;
+    return a.y + a.carried + a.legs * g.config.MOVEMENT.walkLift + 1;
   }
 
   private add(e: Effect): void {
@@ -127,7 +132,9 @@ export class StreetView {
         case 'paid': {
           const a = byId(e.shop);
           a.flash = SHOP_LOOK.flashTime;
-          this.add({ kind: 'coin', para: e.kind === 'para', x: a.x, y: this.roof(g, a), age: 0 });
+          // Counted in walk-ins, the way the street teaches it
+          const worth = e.kind === 'para' ? g.config.SCORING.paraValue : 1;
+          this.add({ kind: 'coin', text: `+${worth}`, x: a.x, y: this.roof(g, a), age: 0 });
           break;
         }
         case 'lost':
@@ -143,21 +150,26 @@ export class StreetView {
   /** Ease every shop toward its grid position, fly toppled ones, age effects. */
   update(g: GameState, dt: number): void {
     const { MOVEMENT, ROUND } = g.config;
-    const legK = follow(SHOP_LOOK.legRate, dt);
+    const stand = dt / SHOP_LOOK.standTime;
     const xK = follow(SHOP_LOOK.followRate, dt);
     const yK = follow(SHOP_LOOK.climbRate, dt);
     for (let c = 0; c < g.C; c++) {
       // Riders move with the walker under them, and stand on its legs
       let offSum = 0;
-      let base = 0;
-      for (const i of g.cols[c]) {
+      let carried = 0;
+      for (const [ty, i] of g.cols[c].entries()) {
         const s = g.shops[i];
         const a = this.anim(s);
         offSum += s.off;
-        a.legs += ((s.walking ? 1 : 0) - a.legs) * legK;
+        a.legs = s.walking ? Math.min(1, a.legs + stand) : Math.max(0, a.legs - stand);
+        a.carried = carried;
+        carried += a.legs * MOVEMENT.walkLift;
         const tx = c + offSum;
-        const ty = base;
-        base += a.legs * MOVEMENT.walkLift + 1;
+        const ahead = tx - a.x;
+        // Strides start once the legs are fully up: standing up and sitting down keep the feet planted
+        a.moving = s.walking && a.legs >= 1 && Math.abs(ahead) > LEG_LOOK.moveSettle;
+        if (a.moving) a.dir = ahead > 0 ? 1 : -1;
+        if (s.pushT > 0 && s.pushCol >= 0) a.dir = s.pushCol > s.col ? 1 : -1;
         if (a.arc) {
           a.arc.age += dt;
           const u = Math.min(1, a.arc.age / MOTION_LOOK.arcTime);

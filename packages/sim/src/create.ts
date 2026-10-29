@@ -88,6 +88,7 @@ export function createGame(config: Config, players: readonly PlayerSpec[], seed:
     shoppers: [],
     nextShopper: 0,
     paras: [],
+    nextPara: 0,
     wave: { state: 'pause', end: config.WAVES.firstWave, col0: NONE, start: 0, spawned: 0 },
     stats: { closures: 0, paraCaught: 0, paraByTower: 0, spawned: 0, topples: 0, bumps: 0, pushbacks: 0, pushStarts: 0, dodged: 0, abandoned: 0, lost: 0, maxHeight: 0 },
     rng: { world: makeRng(seed), bots: makeRng((seed ^ BOT_STREAM_SALT) >>> 0) },

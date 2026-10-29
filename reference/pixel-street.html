@@ -1,0 +1,1260 @@
+<title>Pixel Street</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Public+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; the canvases carry the look, the page chrome stays quiet and cool-grey like asphalt */
+:root {
+  --bg: #eceef2;
+  --surface: #f8f9fb;
+  --fg: #1c1a26;
+  --muted: #595d6c;
+  --line: #d3d7de;
+  --accent: #ffd23f;
+  --on-accent: #1c1a26;
+  --font-display: "Pixelify Sans", ui-monospace, "Courier New", monospace;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14131b; --surface: #1c1b25; --fg: #ebeaf2; --muted: #a3a1b4; --line: #312f3d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14131b; --surface: #1c1b25; --fg: #ebeaf2; --muted: #a3a1b4; --line: #312f3d;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 96px; display: grid; gap: 64px; }
+header { display: grid; gap: 12px; max-width: 68ch; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(40px, 7vw, 64px); line-height: 1; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 26px; line-height: 1.15; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--font-data); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; }
+p { margin: 0; }
+.lede { font-size: 18px; color: var(--muted); }
+.toolbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding-block: 12px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+.ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ctl > span { font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--fg); border-radius: 3px; overflow: hidden; }
+.seg button, .play { font: 600 13px/1 var(--font-data); background: transparent; color: var(--fg); border: 0; padding: 8px 11px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--fg); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.play { border: 1px solid var(--fg); border-radius: 3px; margin-left: auto; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+section { display: grid; gap: 20px; }
+.intro { display: grid; gap: 8px; max-width: 68ch; }
+.intro p { color: var(--muted); }
+.cv { width: 100%; display: flex; justify-content: center; min-width: 0; }
+canvas { display: block; max-width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+.hero canvas { outline: 3px solid var(--fg); }
+.cards { display: grid; gap: 16px; }
+.cards.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cards.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card p { font-size: 14px; color: var(--muted); }
+.panels { display: grid; gap: 8px; margin: 0 auto; }
+.panels.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.panels.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.panels.split { grid-template-columns: 2fr 3fr; }
+.panels p { font-size: 14px; color: var(--muted); }
+.panels strong { display: block; color: var(--fg); font-weight: 600; }
+figure { margin: 0; display: grid; gap: 10px; }
+.res { display: grid; grid-template-columns: auto repeat(3, max-content); justify-content: start; gap: 12px 16px; align-items: center; overflow-x: auto; }
+.res .hd { font-family: var(--font-data); font-size: 12px; color: var(--muted); text-align: center; }
+.res .rl { font-family: var(--font-data); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.notes { display: grid; gap: 14px; max-width: 72ch; margin: 0; padding: 0; list-style: none; }
+.notes li { padding-left: 18px; position: relative; }
+.notes li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 8px; height: 8px; background: var(--accent); outline: 1px solid var(--fg); }
+.notes strong { font-weight: 600; }
+.mono { font-family: var(--font-data); font-size: 0.92em; font-variant-numeric: tabular-nums; }
+@media (max-width: 820px) {
+  .cards.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cards.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .cards.three, .cards.two { grid-template-columns: minmax(0, 1fr); }
+  .play { margin-left: 0; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Walking Shops · look study</p>
+    <h1>Pixel Street</h1>
+    <p class="lede">Pixel-art takes on the shops, walk-ins and parachuters, drawn by code the way the game's renderer would draw them: a few shop parts plus a player tint, on a fixed grid of art pixels per column. Nothing here changes the game.</p>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Look settings">
+    <div class="ctl"><span>Art pixels per column</span>
+      <div class="seg">
+        <button id="g24" data-set="grid" data-val="24">24</button>
+        <button id="g32" data-set="grid" data-val="32">32</button>
+        <button id="g48" data-set="grid" data-val="48">48</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Light</span>
+      <div class="seg">
+        <button id="pday" data-set="pal" data-val="day">Day</button>
+        <button id="pdusk" data-set="pal" data-val="dusk">Dusk</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Sign text</span>
+      <div class="seg">
+        <button id="lgrid" data-set="label" data-val="grid">Art pixels</button>
+        <button id="lhalf" data-set="label" data-val="half">Half pixels</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Legs</span>
+      <div class="seg">
+        <button id="legs-stride" data-set="legs" data-val="stride">Stride</button>
+        <button id="legs-sidestep" data-set="legs" data-val="sidestep">Side-step</button>
+        <button id="legs-chunky" data-set="legs" data-val="chunky">Trousers</button>
+        <button id="legs-hop" data-set="legs" data-val="hop">Hop</button>
+      </div>
+    </div>
+    <button class="play" id="play" type="button">Pause</button>
+  </div>
+
+  <section>
+    <div class="intro">
+      <h2>The street</h2>
+      <p>Seven columns in phase 2. The middle shop walks with a rider on its roof. A wave crosses at the crosswalk: walk-ins enter the lowest open shop, pass under a walking one and turn back in grey. Parachuters drop into the top shop of a column. The second shop from the left lets its shutters drop.</p>
+    </div>
+    <div class="cv hero" id="v-scene"></div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Shop designs</h2>
+      <p>Six designs for the pool, each in three player tints. A design is a few parts drawn in code (sign, awning, wall, window, door), so a tint is only a three-shade color ramp and every design works at every size.</p>
+    </div>
+    <div class="cards three" id="v-designs"></div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Shop states</h2>
+      <p>One shop through everything the street needs it to show.</p>
+    </div>
+    <div class="cards four" id="v-states"></div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Legs</h2>
+      <p>Four ways to walk. Each shop stands up, steps one column, sits, and walks back. Legs keep their length: standing up and sitting down bend the knees out sideways instead of stretching the legs. Pick one in the toolbar to see it on the street and in the states above.</p>
+    </div>
+    <div class="ctl"><span>Speed</span>
+      <div class="seg">
+        <button id="speed-1" data-set="legSpeed" data-val="1">1×</button>
+        <button id="speed-q" data-set="legSpeed" data-val="0.25">¼×</button>
+      </div>
+    </div>
+    <div class="cards four" id="v-legs"></div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Lean and tumble</h2>
+      <p>Rotation and scaling happen after the shop is drawn and scaled up, so tilted pixels may leave the grid. Left, a tower strains under a push. Right, a topple: a half turn in the air, then a squash on landing.</p>
+    </div>
+    <figure>
+      <div class="cv" id="v-motion"></div>
+      <div class="panels split" id="c-motion">
+        <p><strong>Lean</strong>Rotates about the bottom corner it would fall over, shaking harder as the push nears its end.</p>
+        <p><strong>Topple</strong>Spins half a turn along the arc, snaps upright on landing, then scales wider and shorter for the squash.</p>
+      </div>
+    </figure>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Walk-ins</h2>
+      <p>People are hand-drawn pixel maps, 5×10 art pixels (7×14 on the 48 grid), with a one-pixel outline so they read on asphalt and on the sidewalk. Top row: crossing, seen from behind. Bottom row: walking back toward the camera; the grey ones gave up.</p>
+    </div>
+    <div class="cv" id="v-people"></div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Parachuters</h2>
+      <p>Canopies sway in one-pixel steps instead of rotating. The top row shows five canopy patterns; the bottom row shows one canopy's three sway frames.</p>
+    </div>
+    <div class="cards two">
+      <div class="card"><h3>Patterns and sway frames</h3><div class="cv" id="v-chutes"></div></div>
+      <div class="card"><h3>Falling with the wind</h3><div class="cv" id="v-sky"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Grid and sign text</h2>
+      <p>Each column below is 96 screen pixels, which is what a 1080p screen gives a 20-column street. The grid decides how much of a name fits on a sign. These follow the Light setting only.</p>
+    </div>
+    <div class="res" id="v-res">
+      <span></span>
+      <span class="hd">24 per column · <span class="mono">4×</span></span>
+      <span class="hd">32 per column · <span class="mono">3×</span></span>
+      <span class="hd">48 per column · <span class="mono">2×</span></span>
+    </div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Decided</h2>
+    </div>
+    <ul class="notes">
+      <li><strong>32 art pixels per column, daylight, half-pixel sign text.</strong> A shop is 27×23 with a 3-pixel roof ledge, and a sign fits about 10 characters per line on two lines, under a row of padding.</li>
+      <li><strong>Rotation and scaling are fine.</strong> Lean, dizzy sway, push and topple rotate the drawn shop, and the landing squash scales it, even where tilted pixels leave the grid.</li>
+      <li><strong>No marker over your own shop.</strong> Everyone shares one screen; each phone shows its shop's tint instead.</li>
+      <li><strong>Thin ink legs with a side-view stride.</strong> The stride runs forward in both directions, and standing up or sitting down bends the knees out sideways in about an eighth of a second.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Still open</h2>
+    </div>
+    <ul class="notes">
+      <li><strong>Keep the scale a whole number.</strong> A 96-pixel column is exactly 3×. Street widths that don't divide evenly need letterboxing or uneven pixels, and the zoom-out as towers grow should step between whole scales.</li>
+      <li><strong>Tints for 30 players.</strong> Hues snap to 15° steps, which gives 24 three-shade ramps. Thirty players need a second set, such as paler ramps or a different awning pattern.</li>
+      <li><strong>Let stacked shops touch.</strong> Each shop fills its whole floor (body plus roof ledge), so towers read as buildings. Today's body is 80% of a floor and leaves a gap above each shop.</li>
+      <li><strong>Draw shops in code and hand-draw only people.</strong> Hand-drawn shop sprites would need a copy for every tint and squash frame. People and canopies are small enough to draw as pixel maps.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const TAU = Math.PI * 2;
+
+// Art-pixel cells per grid choice; height follows the renderer's cellAspect
+const GRIDS = { 24: { cw: 24, ch: 20 }, 32: { cw: 32, ch: 26 }, 48: { cw: 48, ch: 40 } };
+const LOOK = {
+  bodyWidth: 0.84, roofShare: 0.1, legShare: 1 / 16, canopyShare: 0.2,
+  streetDepth: 2.4, sidewalkShare: 0.32, sidewalkFeet: 0.7,
+  hueStep: 15, golden: 137.508, hueOffset: 20,
+  stridesPerCell: 2, framesPerStride: 4, crossTime: 2.5, idleWarn: 4,
+  leaveTime: 1, leaveAlpha: 0.6, swayRate: 2.5, ground: 4,
+};
+// Copied from the renderer's MOTION_LOOK
+const MOTION = { strainLean: 0.07, strainWobble: 0.05, strainRate: 32, dizzyAngle: 0.07, dizzyRate: 7, arcTime: 0.5, arcHeight: 1.1, arcSpin: Math.PI, squashTime: 0.25, squash: 0.2, pushTime: 0.9 };
+const FX = { time: 0.9, rise: 0.6 };
+
+// Leg rig: two equal segments per leg with the knee bent outward, so sitting down folds the knees out sideways
+const LEG = { hipSpread: 0.24, kneeOut: 0.06, reach: 0.12, footRaise: 0.1, minLift: 2, hopHeight: 0.22, hopCrouch: 0.3, chunkyShare: 1 / 8 };
+const LEG_STYLES = {
+  stride: { name: 'Stride', gait: 'stride', look: 'thin', note: 'Scissor steps seen from the side, four frames per stride, thin ink legs.' },
+  sidestep: { name: 'Side-step', gait: 'sidestep', look: 'thin', note: 'Seen from the front, like the shop: the leading foot steps out and the other closes in.' },
+  chunky: { name: 'Trousers', gait: 'stride', look: 'chunky', note: 'The same stride with thick trouser legs and boots, so legs read from the back of the room.' },
+  hop: { name: 'Hop', gait: 'hop', look: 'thin', note: 'One springy hop per column, with the knees bending out on every landing.' },
+};
+// Longer pauses than the state cards, so each stand-up and sit-down is easy to catch
+const LEG_WALK = [[0, 0, 0], [0.5, 0, 0], [0.625, 0, 1], [1.075, 1, 1], [1.2, 1, 0], [2.3, 1, 0], [2.425, 1, 1], [2.875, 0, 1], [3, 0, 0], [4, 0, 0]];
+const LEG_LOOP = 4;
+
+// 3×5 glyphs, row by row
+const FONT = {
+  A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111',
+  F: '111100110100100', G: '011100101101011', H: '101101111101101', I: '111010010010111', J: '001001001101010',
+  K: '101101110101101', L: '100100100100111', M: '101111111101101', N: '110101101101101', O: '010101101101010',
+  P: '110101110100100', Q: '010101101110011', R: '110101110101101', S: '011100010001110', T: '111010010010010',
+  U: '101101101101111', V: '101101101101010', W: '101101111111101', X: '101101010101101', Y: '101101010010010',
+  Z: '111001010100111', 0: '111101101101111', 1: '010110010010111', 2: '110001010100111', 3: '110001010001110',
+  4: '101101111001001', 5: '111100110001110', 6: '011100111101111', 7: '111001010010010', 8: '111101111101111',
+  9: '111101111001110', ' ': '000000000000000', '&': '010101010101011', "'": '010010000000000', '.': '000000000000010',
+  '-': '000000111000000', '!': '010010010000010', '+': '000010111010000', '?': '110001010000010',
+};
+
+const PALETTES = {
+  day: {
+    sky: ['#7cc6ea', '#97d2ee', '#b8e1f3', '#d9eff7'], cloud: '#ffffff', cloudLo: '#cbe6f1', skyline: '#b2d4e0', skylineWin: '#9fc7d6',
+    curbTop: '#ece2cf', walk: '#cdbd9f', walkLine: '#b2a183', curb: '#857563', curbLo: '#5f5246', asphalt: '#3c414f', asphaltHi: '#4a5062', zebra: '#eeeae0',
+    ink: '#1c1a26', glass: '#8ccfe5', glassHi: '#e6f7fc', glassLo: '#5b98b0', cream: '#f5ebd5', creamLo: '#d6c6a2', wood: '#94603f', woodLo: '#623e29',
+    shutter: '#a0a6b1', shutterLo: '#6e7480', leaf: '#52a65e', leafLo: '#2f6b3a', red: '#e04a3d', yellow: '#f5c746', white: '#ffffff', blue: '#4a86d8', pink: '#ee7fb0',
+    accent: '#ffd23f', danger: '#e8483a', grey: '#9a9ca6', greyLo: '#6f717b', line: '#f4f4f4', pants: '#2f3a56',
+    tintS: [72, 62, 55], tintL: [70, 54, 38],
+  },
+  dusk: {
+    sky: ['#2d2650', '#4a3466', '#7a4570', '#c4666a'], cloud: '#e08c7a', cloudLo: '#a65a6e', skyline: '#3a2d55', skylineWin: '#b5735f',
+    curbTop: '#9c8c86', walk: '#6f6170', walkLine: '#5c505f', curb: '#463c4b', curbLo: '#30283a', asphalt: '#22202e', asphaltHi: '#2e2c3d', zebra: '#b9b0b8',
+    ink: '#120f1a', glass: '#ffd27a', glassHi: '#fff2c4', glassLo: '#d08a3c', cream: '#e9d6b8', creamLo: '#b49c7e', wood: '#7a4a33', woodLo: '#4b2c1f',
+    shutter: '#6f7384', shutterLo: '#4a4d5c', leaf: '#3f8a55', leafLo: '#24543a', red: '#d9443b', yellow: '#f2c14b', white: '#f3ece6', blue: '#4f7fd0', pink: '#e0729f',
+    accent: '#ffd23f', danger: '#ff5a45', grey: '#7d7a88', greyLo: '#5a5766', line: '#d8cfd6', pants: '#283049',
+    tintS: [62, 55, 50], tintL: [62, 47, 32],
+  },
+};
+
+const DESIGNS = [
+  { name: 'Grocer', awning: 'stripes', aw: ['lo', 'cream'], wall: 'plain', window: 'crates', names: ['Lettuce Pray', 'Thyme Out', 'Peas & Love'] },
+  { name: 'Café', awning: 'fringe', aw: ['lo', 'cream'], wall: 'siding', window: 'cup', names: ['Bean There', 'Brew Ha Ha', 'Espresso Yourself'] },
+  { name: 'Bakery', awning: 'cornice', aw: ['lo', 'cream'], wall: 'brick', window: 'loaves', names: ['Knead to Know', 'Rolling Scones', 'Upper Crust'] },
+  { name: 'Books', awning: 'stripes', aw: ['hi', 'lo'], wall: 'plain', window: 'books', names: ['Novel Idea', 'Spine Tingler', 'Read Herring'] },
+  { name: 'Florist', awning: 'stripes', aw: ['hi', 'cream'], wall: 'siding', window: 'flowers', names: ['Petal Pushers', 'Bloom Town', 'Stem Cell'] },
+  { name: 'Barber', awning: 'fringe', aw: ['hi', 'white'], wall: 'brick', window: 'pole', names: ['Hair Force One', 'Curl Up & Dye', 'Shear Genius'] },
+];
+const DESIGN_NOTES = ['Striped, scalloped awning; fruit crates', 'Fringed awning; siding; a steaming cup', 'Cornice instead of an awning; brick; loaves', 'Two-tone stripes; a shelf of spines', 'Flower box on the sill; siding', 'Barber pole beside the door; brick'];
+
+const PEOPLE = {
+  M: {
+    front: ['.hhh.', '.sss.', '.sss.', 'ccccc', 'scccs', '.ppp.'],
+    back: ['.hhh.', '.hhh.', '.hhh.', 'ccccc', 'scccs', '.ppp.'],
+    legs: [['.p.p.', '.p.p.', '.f.f.'], ['.p.p.', '.p.f.', '.f...'], ['.p.p.', '.p.p.', '.f.f.'], ['.p.p.', '.f.p.', '...f.']],
+  },
+  L: {
+    front: ['..hhh..', '.hhhhh.', '.sssss.', '.sssss.', '..sss..', '.ccccc.', 'ccccccc', 'scccccs', '.ccccc.', '.ppppp.'],
+    back: ['..hhh..', '.hhhhh.', '.hhhhh.', '.hhhhh.', '..sss..', '.ccccc.', 'ccccccc', 'scccccs', '.ccccc.', '.ppppp.'],
+    legs: [['.pp.pp.', '.pp.pp.', '.pp.pp.', '.ff.ff.'], ['.pp.pp.', '.pp.pp.', '.pp.ff.', '.ff....'], ['.pp.pp.', '.pp.pp.', '.pp.pp.', '.ff.ff.'], ['.pp.pp.', '.pp.pp.', '.ff.pp.', '....ff.']],
+  },
+};
+const PARA = {
+  M: ['.hhh.', 'sssss', 'cesec', 'csssc', 'ccccc', '.ccc.', '.ppp.', '.p.p.', '.p.p.', 'f...f'],
+  L: ['..hhh..', 'shhhhhs', 'csssssc', 'csesesc', 'c.sss.c', 'c..s..c', 'ccccccc', '.ccccc.', '.ccccc.', '.ppppp.', '.pp.pp.', '.pp.pp.', '.pp.pp.', 'ff...ff'],
+};
+// Hands hold the lines at shoulder height, beside the face
+const PARA_HAND = 1;
+const CHUTES = [
+  { style: 'stripes', A: 'red', B: 'white' }, { style: 'center', A: 'blue', B: 'yellow' }, { style: 'seams', A: 'pink', B: 'white' },
+  { style: 'stripes', A: 'yellow', B: 'red' }, { style: 'center', A: 'leaf', B: 'white' },
+];
+const CLOUD = ['....wwww......', '..wwwwwwww.ww.', '.wwwwwwwwwwwww', 'wwwwwwwwwwwwww', 'llllllllllllll'];
+const HAIR = ['#2b1d16', '#6b3f22', '#d9a441', '#1c1a26', '#8a8f99', '#a8432c'];
+const SKIN = ['#f2c9a0', '#d9a07a', '#a86f4c', '#6e4630'];
+// Shirts stay clear of the skin tones, so a face reads against its shirt
+const SHIRT = ['#e04a3d', '#4a86d8', '#52a65e', '#c39a1c', '#c64f88', '#8b6fd6', '#ffa24d'];
+const PANTS = ['#2f3a56', '#4b3a2f', '#3c414f', '#5a4a6b'];
+// A shirt closer than this to a skin tone (RGB distance) is never paired with it
+const SHIRT_SKIN_MIN = 100;
+const SHIRTS_FOR_SKIN = SKIN.map((s) => SHIRT.filter((c) => colorDistance(c, s) >= SHIRT_SKIN_MIN));
+
+// The street scene: a scripted 12-second loop of phase 2
+const SCENE = {
+  cols: 7, skyFloors: 4.6, loop: 12, fall: 0.8, wind: 0.35,
+  shops: [
+    { col: 0, level: 0, design: 2, hue: 0, name: 'Knead to Know', closed: true },
+    { col: 1, level: 0, design: 1, hue: 1, name: 'Bean There', idle: true },
+    { col: 5, level: 0, design: 4, hue: 2, name: 'Petal Pushers' },
+    { col: 5, level: 1, design: 5, hue: 3, name: 'Hair Force One' },
+    { col: 5, level: 2, design: 2, hue: 4, name: 'Rolling Scones', dizzy: true },
+    { col: 6, level: 0, design: 0, hue: 5, name: 'Thyme Out' },
+  ],
+  walker: { design: 0, hue: 6, name: 'Lettuce Pray' },
+  rider: { design: 3, hue: 7, name: 'Novel Idea' },
+  // [time, column, legs]: sit, stand up, walk two columns, sit, and back
+  walkKeys: [[0, 2, 0], [1.2, 2, 0], [1.325, 2, 1], [2.225, 4, 1], [2.35, 4, 0], [6.2, 4, 0], [6.325, 4, 1], [7.225, 2, 1], [7.35, 2, 0], [12, 2, 0]],
+  waves: [{ at: 0.5, col: 3 }, { at: 6, col: 5 }],
+  waveWidth: 2, waveLines: 4, waveLineInterval: 0.5, waveSize: 6, waveSpawn: 1.5, waveFade: 1,
+};
+// A card-sized walk between two columns
+const CARD_WALK = [[0, 0, 0], [0.4, 0, 0], [0.525, 0, 1], [0.975, 1, 1], [1.1, 1, 0], [1.9, 1, 0], [2.025, 1, 1], [2.475, 0, 1], [2.6, 0, 0], [3, 0, 0]];
+
+const STATES = [
+  { key: 'open', name: 'Open', note: 'Sitting, earning walk-ins.' },
+  { key: 'closing', name: 'Shutters dropping', note: 'The last 4 seconds before an idle shop closes, one row at a time.' },
+  { key: 'closed', name: 'Closed', note: 'The sign stays readable so its owner can still find it.' },
+  { key: 'walking', name: 'Walking', note: 'Legs one floor tall, in the style picked in the toolbar.' },
+  { key: 'carrying', name: 'Carrying', note: 'A rider sits on the roof and bobs along.' },
+  { key: 'dizzy', name: 'Dizzy', note: 'After a topple: stars circle the roof while the shop sways.' },
+  { key: 'push', name: 'Pushing', note: 'The pusher leans with every strain pulse of the tower. The meter stays put.' },
+];
+
+// ---------- settings ----------
+const STORE = 'pixel-street-settings';
+const settings = { grid: 32, pal: 'day', label: 'half', legs: 'stride', legSpeed: 1, playing: true };
+try { Object.assign(settings, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) { /* storage blocked */ }
+if (!GRIDS[settings.grid]) settings.grid = 32;
+settings.playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+function save() { try { localStorage.setItem(STORE, JSON.stringify({ grid: settings.grid, pal: settings.pal, label: settings.label, legs: settings.legs })); } catch (e) { /* storage blocked */ } }
+
+// ---------- helpers ----------
+function mulberry32(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function hash(n) { n = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b); n ^= n >>> 13; n = Math.imul(n, 0xc2b2ae35); n ^= n >>> 16; return n >>> 0; }
+function hueFor(i) { return (Math.round(((i * LOOK.golden + LOOK.hueOffset) % 360) / LOOK.hueStep) * LOOK.hueStep) % 360; }
+function ramp(h, pal) { const s = pal.tintS, l = pal.tintL; return { hi: `hsl(${h} ${s[0]}% ${l[0]}%)`, base: `hsl(${h} ${s[1]}% ${l[1]}%)`, lo: `hsl(${h} ${s[2]}% ${l[2]}%)` }; }
+function colorDistance(a, b) {
+  const x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16);
+  return Math.hypot((x >> 16) - (y >> 16), ((x >> 8) & 255) - ((y >> 8) & 255), (x & 255) - (y & 255));
+}
+function personColors(id) {
+  const h = hash(id), si = (h >>> 4) % SKIN.length, shirts = SHIRTS_FOR_SKIN[si];
+  return { h: HAIR[h % HAIR.length], s: SKIN[si], c: shirts[(h >>> 8) % shirts.length], p: PANTS[(h >>> 12) % PANTS.length], f: '#1c1a26', e: '#1c1a26' };
+}
+function greyColors(pal) { return { h: pal.greyLo, s: pal.grey, c: pal.grey, p: pal.greyLo, f: pal.greyLo, e: pal.greyLo }; }
+function dims(grid) {
+  const { cw, ch } = GRIDS[grid];
+  const roof = Math.max(2, Math.round(ch * LOOK.roofShare));
+  return {
+    grid, cw, ch, roof, W: Math.round(cw * LOOK.bodyWidth), H: ch - roof,
+    legW: Math.max(1, Math.round(cw * LOOK.legShare)), R: Math.max(4, Math.round(cw * LOOK.canopyShare)),
+    person: grid >= 48 ? PEOPLE.L : PEOPLE.M, paraMap: grid >= 48 ? PARA.L : PARA.M,
+  };
+}
+// Linear keyframes [time, column, legs]; facing is the last direction moved
+function keyAt(keys, t) {
+  let dir = 1;
+  for (let i = 1; i < keys.length; i++) {
+    const a = keys[i - 1], b = keys[i];
+    if (b[1] !== a[1]) dir = Math.sign(b[1] - a[1]);
+    if (t <= b[0]) {
+      const u = b[0] === a[0] ? 1 : (t - a[0]) / (b[0] - a[0]);
+      return { col: a[1] + (b[1] - a[1]) * u, lift: a[2] + (b[2] - a[2]) * u, dir, moving: b[1] !== a[1] };
+    }
+  }
+  const z = keys[keys.length - 1];
+  return { col: z[1], lift: z[2], dir, moving: false };
+}
+function strideFrame(col) { return Math.floor(col * LOOK.stridesPerCell * LOOK.framesPerStride) & 3; }
+// Shop options for a keyframed walker: leg height, stride frame and hop phase
+function walkPose(k, ch) { return { lift: k.lift * ch, walking: k.moving, frame: strideFrame(k.col), phase: k.col % 1, dir: k.dir }; }
+
+// Draws in art pixels; P is device pixels per art pixel, so half pixels exist when P >= 2
+class Pix {
+  constructor(ctx, P) { this.c = ctx; this.P = P; }
+  r(x, y, w, h, col) {
+    if (!col || w <= 0 || h <= 0) return;
+    const P = this.P, X = Math.round(x * P), Y = Math.round(y * P);
+    this.c.fillStyle = col;
+    this.c.fillRect(X, Y, Math.round((x + w) * P) - X, Math.round((y + h) * P) - Y);
+  }
+  line(x0, y0, x1, y1, col, t = 1) {
+    x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+    const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    // A square brush, so thick lines keep their width at any angle
+    const o = Math.ceil((t - 1) / 2);
+    for (;;) {
+      this.r(x0 - o, y0 - o, t, t, col);
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+  }
+  text(str, x, y, s, col) {
+    let cx = x;
+    for (const ch of str) {
+      const g = FONT[ch] || FONT['?'];
+      for (let i = 0; i < 15; i++) if (g[i] === '1') this.r(cx + (i % 3) * s, y + Math.floor(i / 3) * s, s, s, col);
+      cx += 4 * s;
+    }
+  }
+  textOutlined(str, x, y, s, col, ink) {
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.text(str, x + dx * s, y + dy * s, s, ink);
+    this.text(str, x, y, s, col);
+  }
+  map(rows, x, y, colors, outline) {
+    if (outline) {
+      for (let j = 0; j < rows.length; j++) for (let i = 0; i < rows[j].length; i++) {
+        if (rows[j][i] === '.') continue;
+        this.r(x + i - 1, y + j, 3, 1, outline);
+        this.r(x + i, y + j - 1, 1, 3, outline);
+      }
+    }
+    for (let j = 0; j < rows.length; j++) for (let i = 0; i < rows[j].length; i++) {
+      const ch = rows[j][i];
+      if (ch !== '.') this.r(x + i, y + j, 1, 1, colors[ch]);
+    }
+  }
+}
+
+// Greedy word wrap into lines of at most `cols` glyphs; the last kept line ends in a dot when cut
+function fitLines(str, cols, maxLines) {
+  if (cols < 1 || maxLines < 1) return [];
+  const words = str.toUpperCase().split(/\s+/).map((w) => [...w].filter((c) => FONT[c]).join('')).filter(Boolean);
+  const lines = [];
+  let cur = '';
+  for (let w of words) {
+    while (w.length > cols) { if (cur) { lines.push(cur); cur = ''; } lines.push(w.slice(0, cols)); w = w.slice(cols); }
+    if (!w) continue;
+    if (!cur) cur = w;
+    else if (cur.length + 1 + w.length <= cols) cur += ' ' + w;
+    else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines) {
+    const kept = lines.slice(0, maxLines);
+    const last = kept[maxLines - 1];
+    kept[maxLines - 1] = (last.length < cols ? last : last.slice(0, cols - 1)) + '.';
+    return kept;
+  }
+  return lines;
+}
+
+// ---------- shops ----------
+function shopLayout(W, H) {
+  // One extra row pads the sign text away from the roof line
+  const signH = Math.max(5, Math.round(H * 0.32)) + 1;
+  const awnH = Math.max(3, Math.round(H * 0.18));
+  const lowTop = 1 + signH + awnH;
+  return { signH, awnH, lowTop, lowH: H - 1 - lowTop };
+}
+
+/** One shop with its feet at (cx, feetY). Returns its body box and the top of its roof, where a rider's feet go. */
+function drawShop(px, o) {
+  const { pal, T, W, H, roof } = o;
+  const pose = legPose(o);
+  const bx = Math.round(o.cx - W / 2), ground = Math.round(o.feetY);
+  const by = ground - pose.raise - H;
+  if (pose.feet) drawLegs(px, o, by + H, ground, pose);
+  const L = shopLayout(W, H);
+  const D = DESIGNS[o.design];
+  // The roof ledge fills the rest of the floor, so stacked shops touch
+  const ry = by - roof;
+  px.r(bx - 1, ry, W + 2, roof, pal.creamLo);
+  if (roof > 2) px.r(bx, ry + 1, W, 1, pal.cream);
+  px.r(bx - 1, ry, W + 2, 1, pal.ink);
+  px.r(bx - 1, ry, 1, roof, pal.ink);
+  px.r(bx + W, ry, 1, roof, pal.ink);
+  px.r(bx, by, W, H, T.base);
+  drawWall(px, D.wall, bx, by, W, H, L, T);
+  drawSign(px, o, bx, by, W, L);
+  drawFront(px, o, D, bx, by, W, H, L);
+  if (o.shutter > 0) drawShutter(px, o.shutter, bx, by, W, H, L, pal);
+  const edge = o.danger ? pal.danger : pal.ink;
+  px.r(bx, by, W, 1, edge); px.r(bx, by + H - 1, W, 1, edge); px.r(bx, by, 1, H, edge); px.r(bx + W - 1, by, 1, H, edge);
+  drawAwning(px, D, bx, by + 1 + L.signH, W, L.awnH, T, pal);
+  if (o.dizzy) drawDizzy(px, o.cx, ry, o);
+  return { bx, by, top: ry };
+}
+
+function drawWall(px, kind, bx, by, W, H, L, T) {
+  const y0 = by + L.lowTop + 1, y1 = by + H - 1;
+  if (kind === 'siding') for (let y = y0 + 1; y < y1; y += 3) px.r(bx + 1, y, W - 2, 1, T.hi);
+  if (kind === 'brick') {
+    for (let y = y0; y < y1; y++) {
+      const k = y - y0;
+      if (k % 3 === 2) { px.r(bx + 1, y, W - 2, 1, T.lo); continue; }
+      for (let x = (Math.floor(k / 3) % 2) * 2 + 1; x < W - 1; x += 4) px.r(bx + x, y, 1, 1, T.lo);
+    }
+  }
+}
+
+function drawSign(px, o, bx, by, W, L) {
+  const { pal } = o;
+  const si = Math.max(1, Math.round(W * 0.05));
+  const sx = bx + 1 + si, sw = W - 2 - 2 * si, sy = by + 1, sh = L.signH;
+  px.r(sx, sy, sw, sh, pal.cream);
+  px.r(sx, sy + sh - 1, sw, 1, pal.creamLo);
+  if (!o.label) return;
+  const s = o.labelMode === 'half' && px.P >= 2 ? 0.5 : 1;
+  const inner = sw - 2;
+  const cols = Math.floor((inner / s + 1) / 4);
+  // Text sits between the padding row and the shade row
+  const rows = sh - 2;
+  const maxLines = Math.min(2, Math.floor((rows / s + 1) / 6));
+  const lines = fitLines(o.label, cols, maxLines);
+  const free = rows / s - (lines.length * 6 - 1);
+  let ty = sy + 1 + Math.max(0, Math.floor(free / 2)) * s;
+  for (const ln of lines) {
+    const fx = inner / s - (ln.length * 4 - 1);
+    px.text(ln, sx + 1 + Math.floor(fx / 2) * s, ty, s, pal.ink);
+    ty += 6 * s;
+  }
+}
+
+function drawFront(px, o, D, bx, by, W, H, L) {
+  const { pal, T } = o;
+  const t = o.t || 0;
+  px.r(bx + 1, by + L.lowTop, W - 2, 1, T.lo);
+  const m = Math.max(1, Math.round(W * 0.07));
+  const top = by + L.lowTop + 1, bottom = by + H - 1;
+  const dw = Math.max(3, Math.round(W * 0.2));
+  const dx = bx + W - 1 - m - dw, dh = bottom - top;
+  px.r(dx, top, dw, dh, pal.woodLo);
+  px.r(dx + 1, top + 1, dw - 2, dh - 1, pal.wood);
+  if (dw >= 5) px.r(dx + 2, top + 2, dw - 4, Math.max(1, Math.round(dh * 0.25)), pal.glass);
+  px.r(dx + dw - 2, top + Math.floor(dh * 0.55), 1, 1, pal.yellow);
+  const wx = bx + 1 + m;
+  let wr = dx - m;
+  if (D.window === 'pole') {
+    const pw = Math.max(1, Math.round(W * 0.07));
+    const p0 = wr - pw;
+    const turn = Math.floor(t * 6);
+    for (let y = top + 1; y < bottom - 1; y++) for (let x = 0; x < pw; x++) {
+      const k = (y + x + turn) % 4;
+      px.r(p0 + x, y, 1, 1, k < 2 ? pal.red : k === 2 ? pal.white : pal.blue);
+    }
+    px.r(p0, top, pw, 1, pal.ink);
+    px.r(p0, bottom - 1, pw, 1, pal.ink);
+    wr = p0 - 1;
+  }
+  const ww = wr - wx, wh = dh - 1;
+  if (ww < 3 || wh < 3) return;
+  px.r(wx, top, ww, wh, pal.creamLo);
+  const gx = wx + 1, gy = top + 1, gw = ww - 2, gh = wh - 2;
+  px.r(gx, gy, gw, gh, pal.glass);
+  px.r(gx, gy + gh - 1, gw, 1, pal.glassLo);
+  if (gw > 4) { px.r(gx + gw - 3, gy, 2, 1, pal.glassHi); px.r(gx + gw - 4, gy + 1, 1, 1, pal.glassHi); }
+  drawGoods(px, D.window, gx, gy, gw, gh, pal, t);
+  px.r(wx - 1, top + wh, ww + 2, 1, D.window === 'flowers' ? pal.leafLo : pal.cream);
+}
+
+function drawGoods(px, kind, gx, gy, gw, gh, pal, t) {
+  const yb = gy + gh - 1;
+  if (kind === 'crates') {
+    const fruit = [pal.red, pal.yellow, pal.leaf];
+    px.r(gx, yb, gw, 1, pal.woodLo);
+    for (let x = 0; x < gw; x++) px.r(gx + x, yb - 1, 1, 1, fruit[(x >> 1) % 3]);
+    if (gh >= 6) for (let x = 1; x < gw - 1; x += 2) px.r(gx + x, yb - 2, 1, 1, fruit[((x >> 1) + 1) % 3]);
+  } else if (kind === 'cup') {
+    const cx = gx + Math.floor(gw / 2) - 1;
+    px.r(cx, yb - 1, 3, 2, pal.white);
+    px.r(cx + 3, yb - 1, 1, 1, pal.white);
+    if (gh >= 5) {
+      const f = Math.floor(t * 3) % 2;
+      px.r(cx + 1 + f, yb - 3, 1, 1, pal.white);
+      if (gh >= 6) px.r(cx + 2 - f, yb - 4, 1, 1, pal.white);
+    }
+  } else if (kind === 'loaves') {
+    for (let x = 1; x + 3 <= gw; x += 4) { px.r(gx + x, yb, 3, 1, pal.wood); px.r(gx + x, yb - 1, 3, 1, pal.creamLo); }
+    if (gh >= 6) for (let x = 3; x + 3 <= gw; x += 4) { px.r(gx + x, yb - 2, 3, 1, pal.wood); px.r(gx + x, yb - 3, 3, 1, pal.creamLo); }
+  } else if (kind === 'books') {
+    const spines = [pal.red, pal.blue, pal.yellow, pal.leaf, pal.cream];
+    for (let x = 0; x < gw; x++) {
+      if ((x + 1) % 6 === 0) continue;
+      const h = 1 + ((x * 7) % 3 === 0 ? 1 : 0) + (gh >= 8 ? 1 : 0);
+      px.r(gx + x, yb - h + 1, 1, h, spines[(x * 3) % 5]);
+    }
+  } else if (kind === 'flowers') {
+    const petals = [pal.red, pal.pink, pal.yellow];
+    for (let x = 0; x < gw; x++) {
+      px.r(gx + x, yb, 1, 1, pal.leaf);
+      px.r(gx + x, yb - 1, 1, 1, x % 2 === 0 ? petals[(x >> 1) % 3] : pal.leafLo);
+    }
+  }
+}
+
+function drawAwning(px, D, bx, ay, W, h, T, pal) {
+  const A = T[D.aw[0]] || pal[D.aw[0]], B = T[D.aw[1]] || pal[D.aw[1]];
+  const ax = bx - 1, aw = W + 2;
+  if (D.awning === 'stripes') {
+    const sw = Math.max(2, Math.round(W / 9));
+    for (let x = 0; x < aw; x++) {
+      const k = Math.floor(x / sw) % 2, c = k ? B : A, xi = x % sw;
+      px.r(ax + x, ay, 1, h - 1, c);
+      if (sw >= 3 ? xi > 0 && xi < sw - 1 : k === 0) px.r(ax + x, ay + h - 1, 1, 1, c);
+    }
+  } else if (D.awning === 'fringe') {
+    px.r(ax, ay, aw, h - 1, A);
+    for (let x = 0; x < aw; x += 2) px.r(ax + x, ay + h - 1, 1, 1, B);
+  } else {
+    px.r(ax, ay, aw, h - 1, T.lo);
+    px.r(ax, ay, aw, 1, pal.creamLo);
+    for (let x = 1; x < aw; x += 2) px.r(ax + x, ay + 1, 1, 1, pal.cream);
+    px.r(ax, ay + h - 2, aw, 1, pal.creamLo);
+  }
+  px.r(ax, ay, 1, h - 1, pal.ink);
+  px.r(ax + aw - 1, ay, 1, h - 1, pal.ink);
+}
+
+function drawShutter(px, drop, bx, by, W, H, L, pal) {
+  const top = by + L.lowTop;
+  const rows = Math.round((H - 1 - L.lowTop) * Math.min(1, drop));
+  if (rows <= 0) return;
+  px.r(bx + 1, top, W - 2, rows, pal.shutter);
+  for (let y = 1; y < rows; y += 2) px.r(bx + 1, top + y, W - 2, 1, pal.shutterLo);
+  px.r(bx + 1, top + rows - 1, W - 2, 1, pal.shutterLo);
+}
+
+/** How high the body sits and where each foot goes (offset from its hip, height off the ground), for the chosen legs. */
+function legPose(o) {
+  const lift = o.lift || 0;
+  if (lift < LEG.minLift) return { raise: Math.round(lift), feet: null };
+  const gait = (LEG_STYLES[o.legs || settings.legs] || LEG_STYLES.stride).gait;
+  // Walking left runs the frames backward along the column, so flip them to keep the stride moving forward
+  const dir = o.dir || 1, f = (dir > 0 ? o.frame || 0 : 4 - (o.frame || 0)) & 3;
+  const r = Math.max(1, Math.round(o.W * LEG.reach)), half = Math.round(r / 2);
+  const up = Math.max(1, Math.round(o.ch * LEG.footRaise));
+  let raise = Math.round(lift), left = [0, 0], right = [0, 0];
+  if (o.walking && gait === 'stride') {
+    // Contact, passing, contact, passing; the body rises a pixel on each pass
+    const L = [[r, 0], [0, 0], [-r, 0], [0, up]][f], R = [[-r, 0], [0, up], [r, 0], [0, 0]][f];
+    left = [L[0] * dir, L[1]];
+    right = [R[0] * dir, R[1]];
+    raise += f & 1;
+  } else if (o.walking && gait === 'sidestep') {
+    // The leading foot steps out, then the trailing one closes in
+    const lead = [[r, 0], [half, 0], [0, 0], [half, up]][f], trail = [[0, 0], [half, up], [r, 0], [half, 0]][f];
+    const ld = [lead[0] * dir, lead[1]], tr = [trail[0] * dir, trail[1]];
+    if (dir > 0) { right = ld; left = tr; } else { left = ld; right = tr; }
+    raise += f & 1;
+  } else if (o.walking && gait === 'hop') {
+    // Airborne mid-column, crouched at each takeoff and landing
+    const s = Math.sin(Math.PI * (o.phase || 0));
+    const air = Math.round(o.ch * LEG.hopHeight * s), crouch = Math.round(o.ch * LEG.hopCrouch * (1 - s) * (1 - s));
+    left = [1, air];
+    right = [-1, air];
+    raise += air - crouch;
+  }
+  return { raise, feet: [{ dx: left[0], up: left[1] }, { dx: right[0], up: right[1] }] };
+}
+
+/** Two-segment leg: the knee sits off the hip-to-foot line on the outer side, keeping both segments their full length. */
+function kneeIK(hx, hy, fx, fy, seg, side) {
+  const dx = fx - hx, dy = fy - hy, D = Math.hypot(dx, dy) || 1;
+  const k = Math.sqrt(Math.max(0, seg * seg - (D / 2) * (D / 2)));
+  let nx = -dy / D, ny = dx / D;
+  if (nx * side < 0) { nx = -nx; ny = -ny; }
+  return { x: hx + dx / 2 + nx * k, y: hy + dy / 2 + ny * k };
+}
+
+function drawLegs(px, o, hipY, ground, pose) {
+  const { W, pal } = o;
+  const st = LEG_STYLES[o.legs || settings.legs] || LEG_STYLES.stride;
+  const knee = Math.max(1, Math.round(W * LEG.kneeOut));
+  // Straight-ish at full height, with the same slight outward knee as today's renderer
+  const seg = Math.hypot(o.ch / 2, knee);
+  const chunky = st.look === 'chunky';
+  const lw = chunky ? Math.max(3, Math.round(o.cw * LEG.chunkyShare)) : o.legW;
+  // Seen from the front, shoes point at the camera; from the side, along the walk
+  const front = st.gait !== 'stride';
+  const dir = o.dir || 1;
+  const shoeW = lw + 2, shoeH = lw > 2 ? 2 : 1;
+  const legs = [-1, 1].map((side, i) => {
+    const hx = Math.round(o.cx + side * W * LEG.hipSpread), f = pose.feet[i];
+    const sole = ground - 1 - f.up, fx = hx + f.dx, fy = sole - Math.floor((lw - 1) / 2);
+    const k = kneeIK(hx, hipY, fx, fy, seg, side);
+    const sx = front ? fx - Math.floor(shoeW / 2) : fx - Math.floor((lw - 1) / 2) - (dir > 0 ? 0 : 2);
+    return { hx, fx, fy, sole, sx, kx: Math.round(k.x), ky: Math.round(k.y) };
+  });
+  if (chunky) {
+    for (const l of legs) {
+      px.line(l.hx, hipY, l.kx, l.ky, pal.ink, lw + 2);
+      px.line(l.kx, l.ky, l.fx, l.fy, pal.ink, lw + 2);
+      px.r(l.sx - 1, l.sole - shoeH, shoeW + 2, shoeH + 1, pal.ink);
+    }
+  }
+  for (const l of legs) {
+    const c = chunky ? pal.pants : pal.ink;
+    px.line(l.hx, hipY, l.kx, l.ky, c, lw);
+    px.line(l.kx, l.ky, l.fx, l.fy, c, lw);
+    px.r(l.sx, l.sole - shoeH + 1, shoeW, shoeH, chunky ? pal.woodLo : pal.ink);
+  }
+}
+
+function drawDizzy(px, cx, topY, o) {
+  const { pal } = o;
+  const t = o.t || 0;
+  const cy = topY - Math.round(o.ch * 0.16);
+  for (let k = 0; k < 3; k++) {
+    const a = t * MOTION.dizzyRate + (k * TAU) / 3;
+    const sx = Math.round(cx + Math.cos(a) * o.W * 0.45), sy = Math.round(cy + Math.sin(a) * o.ch * 0.1);
+    px.r(sx - 1, sy, 3, 1, pal.accent);
+    px.r(sx, sy - 1, 1, 3, pal.accent);
+    if (Math.sin(a) > 0) px.r(sx, sy, 1, 1, pal.white);
+  }
+}
+
+function drawPushMeter(px, cx, topY, frac, o) {
+  const { pal, W } = o;
+  const h = Math.max(2, Math.round(o.ch * 0.07));
+  const y = topY - Math.round(o.ch * 0.14) - h, x = Math.round(cx - W / 2);
+  px.r(x - 1, y - 1, W + 2, h + 2, pal.ink);
+  px.r(x, y, W, h, pal.shutterLo);
+  px.r(x, y, Math.round(W * Math.min(1, frac)), h, pal.danger);
+}
+
+// ---------- people ----------
+function drawPerson(px, set, view, frame, cx, feetY, colors, outline) {
+  const rows = set[view].concat(set.legs[frame & 3]);
+  px.map(rows, Math.round(cx - rows[0].length / 2), Math.round(feetY) - rows.length, colors, outline);
+}
+
+function canopyRows(R) { return Math.max(3, Math.round(R * 0.75)); }
+function paraGap(R) { return Math.round(R * 0.9) + 1; }
+function paraHeight(d) { return d.paraMap.length + paraGap(d.R) + canopyRows(d.R) + 1; }
+
+function drawCanopy(px, cx, bottomY, R, chute, pal) {
+  const A = pal[chute.A], B = pal[chute.B];
+  const h = canopyRows(R), y0 = bottomY - h, pw = Math.max(2, Math.round(R / 2.5));
+  const halves = [];
+  for (let r = 0; r < h; r++) { const v = (h - 0.5 - r) / h; halves.push(Math.max(1, Math.round(R * Math.sqrt(Math.max(0, 1 - v * v))))); }
+  px.r(cx - halves[0], y0 - 1, 2 * halves[0] + 1, 1, pal.ink);
+  for (let r = 0; r < h; r++) px.r(cx - halves[r] - 1, y0 + r, 2 * halves[r] + 3, 1, pal.ink);
+  for (let r = 0; r < h; r++) {
+    for (let x = -halves[r]; x <= halves[r]; x++) {
+      let c = A;
+      if (chute.style === 'stripes') c = Math.floor((x + R) / pw) % 2 ? B : A;
+      else if (chute.style === 'center') c = Math.abs(x) <= Math.floor(pw / 2) ? B : A;
+      else if (chute.style === 'seams') c = (x + R) % pw === 0 ? B : A;
+      // Scalloped rim between panels
+      if (r === h - 1 && (x + R) % pw === 0) c = pal.ink;
+      px.r(cx + x, y0 + r, 1, 1, c);
+    }
+  }
+  px.r(cx - Math.ceil(halves[1] * 0.5), y0 + 1, 1, 1, pal.white);
+}
+
+/** A parachuter with its feet at (cx, feetY). Lean is -1, 0 or 1: the canopy shifts instead of rotating. */
+function drawPara(px, d, cx, feetY, chute, lean, colors, pal) {
+  const map = d.paraMap, w = map[0].length;
+  const left = Math.round(cx - w / 2), top = Math.round(feetY) - map.length;
+  const rimY = top - paraGap(d.R);
+  const ccx = left + Math.floor(w / 2) + lean * (d.R >= 8 ? 2 : 1);
+  px.line(ccx - d.R + 1, rimY, left, top + PARA_HAND, pal.line);
+  px.line(ccx + d.R - 1, rimY, left + w - 1, top + PARA_HAND, pal.line);
+  drawCanopy(px, ccx, rimY, d.R, chute, pal);
+  px.map(map, left, top, colors, pal.ink);
+}
+function swayStep(t, phase) { return Math.max(-1, Math.min(1, Math.round(Math.sin(t * LOOK.swayRate + phase) * 1.4))); }
+
+// ---------- backgrounds ----------
+function drawSky(px, w, h, pal) {
+  const n = pal.sky.length, bh = h / n;
+  for (let i = 0; i < n; i++) {
+    const a = Math.round(i * bh), b = Math.round((i + 1) * bh);
+    px.r(0, a, w, b - a, pal.sky[i]);
+    if (i === 0) continue;
+    // Dithered band edges
+    for (let x = 0; x < w; x += 2) px.r(x, a, 1, 1, pal.sky[i - 1]);
+    for (let x = 1; x < w; x += 4) px.r(x, a + 1, 1, 1, pal.sky[i - 1]);
+  }
+}
+function drawClouds(px, w, skyH, d, pal, t) {
+  const speed = d.cw / 16;
+  for (let i = 0; i < 3; i++) {
+    const span = w + 30;
+    const x = Math.round(((t * speed * (1 + i * 0.5) + i * 97) % span) - 16);
+    px.map(CLOUD, x, Math.round(skyH * (0.1 + i * 0.2)), { w: pal.cloud, l: pal.cloudLo });
+  }
+}
+function drawSkyline(px, w, gy, d, pal) {
+  const rng = mulberry32(3), s = d.cw / 32;
+  for (let x = 0; x < w;) {
+    const bw = Math.round((10 + rng() * 14) * s), bh = Math.round((0.4 + rng() * 0.9) * d.ch);
+    px.r(x, gy - bh, bw, bh, pal.skyline);
+    for (let wy = gy - bh + 2; wy < gy - 2; wy += 3) for (let wx = x + 2; wx < x + bw - 2; wx += 3) if (rng() > 0.55) px.r(wx, wy, 1, 1, pal.skylineWin);
+    x += bw + (rng() > 0.6 ? 1 : 0);
+  }
+}
+function drawStreet(px, gy, w, h, d, pal) {
+  const sw = Math.round(h * LOOK.sidewalkShare);
+  px.r(0, gy, w, sw, pal.walk);
+  px.r(0, gy, w, 1, pal.curbTop);
+  const joint = Math.round(d.cw / 2);
+  for (let x = Math.round(d.cw / 4); x < w; x += joint) px.r(x, gy + 1, 1, sw - 3, pal.walkLine);
+  px.r(0, gy + sw - 2, w, 1, pal.curb);
+  px.r(0, gy + sw - 1, w, 1, pal.curbLo);
+  px.r(0, gy + sw, w, h - sw, pal.asphalt);
+  const rng = mulberry32(5);
+  const specks = Math.round((w * (h - sw)) / 40);
+  for (let k = 0; k < specks; k++) px.r(Math.floor(rng() * w), gy + sw + 1 + Math.floor(rng() * (h - sw - 1)), 1, 1, pal.asphaltHi);
+}
+function drawBackdrop(px, w, h, gy, pal) {
+  px.r(0, 0, w, gy, pal.sky[2]);
+  px.r(0, gy, w, h - gy, pal.walk);
+  px.r(0, gy, w, 1, pal.curbTop);
+}
+function drawCrosswalk(px, wave, tl, d, gy, streetH, pal) {
+  const sw = Math.round(streetH * LOOK.sidewalkShare);
+  const top = gy + sw + 2, bottom = gy + streetH - 2;
+  const x0 = wave.col * d.cw + 2, x1 = (wave.col + SCENE.waveWidth) * d.cw - 2;
+  const iv = SCENE.waveLineInterval, n = SCENE.waveLines;
+  const off = wave.at + n * iv, end = off + SCENE.waveSpawn, fadeEnd = end + SCENE.waveFade;
+  if (tl < wave.at - 1 || tl > fadeEnd) return;
+  const ctx = px.c;
+  if (tl < off) {
+    // The empty crosswalk: a blinking dashed outline
+    ctx.globalAlpha = Math.sin(tl * 6) > 0 ? 0.75 : 0.35;
+    for (let x = x0; x < x1; x += 4) { px.r(x, top, 2, 1, pal.zebra); px.r(x, bottom - 1, 2, 1, pal.zebra); }
+    for (let y = top; y < bottom; y += 4) { px.r(x0, y, 1, 2, pal.zebra); px.r(x1 - 1, y, 1, 2, pal.zebra); }
+  }
+  // Bars drawn bottom to top; the wave steps off with the last one
+  const shown = tl < wave.at ? 0 : Math.min(n, Math.floor((tl - wave.at) / iv));
+  ctx.globalAlpha = tl > end ? Math.max(0.15, 1 - Math.ceil(((tl - end) / SCENE.waveFade) * 3) / 3) : 0.9;
+  const slot = (bottom - top) / n, bh = Math.max(2, Math.round(slot * 0.55));
+  for (let k = 0; k < shown; k++) px.r(x0 + 1, Math.round(bottom - (k + 1) * slot + (slot - bh) / 2), x1 - x0 - 2, bh, pal.zebra);
+  ctx.globalAlpha = 1;
+}
+
+// ---------- offscreen transforms ----------
+const spriteCanvas = document.createElement('canvas');
+function art(cv, w, h) {
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  const c = cv.getContext('2d');
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.clearRect(0, 0, w, h);
+  c.imageSmoothingEnabled = false;
+  return c;
+}
+/** Draws `fn` at art resolution into a w×h sprite, then places it at (ox, oy), rotated and scaled about a pivot after scaling up. */
+function drawTransformed(px, ox, oy, w, h, fn, { angle = 0, sx = 1, sy = 1 }, pivX, pivY) {
+  fn(new Pix(art(spriteCanvas, w, h), 1));
+  const ctx = px.c, P = px.P;
+  ctx.save();
+  ctx.translate((ox + pivX) * P, (oy + pivY) * P);
+  ctx.rotate(angle);
+  ctx.scale(sx, sy);
+  ctx.drawImage(spriteCanvas, -pivX * P, -pivY * P, w * P, h * P);
+  ctx.restore();
+}
+
+// ---------- the street scene ----------
+class Scene {
+  constructor() { this.rng = mulberry32(11); this.t = 0; this.shoppers = []; this.paras = []; this.fx = []; this.id = 1; this.trickle = 0.6; this.paraT = 0.2; this.loopIdx = -1; this.waveCount = []; }
+  get tl() { return this.t % SCENE.loop; }
+  walker() { return keyAt(SCENE.walkKeys, this.tl); }
+  drop() { const tl = this.tl; return tl < 3 || tl >= 9.5 ? 0 : Math.min(1, (tl - 3) / LOOK.idleWarn); }
+  isOpen(s) { return !s.closed && !(s.idle && this.drop() >= 1); }
+  column(c) {
+    const out = SCENE.shops.filter((s) => s.col === c).sort((a, b) => a.level - b.level).map((s) => ({ level: s.level, open: this.isOpen(s) }));
+    const w = this.walker();
+    if (Math.abs(w.col - c) < 0.5) {
+      const walking = w.lift > 0.05;
+      out.push({ level: 0, open: true, walker: true, walking });
+      out.push({ level: 1, open: true, rider: true, lift: w.lift });
+    }
+    return out;
+  }
+  topOf(c) { const st = this.column(c); return st.some((e) => e.walker) ? 2 + this.walker().lift : st.length; }
+  spawnShopper(c, rise = 0) { const sh = { id: this.id++, col: c, lane: (this.rng() - 0.5) * 0.6, rise, state: 'cross' }; this.shoppers.push(sh); return sh; }
+  arrive(sh) {
+    const st = this.column(sh.col);
+    // A walking shop blocks the column: shoppers pass under its legs
+    const target = st.length && st[0].walking ? null : st.find((e) => e.open);
+    if (target) { sh.state = 'done'; this.fx.push({ x: sh.col + 0.5, y: target.level + 0.4 + (target.lift || 0), str: '+1', age: 0 }); }
+    else { sh.state = 'leave'; sh.rise = 0; }
+  }
+  step(dt) {
+    this.t += dt;
+    const tl = this.tl, li = Math.floor(this.t / SCENE.loop);
+    if (li !== this.loopIdx) { this.loopIdx = li; this.waveCount = SCENE.waves.map(() => 0); }
+    SCENE.waves.forEach((w, i) => {
+      const off = w.at + SCENE.waveLines * SCENE.waveLineInterval, gap = SCENE.waveSpawn / SCENE.waveSize;
+      while (this.waveCount[i] < SCENE.waveSize && tl >= off + this.waveCount[i] * gap) { this.waveCount[i]++; this.spawnShopper(w.col + Math.floor(this.rng() * SCENE.waveWidth)); }
+    });
+    this.trickle -= dt;
+    if (this.trickle <= 0) { this.trickle = 0.7 + this.rng() * 0.9; this.spawnShopper(Math.floor(this.rng() * SCENE.cols)); }
+    for (const sh of this.shoppers) {
+      if (sh.state === 'cross') { sh.rise += dt / LOOK.crossTime; if (sh.rise >= 1) { sh.rise = 1; this.arrive(sh); } }
+      else if (sh.state === 'leave') { sh.rise += dt / LOOK.leaveTime; if (sh.rise >= 1) sh.state = 'done'; }
+    }
+    this.shoppers = this.shoppers.filter((s) => s.state !== 'done');
+    this.paraT -= dt;
+    if (this.paraT <= 0) { this.paraT = 0.8 + this.rng() * 0.7; this.paras.push({ x: this.rng() * (SCENE.cols - 2) + 0.2, y: SCENE.skyFloors - 0.3, chute: Math.floor(this.rng() * CHUTES.length), phase: this.rng() * TAU, id: this.id++ }); }
+    for (const p of this.paras) {
+      p.y -= dt * SCENE.fall;
+      p.x += dt * SCENE.wind;
+      const c = Math.floor(p.x);
+      if (c >= SCENE.cols) { p.gone = true; continue; }
+      const st = this.column(c), top = this.topOf(c), topE = st[st.length - 1];
+      // Enters the top shop it touches when open; a closed top lets it fall to the street
+      if (topE && topE.open && p.y <= top && p.y > top - 0.35) { p.gone = true; this.fx.push({ x: p.x, y: top + 0.1, str: '+3', age: 0 }); }
+      else if (p.y <= 0) { p.gone = true; this.arrive(this.spawnShopper(c, 1)); }
+    }
+    this.paras = this.paras.filter((p) => !p.gone);
+    for (const f of this.fx) f.age += dt;
+    this.fx = this.fx.filter((f) => f.age < FX.time);
+  }
+}
+const scene = new Scene();
+for (let i = 0; i < 240; i++) scene.step(1 / 60);
+
+function sceneSize(d) { const sky = Math.round(SCENE.skyFloors * d.ch), street = Math.round(LOOK.streetDepth * d.ch); return { w: SCENE.cols * d.cw, h: sky + street, sky, street }; }
+
+function drawScene(px, d, pal, _t, v) {
+  const sc = scene, t = sc.t, tl = sc.tl;
+  const { cw, ch } = d;
+  const { w: SW, h: SH, sky: gy, street } = sceneSize(d);
+  layer(px, v, 'sky', SW, SH, (p) => drawSky(p, SW, gy, pal));
+  drawClouds(px, SW, gy, d, pal, t);
+  layer(px, v, 'ground', SW, SH, (p) => { drawSkyline(p, SW, gy, d, pal); drawStreet(p, gy, SW, street, d, pal); });
+  for (const w of SCENE.waves) drawCrosswalk(px, w, tl, d, gy, street, pal);
+  const base = { pal, ...d, t, labelMode: settings.label };
+  for (const s of SCENE.shops.slice().sort((a, b) => a.level - b.level)) {
+    drawShop(px, { ...base, cx: (s.col + 0.5) * cw, feetY: gy - s.level * ch, design: s.design, T: ramp(hueFor(s.hue), pal), label: s.name, shutter: s.closed ? 1 : s.idle ? sc.drop() : 0, dizzy: s.dizzy });
+  }
+  const w = sc.walker(), wx = (w.col + 0.5) * cw;
+  const wk = drawShop(px, { ...base, cx: wx, feetY: gy, ...walkPose(w, ch), design: SCENE.walker.design, T: ramp(hueFor(SCENE.walker.hue), pal), label: SCENE.walker.name });
+  drawShop(px, { ...base, cx: wx, feetY: wk.top, design: SCENE.rider.design, T: ramp(hueFor(SCENE.rider.hue), pal), label: SCENE.rider.name });
+
+  const feet = gy + Math.round(street * LOOK.sidewalkShare * LOOK.sidewalkFeet);
+  const far = SH + d.person.front.length + 4;
+  const people = sc.shoppers.map((sh) => ({ sh, y: sh.state === 'cross' ? feet + (1 - sh.rise) * (far - feet) : feet + sh.rise * (far - feet) })).sort((a, b) => a.y - b.y);
+  for (const { sh, y } of people) {
+    const cx = (sh.col + 0.5 + sh.lane) * cw, frame = Math.floor(t * 8 + sh.id) & 3;
+    if (sh.state === 'cross') drawPerson(px, d.person, 'back', frame, cx, y, personColors(sh.id), pal.ink);
+    else {
+      px.c.globalAlpha = LOOK.leaveAlpha * (1 - sh.rise * 0.5);
+      drawPerson(px, d.person, 'front', frame, cx, y, greyColors(pal), pal.greyLo);
+      px.c.globalAlpha = 1;
+    }
+  }
+  for (const p of sc.paras) drawPara(px, d, p.x * cw, gy - p.y * ch, CHUTES[p.chute], swayStep(t, p.phase), personColors(p.id), pal);
+  const s = cw >= 48 ? 2 : 1;
+  for (const f of sc.fx) {
+    const u = f.age / FX.time;
+    const y = gy - f.y * ch - u * FX.rise * ch - 5 * s;
+    px.c.globalAlpha = u < 0.6 ? 1 : 1 - Math.ceil(((u - 0.6) / 0.4) * 3) / 3;
+    px.textOutlined(f.str, Math.round(f.x * cw - ((f.str.length * 4 - 1) * s) / 2), Math.round(y), s, pal.yellow, pal.ink);
+    px.c.globalAlpha = 1;
+  }
+}
+
+// Static layers drawn once per size and palette
+function layer(px, v, name, w, h, fn) {
+  const key = name + settings.pal;
+  let c = v.cache[key];
+  if (!c) {
+    c = document.createElement('canvas');
+    c.width = w * px.P; c.height = h * px.P;
+    const cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    fn(new Pix(cx, px.P));
+    v.cache[key] = c;
+  }
+  px.c.drawImage(c, 0, 0);
+}
+
+// ---------- cards ----------
+function cardBase(d, pal, t) { return { pal, ...d, t, labelMode: settings.label, design: 0, T: ramp(hueFor(6), pal), label: 'Lettuce Pray' }; }
+function stateSize(d) { return { w: 2 * d.cw, h: 3 * d.ch + Math.round(d.ch * 0.45) + LOOK.ground }; }
+function strain(t) {
+  const tl = t % 1.8, amt = tl < 1.4 ? Math.min(1, tl / MOTION.pushTime) : 0;
+  return { amt, angle: amt * MOTION.strainLean + Math.sin(t * MOTION.strainRate) * MOTION.strainWobble * amt };
+}
+function drawTower(p, d, pal, t, cx, gy, danger) {
+  const b = { pal, ...d, t, labelMode: settings.label };
+  const r = drawShop(p, { ...b, cx, feetY: gy, design: 4, T: ramp(hueFor(2), pal), label: 'Petal Pushers', danger });
+  drawShop(p, { ...b, cx, feetY: r.top, design: 5, T: ramp(hueFor(3), pal), label: 'Hair Force One', danger });
+}
+
+function drawState(key, px, d, pal, t, v) {
+  const gy = v.h - LOOK.ground;
+  drawBackdrop(px, v.w, v.h, gy, pal);
+  const base = cardBase(d, pal, t), cx = d.cw;
+  if (key === 'open') drawShop(px, { ...base, cx, feetY: gy });
+  else if (key === 'closing') { const tl = t % 5.5; drawShop(px, { ...base, cx, feetY: gy, shutter: tl < 0.5 ? 0 : Math.min(1, (tl - 0.5) / LOOK.idleWarn) }); }
+  else if (key === 'closed') drawShop(px, { ...base, cx, feetY: gy, shutter: 1 });
+  else if (key === 'walking' || key === 'carrying') {
+    const k = keyAt(CARD_WALK, t % 3);
+    const o = { ...base, cx: (k.col + 0.5) * d.cw, feetY: gy, ...walkPose(k, d.ch) };
+    const r = drawShop(px, o);
+    if (key === 'carrying') drawShop(px, { ...base, cx: o.cx, feetY: r.top, design: 3, T: ramp(hueFor(7), pal), label: 'Novel Idea' });
+  } else if (key === 'dizzy') {
+    const angle = Math.sin(t * MOTION.dizzyRate) * MOTION.dizzyAngle;
+    drawTransformed(px, 0, 0, v.w, gy, (p) => drawShop(p, { ...base, cx, feetY: gy }), { angle }, cx, gy);
+    drawDizzy(px, cx, gy - d.ch, base);
+  } else if (key === 'push') {
+    // The pusher leans forward with the tower's strain, pulse for pulse; the meter stays put
+    const s = strain(t), wx = 0.5 * d.cw, tx = 1.5 * d.cw, pivX = Math.round(tx - d.W / 2) + d.W;
+    let top = 0;
+    drawTransformed(px, 0, 0, v.w, gy, (p) => { top = drawShop(p, { ...base, cx: wx, feetY: gy, lift: d.ch, dir: 1 }).top; }, { angle: s.angle }, Math.round(wx), gy);
+    if (s.amt > 0) drawPushMeter(px, wx, top, s.amt, base);
+    drawTransformed(px, 0, 0, v.w, gy, (p) => drawTower(p, d, pal, t, tx, gy, s.amt > 0), { angle: s.angle }, pivX, gy);
+  }
+}
+
+function drawMotion(px, d, pal, t, v) {
+  const gy = v.h - LOOK.ground;
+  drawBackdrop(px, v.w, v.h, gy, pal);
+  // Lean: the tower rotates about the bottom corner it would fall over
+  const s = strain(t), tx = d.cw, pivX = Math.round(tx - d.W / 2) + d.W;
+  drawTransformed(px, 0, 0, 2 * d.cw, gy, (p) => drawTower(p, d, pal, t, tx, gy, s.amt > 0), { angle: s.angle }, pivX, gy);
+  // Topple: off the base shop on an arc with a half turn, then a squash on landing
+  const ox = 2 * d.cw;
+  px.r(ox, 0, 1, gy, pal.sky[1]);
+  const base = { pal, ...d, t, labelMode: settings.label };
+  drawShop(px, { ...base, cx: ox + 0.5 * d.cw, feetY: gy, design: 1, T: ramp(hueFor(1), pal), label: 'Bean There' });
+  const tl = t % 2.2, start = 0.4;
+  let col = 0, lev = 1, spin = 0, squash = 0;
+  if (tl >= start && tl < start + MOTION.arcTime) {
+    const u = (tl - start) / MOTION.arcTime, e = u * u * (3 - 2 * u);
+    col = 2 * e; lev = 1 - e + Math.sin(Math.PI * u) * MOTION.arcHeight; spin = u * MOTION.arcSpin;
+  } else if (tl >= start + MOTION.arcTime) {
+    col = 2; lev = 0;
+    const since = tl - start - MOTION.arcTime;
+    squash = since < MOTION.squashTime ? 1 - since / MOTION.squashTime : 0;
+  }
+  // A square sprite around the shop's center leaves room for the spin
+  const S = 2 * Math.ceil(d.ch * 0.8);
+  const cx = ox + (col + 0.5) * d.cw, feet = gy - lev * d.ch;
+  const sx = Math.round(cx - S / 2), sy = Math.round(feet - d.ch / 2 - S / 2);
+  const sprite = (p) => drawShop(p, { ...base, cx: S / 2, feetY: S / 2 + d.ch / 2, design: 2, T: ramp(hueFor(4), pal), label: 'Upper Crust' });
+  const q = squash * MOTION.squash;
+  // Spin about the center in the air; squash about the feet after landing
+  if (squash > 0) drawTransformed(px, sx, sy, S, S, sprite, { sx: 1 + q / 2, sy: 1 - q }, S / 2, S / 2 + d.ch / 2);
+  else drawTransformed(px, sx, sy, S, S, sprite, { angle: spin }, S / 2, S / 2);
+}
+
+function peopleSize(d) { const pw = d.person.front[0].length, ph = d.person.front.length + 3; return { w: 6 * (pw + 5) + 4, h: 2 * (ph + 5) + 2, pw, ph }; }
+function drawPeople(px, d, pal, t, v) {
+  const { pw, ph } = peopleSize(d);
+  px.r(0, 0, v.w, v.h, pal.asphalt);
+  const rng = mulberry32(9);
+  for (let k = 0; k < (v.w * v.h) / 40; k++) px.r(Math.floor(rng() * v.w), Math.floor(rng() * v.h), 1, 1, pal.asphaltHi);
+  for (let row = 0; row < 2; row++) for (let k = 0; k < 6; k++) {
+    const cx = 2 + k * (pw + 5) + (pw + 5) / 2, feet = 2 + row * (ph + 5) + ph + 2;
+    const grey = row === 1 && k >= 4;
+    drawPerson(px, d.person, row === 0 ? 'back' : 'front', Math.floor(t * 6 + k) & 3, cx, feet, grey ? greyColors(pal) : personColors(k * 7 + 3), grey ? pal.greyLo : pal.ink);
+  }
+}
+
+function chuteSize(d) { const cell = 2 * d.R + 8, ph = paraHeight(d) + 4; return { w: 5 * cell, h: 2 * ph, cell, ph }; }
+function drawChutes(px, d, pal, t, v) {
+  const { cell, ph } = chuteSize(d);
+  px.r(0, 0, v.w, v.h, pal.sky[2]);
+  for (let k = 0; k < 5; k++) drawPara(px, d, (k + 0.5) * cell, ph - 2, CHUTES[k], 0, personColors(k * 5 + 1), pal);
+  [-1, 0, 1].forEach((lean, k) => drawPara(px, d, (k + 1.5) * cell, 2 * ph - 2, CHUTES[0], lean, personColors(1), pal));
+}
+function drawFalling(px, d, pal, t, v) {
+  drawSky(px, v.w, v.h, pal);
+  drawClouds(px, v.w, v.h, d, pal, t);
+  const hgt = paraHeight(d), period = 5;
+  for (let i = 0; i < 5; i++) {
+    const ph = (t / period + i / 5) % 1;
+    const x = (((i * 1.1 + 0.4 + ph * 1.4) % 5) + 0) * d.cw;
+    drawPara(px, d, x, ph * (v.h + hgt) - 2, CHUTES[i], swayStep(t, i * 1.7), personColors(i * 5 + 1), pal);
+  }
+}
+
+// ---------- views ----------
+const views = [];
+const io = new IntersectionObserver((entries) => { for (const e of entries) { const v = views.find((x) => x.el === e.target); if (v) v.visible = e.isIntersecting; } });
+function addView(container, spec) {
+  const el = document.createElement('canvas');
+  el.setAttribute('role', 'img');
+  if (spec.alt) el.setAttribute('aria-label', spec.alt);
+  container.appendChild(el);
+  const v = { el, spec, ctx: el.getContext('2d'), P: 1, w: 1, h: 1, d: null, visible: true, dirty: true, cache: {} };
+  views.push(v);
+  io.observe(el);
+  return v;
+}
+function layoutView(v) {
+  const d = dims(v.spec.grid || settings.grid);
+  const { w, h } = v.spec.size(d);
+  const dpr = window.devicePixelRatio || 1;
+  let P;
+  if (v.spec.fixedCss) P = Math.max(1, Math.round(v.spec.fixedCss(d) * dpr));
+  else {
+    const avail = v.el.parentElement.clientWidth || 300;
+    P = Math.max(1, Math.floor((avail * dpr) / w));
+    if (v.spec.maxCss) P = Math.min(P, Math.max(1, Math.round(v.spec.maxCss * dpr)));
+  }
+  v.el.width = w * P; v.el.height = h * P;
+  v.el.style.width = (w * P) / dpr + 'px';
+  Object.assign(v, { P, w, h, d, cache: {}, dirty: true });
+  if (v.spec.caption) v.spec.caption.style.width = v.el.style.width;
+}
+function render(v) {
+  const ctx = v.ctx;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, v.el.width, v.el.height);
+  v.spec.draw(new Pix(ctx, v.P), v.d, PALETTES[settings.pal], v.spec.legClock ? legClock : clock, v);
+  v.dirty = false;
+}
+
+const $ = (id) => document.getElementById(id);
+addView($('v-scene'), { size: sceneSize, draw: drawScene, alt: 'Animated pixel-art street with walking shops, walk-ins and parachuters' });
+
+DESIGNS.forEach((D, i) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h3>${D.name}</h3><div class="cv"></div><p>${DESIGN_NOTES[i]}</p>`;
+  $('v-designs').appendChild(card);
+  addView(card.querySelector('.cv'), {
+    alt: `${D.name} shop design in three tints`,
+    size: (d) => ({ w: 3 * d.cw, h: d.ch + Math.round(d.ch * 0.3) + LOOK.ground }),
+    draw(px, d, pal, t, v) {
+      const gy = v.h - LOOK.ground;
+      drawBackdrop(px, v.w, v.h, gy, pal);
+      for (let k = 0; k < 3; k++) drawShop(px, { pal, ...d, t, labelMode: settings.label, cx: (k + 0.5) * d.cw, feetY: gy, design: i, T: ramp(hueFor(i * 3 + k), pal), label: D.names[k] });
+    },
+  });
+});
+
+for (const s of STATES) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h3>${s.name}</h3><div class="cv"></div><p>${s.note}</p>`;
+  $('v-states').appendChild(card);
+  addView(card.querySelector('.cv'), { alt: `Shop state: ${s.name}`, size: stateSize, draw: (px, d, pal, t, v) => drawState(s.key, px, d, pal, t, v) });
+}
+
+for (const [id, st] of Object.entries(LEG_STYLES)) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h3>${st.name}</h3><div class="cv"></div><p>${st.note}</p>`;
+  $('v-legs').appendChild(card);
+  addView(card.querySelector('.cv'), {
+    alt: `Legs: ${st.name}`, legClock: true,
+    size: (d) => ({ w: 2 * d.cw, h: 2 * d.ch + Math.round(d.ch * 0.3) + LOOK.ground }),
+    draw(px, d, pal, t, v) {
+      const gy = v.h - LOOK.ground;
+      drawBackdrop(px, v.w, v.h, gy, pal);
+      const k = keyAt(LEG_WALK, t % LEG_LOOP);
+      drawShop(px, { ...cardBase(d, pal, t), legs: id, cx: (k.col + 0.5) * d.cw, feetY: gy, ...walkPose(k, d.ch) });
+    },
+  });
+}
+
+addView($('v-motion'), { alt: 'A strained tower and a toppling shop', caption: $('c-motion'), size: (d) => ({ w: 5 * d.cw, h: Math.round(2.9 * d.ch) + LOOK.ground }), draw: drawMotion });
+addView($('v-people'), { alt: 'Walk-in sprites', maxCss: 7, size: peopleSize, draw: drawPeople });
+addView($('v-chutes'), { alt: 'Parachute canopy patterns and sway frames', maxCss: 6, size: chuteSize, draw: drawChutes });
+addView($('v-sky'), { alt: 'Parachuters falling', size: (d) => ({ w: 5 * d.cw, h: 3 * d.ch }), draw: drawFalling });
+
+const RES_NAMES = [['Knead to Know', 2, 5], ['Hair Force One', 5, 11]];
+for (const mode of ['grid', 'half']) {
+  const rl = document.createElement('span');
+  rl.className = 'rl';
+  rl.textContent = mode === 'grid' ? 'Art pixels' : 'Half pixels';
+  $('v-res').appendChild(rl);
+  for (const g of [24, 32, 48]) {
+    const cell = document.createElement('div');
+    cell.className = 'cv';
+    $('v-res').appendChild(cell);
+    addView(cell, {
+      grid: g, alt: `Signs at ${g} art pixels per column, ${rl.textContent.toLowerCase()}`,
+      fixedCss: (d) => 96 / d.cw,
+      size: (d) => ({ w: 2 * d.cw, h: d.ch + Math.round(d.ch * 0.25) + LOOK.ground }),
+      draw(px, d, pal, t, v) {
+        const gy = v.h - LOOK.ground;
+        drawBackdrop(px, v.w, v.h, gy, pal);
+        RES_NAMES.forEach(([name, design, hue], k) => drawShop(px, { pal, ...d, t, labelMode: mode, cx: (k + 0.5) * d.cw, feetY: gy, design, T: ramp(hueFor(hue), pal), label: name }));
+      },
+    });
+  }
+}
+
+// ---------- controls ----------
+function sync() {
+  document.querySelectorAll('[data-set]').forEach((b) => b.setAttribute('aria-pressed', String(String(settings[b.dataset.set]) === b.dataset.val)));
+  $('play').textContent = settings.playing ? 'Pause' : 'Play';
+}
+document.querySelectorAll('[data-set]').forEach((b) => b.addEventListener('click', () => {
+  const k = b.dataset.set;
+  settings[k] = k === 'grid' || k === 'legSpeed' ? Number(b.dataset.val) : b.dataset.val;
+  save(); sync();
+  if (k === 'grid') views.forEach(layoutView); else views.forEach((v) => { v.dirty = true; });
+}));
+$('play').addEventListener('click', () => { settings.playing = !settings.playing; sync(); });
+
+// The legs cards run on their own clock so they can play slowed down
+let clock = 4, legClock = 0, last = performance.now(), resizeT = 0, lastW = window.innerWidth;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => { if (window.innerWidth !== lastW) { lastW = window.innerWidth; views.forEach(layoutView); } }, 120);
+});
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (settings.playing) { clock += dt; legClock += dt * settings.legSpeed; scene.step(dt); }
+  for (const v of views) if (v.dirty || (settings.playing && v.visible)) render(v);
+  requestAnimationFrame(frame);
+}
+sync();
+views.forEach(layoutView);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => views.forEach(layoutView));
+requestAnimationFrame(frame);
+})();
+</script>
