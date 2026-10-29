@@ -72,16 +72,25 @@ export class Pix {
   readonly P: number;
   readonly ox: number;
   readonly oy: number;
+  // Mirrored left to right about the middle of the art pixel at x = 0
+  readonly flip: boolean;
 
-  constructor(c: Ctx2D, P: number, ox = 0, oy = 0) {
+  constructor(c: Ctx2D, P: number, ox = 0, oy = 0, flip = false) {
     this.c = c;
     this.P = P;
     this.ox = ox;
     this.oy = oy;
+    this.flip = flip;
+  }
+
+  /** The same pen drawing mirrored, so a shape centered on x = 0 faces the other way pixel for pixel. */
+  mirrored(): Pix {
+    return new Pix(this.c, this.P, this.ox, this.oy, !this.flip);
   }
 
   r(x: number, y: number, w: number, h: number, col: string): void {
     if (w <= 0 || h <= 0) return;
+    if (this.flip) x = 1 - x - w;
     const { P, ox, oy } = this;
     const X = Math.round(ox + x * P);
     const Y = Math.round(oy + y * P);

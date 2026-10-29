@@ -70,7 +70,8 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
       const lift = a.legs * walkLift * GRID.cellH;
       const climb = climbStep(a);
       const dir = climb ? a.climb!.dir : a.dir;
-      const pose = legPose(lift, SHOP.W, a.moving, strideFrame(a.x), dir, climb);
+      // Facing left mirrors the right-facing legs, so its frames count distance walked leftward
+      const pose = legPose(lift, SHOP.W, a.moving, strideFrame(a.x * dir), climb);
       bob += pose.raise - Math.round(lift);
       if (st && s.level >= st.level && !danger) {
         // The tower turns about the bottom corner it falls over
@@ -120,7 +121,7 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
   }
 
   const px = new Pix(ctx, P);
-  drawLegs(px, pose, SHOP.W, dir, PALETTE.ink);
+  drawLegs(dir > 0 ? px : px.mirrored(), pose, SHOP.W, PALETTE.ink);
   const sprite = shopSprite({
     design: shopDesign(it.index),
     tint: shopTint(shopHue(it.index)),

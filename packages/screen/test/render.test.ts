@@ -2,10 +2,10 @@ import { parachuteSky, TICK, type GameState, type SimEvent } from '@walking-shop
 import { describe, expect, it } from 'vitest';
 import { run, shop, street } from '../../sim/test/helpers.ts';
 import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN } from '../src/render/colors.ts';
-import { kneeIK, legPose, strideFrame, type ClimbStep } from '../src/render/legs.ts';
+import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/render/legs.ts';
 import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
 import { GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK } from '../src/render/look.ts';
-import { fitLines } from '../src/render/pix.ts';
+import { fitLines, Pix } from '../src/render/pix.ts';
 import { SHOP } from '../src/render/shopArt.ts';
 import { strainsByColumn } from '../src/render/strain.ts';
 import { PHASE2_BANNER, StreetView } from '../src/render/view.ts';
@@ -176,11 +176,29 @@ describe('riders', () => {
 describe('legs', () => {
   const lift = GRID.cellH;
 
-  it('stride forward both ways: walking left mirrors the frames walking right', () => {
-    for (let f = 0; f < 4; f++) {
-      const right = legPose(lift, SHOP.W, true, f, 1).feet!;
-      const left = legPose(lift, SHOP.W, true, (4 - f) % 4, -1).feet!;
-      expect(left.map((ft) => [-ft.dx, ft.up])).toEqual(right.map((ft) => [ft.dx, ft.up]));
+  /** The art pixels a pose covers, at one device pixel per art pixel, as "x,y" keys. */
+  function cells(pose: LegPose, flip: boolean): Set<string> {
+    const out = new Set<string>();
+    const ctx = {
+      fillStyle: '',
+      fillRect(x: number, y: number, w: number, h: number) {
+        for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) out.add(`${i},${j}`);
+      },
+    };
+    const px = new Pix(ctx as unknown as CanvasRenderingContext2D, 1);
+    drawLegs(flip ? px.mirrored() : px, pose, SHOP.W, '#');
+    return out;
+  }
+
+  it('face left as the right-facing legs mirrored pixel for pixel, striding and climbing', () => {
+    const poses = [0, 1, 2, 3].map((f) => legPose(lift, SHOP.W, true, f));
+    for (const u of [0.1, 0.4, 0.7]) poses.push(legPose(lift, SHOP.W, true, 0, { u, rest: lift * (1 - u), rise: lift }));
+    for (const pose of poses) {
+      const mirrored = [...cells(pose, false)].map((k) => {
+        const [x, y] = k.split(',').map(Number);
+        return `${-x},${y}`;
+      });
+      expect(cells(pose, true)).toEqual(new Set(mirrored));
     }
   });
 
@@ -232,7 +250,7 @@ describe('legs', () => {
       expect(a.y).toBeGreaterThanOrEqual(y);
       y = a.y;
       const rest = (a.climb.to - a.y) * GRID.cellH;
-      const front = legPose(lift, SHOP.W, true, 0, 1, { u: a.climb.u, rest, rise: GRID.cellH }).feet![1];
+      const front = legPose(lift, SHOP.W, true, 0, { u: a.climb.u, rest, rise: GRID.cellH }).feet![1];
       expect(front.dx).toBeGreaterThanOrEqual(0);
       // Once lifted, the foot sits on the step: as high over the body's feet as the rise still ahead
       if (a.climb.u >= LEG_LOOK.climbLiftShare && rest <= cap) expect(Math.abs(front.up - rest)).toBeLessThanOrEqual(1);
@@ -242,20 +260,17 @@ describe('legs', () => {
     expect(a.y).toBe(shop(g, 'A').level);
   });
 
-  it('climb left as the mirror of climbing right', () => {
+  it('lead a climb with the front foot raised', () => {
     for (const u of [0.1, 0.4, 0.7]) {
-      const c: ClimbStep = { u, rest: GRID.cellH * (1 - u), rise: GRID.cellH };
-      const right = legPose(lift, SHOP.W, true, 0, 1, c).feet!;
-      const left = legPose(lift, SHOP.W, true, 0, -1, c).feet!;
-      expect([...left].reverse().map((ft) => [-ft.dx, ft.up])).toEqual(right.map((ft) => [ft.dx, ft.up]));
-      // The leading foot is the raised one
-      expect(right[1].up).toBeGreaterThan(0);
-      expect(right[0].up).toBe(0);
+      const [back, front] = legPose(lift, SHOP.W, true, 0, { u, rest: lift * (1 - u), rise: lift }).feet!;
+      expect(front.up).toBeGreaterThan(0);
+      expect(front.dx).toBeGreaterThan(0);
+      expect(back.up).toBe(0);
     }
   });
 
   it('are hidden while sitting', () => {
-    expect(legPose(0, SHOP.W, false, 0, 1).feet).toBeNull();
+    expect(legPose(0, SHOP.W, false, 0).feet).toBeNull();
   });
 });
 

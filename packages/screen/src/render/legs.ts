@@ -18,7 +18,7 @@ function mod(n: number, m: number): number {
   return ((n % m) + m) % m;
 }
 
-/** The stride frame for a column position: frames advance with distance walked, not time. */
+/** The stride frame for a distance walked (in columns, forward counting up): frames advance with distance, not time. */
 export function strideFrame(x: number): number {
   return mod(Math.floor(x * LEG_LOOK.stridesPerCell * LEG_LOOK.framesPerStride), LEG_LOOK.framesPerStride);
 }
@@ -50,20 +50,18 @@ export function climbEase(u: number): number {
 }
 
 /**
- * The legs for a body `W` art pixels wide, standing `lift` art pixels tall. A moving shop strides (seen from the side,
- * body up a pixel on each pass); walking left runs the frames backward along the column, so they're flipped to keep
- * the stride moving forward. A climbing shop steps up instead.
+ * The legs for a body `W` art pixels wide, standing `lift` art pixels tall, facing right: facing left draws the same
+ * pose mirrored. A moving shop strides (seen from the side, body up a pixel on each pass); a climbing one steps up.
  */
-export function legPose(lift: number, W: number, moving: boolean, frame: number, dir: 1 | -1, climb: ClimbStep | null = null): LegPose {
+export function legPose(lift: number, W: number, moving: boolean, frame: number, climb: ClimbStep | null = null): LegPose {
   const raise = Math.round(lift);
   if (lift < LEG_LOOK.minLift) return { raise, feet: null };
-  if (climb) return { raise, feet: climbFeet(W, dir, climb) };
+  if (climb) return { raise, feet: climbFeet(W, climb) };
   if (!moving) return { raise, feet: [{ dx: 0, up: 0 }, { dx: 0, up: 0 }] };
-  const n = LEG_LOOK.framesPerStride;
-  const f = mod(dir > 0 ? frame : -frame, n);
+  const f = mod(frame, LEG_LOOK.framesPerStride);
   const reach = Math.max(1, Math.round(W * LEG_LOOK.reach));
   const up = Math.max(1, Math.round(GRID.cellH * LEG_LOOK.footRaise));
-  const foot = ([r, u]: number[]): Foot => ({ dx: r * reach * dir, up: u * up });
+  const foot = ([r, u]: number[]): Foot => ({ dx: r * reach, up: u * up });
   return { raise: raise + (f % 2), feet: [foot(LEFT_STEPS[f]), foot(RIGHT_STEPS[f])] };
 }
 
@@ -71,14 +69,14 @@ export function legPose(lift: number, W: number, moving: boolean, frame: number,
  * Stepping up: the front foot lifts and reaches forward until it meets the step, then stays on it, so it straightens
  * and comes back under the hip as the body rises. The back foot pushes off behind.
  */
-function climbFeet(W: number, dir: 1 | -1, c: ClimbStep): [Foot, Foot] {
+function climbFeet(W: number, c: ClimbStep): [Foot, Foot] {
   const lift = Math.min(1, c.u / LEG_LOOK.climbLiftShare);
   const raised = GRID.cellH * LEG_LOOK.climbFootRaise * lift;
   const ahead = c.rise > 0 ? Math.min(lift, c.rest / c.rise) : 0;
-  const front = { dx: Math.round(dir * W * LEG_LOOK.climbReach * ahead), up: Math.round(Math.max(0, Math.min(raised, c.rest))) };
-  const back = { dx: -dir * Math.max(1, Math.round(W * LEG_LOOK.reach)), up: 0 };
-  // The right foot (second) leads walking right
-  return dir > 0 ? [back, front] : [front, back];
+  const front = { dx: Math.round(W * LEG_LOOK.climbReach * ahead), up: Math.round(Math.max(0, Math.min(raised, c.rest))) };
+  const back = { dx: -Math.max(1, Math.round(W * LEG_LOOK.reach)), up: 0 };
+  // Facing right, the right foot (second) leads
+  return [back, front];
 }
 
 /** Two-segment leg: the knee sits off the hip-to-foot line on the outer side, keeping both segments their full length. */
@@ -97,10 +95,10 @@ export function kneeIK(hx: number, hy: number, fx: number, fy: number, seg: numb
 }
 
 /**
- * Both legs, from the underside of a body centered on x = 0 down to the ground at y = 0. Segments are sized to reach a
- * floor with the knees barely out, so a shorter lift folds them out sideways.
+ * Both legs, from the underside of a body centered on x = 0 down to the ground at y = 0, facing right (pass a mirrored
+ * pen to face left). Segments are sized to reach a floor with the knees barely out, so a shorter lift folds them out.
  */
-export function drawLegs(px: Pix, pose: LegPose, W: number, dir: 1 | -1, ink: string): void {
+export function drawLegs(px: Pix, pose: LegPose, W: number, ink: string): void {
   if (!pose.feet) return;
   const lw = Math.max(1, Math.round(GRID.cellW * LEG_LOOK.legShare));
   const knee = Math.max(1, Math.round(W * LEG_LOOK.kneeOut));
@@ -109,7 +107,6 @@ export function drawLegs(px: Pix, pose: LegPose, W: number, dir: 1 | -1, ink: st
   // Shoes point along the walk, toes ahead
   const shoeW = lw + 2;
   const shoeH = lw > 2 ? 2 : 1;
-  const toeBack = dir > 0 ? 0 : shoeW - lw;
   const half = Math.floor((lw - 1) / 2);
   for (const [i, side] of [-1, 1].entries()) {
     const f = pose.feet[i];
@@ -122,6 +119,6 @@ export function drawLegs(px: Pix, pose: LegPose, W: number, dir: 1 | -1, ink: st
     const ky = Math.round(k.y);
     px.line(hx, hipY, kx, ky, ink, lw);
     px.line(kx, ky, fx, fy, ink, lw);
-    px.r(fx - half - toeBack, sole - shoeH + 1, shoeW, shoeH, ink);
+    px.r(fx - half, sole - shoeH + 1, shoeW, shoeH, ink);
   }
 }
