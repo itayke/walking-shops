@@ -1,3 +1,4 @@
+import { Latch } from '@walking-shops/net';
 import type { Dir } from '@walking-shops/sim';
 
 const LEFT_KEYS = new Set(['a', 'arrowleft']);
@@ -13,12 +14,13 @@ export interface Keyboard {
 export function createKeyboard(): Keyboard {
   // Held walk keys, most recent last
   const held: string[] = [];
-  // A press released before the sim reads it still counts once, so a quick tap is never lost between ticks
-  let tapped: Dir = 0;
+  // Same tap handling as a phone's input: a press released before the sim reads it still counts once
+  const latch = new Latch();
   const sideOf = (key: string): Dir => (LEFT_KEYS.has(key) ? -1 : RIGHT_KEYS.has(key) ? 1 : 0);
   const release = (key: string) => {
     const i = held.indexOf(key);
     if (i >= 0) held.splice(i, 1);
+    latch.set(sideOf(held.at(-1) ?? ''));
   };
 
   const onDown = (e: KeyboardEvent) => {
@@ -29,24 +31,20 @@ export function createKeyboard(): Keyboard {
     if (e.repeat) return;
     release(key);
     held.push(key);
-    tapped = sideOf(key);
+    latch.set(sideOf(key));
   };
   const onUp = (e: KeyboardEvent) => release(e.key.toLowerCase());
   // Keys released while the window is in the background never send keyup
   const onBlur = () => {
     held.length = 0;
-    tapped = 0;
+    latch.clear();
   };
 
   window.addEventListener('keydown', onDown);
   window.addEventListener('keyup', onUp);
   window.addEventListener('blur', onBlur);
   return {
-    dir: () => {
-      const d = held.length > 0 ? sideOf(held.at(-1)!) : tapped;
-      tapped = 0;
-      return d;
-    },
+    dir: () => latch.read(),
     dispose: () => {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);

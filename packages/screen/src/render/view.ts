@@ -62,6 +62,8 @@ export class StreetView {
   effects: Effect[] = [];
   // Floors of sky shown, eased toward what the street needs
   floors = 0;
+  // The shop played at this screen (the keyboard), drawn highlighted with a marker; phones' shops are not
+  you: string | null = null;
   private phase2 = false;
 
   reset(g: GameState): void {

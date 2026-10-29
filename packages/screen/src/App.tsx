@@ -1,10 +1,14 @@
-import { BOT_MIX, botPlayers, CONFIG, createGame, step, TICK, type GameState, type PlayerSpec } from '@walking-shops/sim';
+import { Host, NET, randomId, type ScreenMsg } from '@walking-shops/net';
+import { connectScreen, type Link } from '@walking-shops/net/client';
+import { CONFIG, step, TICK, type GameState, type PlayerSpec } from '@walking-shops/sim';
 import { useEffect, useRef, useState } from 'react';
 import { createTuningPanel } from './dev/tuningPanel.ts';
 import { Board, Hud, Paused, Results } from './hud/Hud.tsx';
 import { createKeyboard } from './input/keyboard.ts';
+import { currentRoom, isRoomTaken, newRoom, PARTY_HOST, type RoomInfo } from './net/room.ts';
+import { shopFill, shopHue } from './render/colors.ts';
 import { drawFrame } from './render/draw.ts';
-import { onThemeChange, readTheme } from './render/theme.ts';
+import { onThemeChange, readTheme, type Theme } from './render/theme.ts';
 import { StreetView } from './render/view.ts';
 
 // Most ticks run in one frame after a stall (a background tab), so the sim never spirals
@@ -23,13 +27,16 @@ const params = new URLSearchParams(location.search);
 const SEED_PARAM = params.get('seed');
 const START_AT = Number(params.get('at') ?? 0);
 
-// The keyboard plays one shop until phones arrive (Milestone 3); bots play the rest
+// The keyboard always plays one shop; phones take over bots' shops as they join, and bots play the rest
 const YOU: PlayerSpec = { id: 'you', label: 'YOU', controller: 'human' };
 
-// The game holds CONFIG by reference, so tuning applies live
-function newGame(): GameState {
-  const seed = SEED_PARAM === null ? Math.floor(Math.random() * SEED_RANGE) : Number(SEED_PARAM);
-  return createGame(CONFIG, [YOU, ...botPlayers(BOT_MIX)], seed);
+const seed = () => (SEED_PARAM === null ? Math.floor(Math.random() * SEED_RANGE) : Number(SEED_PARAM));
+
+/** The room link, or none yet. Host sends through it; a closed or missing link drops state packets until reconnect. */
+interface Net {
+  link: Link<ScreenMsg> | null;
+  room: RoomInfo;
+  online: boolean;
 }
 
 /** Run the round (and its animations) ahead with no input, as if watched. */
@@ -43,8 +50,14 @@ function fastForward(g: GameState, view: StreetView, seconds: number): void {
 /** The big screen, offline: the street on a canvas, the HUD above it. */
 export function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const game = useRef<GameState>(null!);
-  game.current ??= newGame();
+  const net = useRef<Net>(null!);
+  net.current ??= { link: null, room: currentRoom(), online: false };
+  // The game holds CONFIG by reference, so tuning applies live
+  const host = useRef<Host>(null!);
+  // Phones get their shop's tint as a plain color, resolved from the screen's theme tokens
+  const theme = useRef<Theme>(null!);
+  theme.current ??= readTheme();
+  host.current ??= new Host({ config: CONFIG, local: [YOU], seed, tint: (i) => shopFill(theme.current, shopHue(i)), send: (m) => net.current.link?.send(m) });
   const paused = useRef(false);
   const [board, setBoard] = useState(false);
   // Re-renders the HUD a few times a second; the canvas redraws every frame on its own
@@ -54,10 +67,28 @@ export function App() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const view = new StreetView();
-    view.reset(game.current);
-    fastForward(game.current, view, START_AT);
-    let theme = readTheme();
-    const offTheme = onThemeChange(() => (theme = readTheme()));
+    view.you = YOU.id;
+    view.reset(host.current.game);
+    fastForward(host.current.game, view, START_AT);
+    const connect = () => {
+      const n = net.current;
+      n.link = connectScreen({
+        host: PARTY_HOST,
+        room: n.room.code,
+        key: n.room.key,
+        id: randomId(),
+        onMessage: (m) => host.current.receive(m),
+        onStatus: (online) => (n.online = online),
+        onRefused: (code) => {
+          // Someone else's room under this code: open a new one
+          if (!isRoomTaken(code)) return;
+          n.room = newRoom();
+          connect();
+        },
+      });
+    };
+    connect();
+    const offTheme = onThemeChange(() => (theme.current = readTheme()));
 
     let width = 0;
     let height = 0;
@@ -70,14 +101,17 @@ export function App() {
       canvas.width = Math.round(width * ratio);
       canvas.height = Math.round(height * ratio);
     };
-    const observer = new ResizeObserver(resize);
+    // Resizing clears the canvas, so redraw straight away rather than wait for the next frame
+    const observer = new ResizeObserver(() => {
+      resize();
+      draw();
+    });
     observer.observe(canvas);
     resize();
 
     let acc = 0;
     const restart = () => {
-      game.current = newGame();
-      view.reset(game.current);
+      view.reset(host.current.restart());
       acc = 0;
       paused.current = false;
       setHudTick((t) => t + 1);
@@ -98,22 +132,23 @@ export function App() {
 
     let last = performance.now();
     let lastHud = last;
+    let lastFlush = last;
     // Animation clock: stands still while paused, so wobbles and bobs freeze too
     let clock = 0;
     let raf = 0;
     const draw = () => {
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      drawFrame(ctx, game.current, view, width, height, theme, clock);
+      drawFrame(ctx, host.current.game, view, width, height, theme.current, clock);
     };
     const frame = (now: number) => {
       const dt = Math.min(MAX_FRAME_SECONDS, (now - last) / MS_PER_SECOND);
       last = now;
-      const g = game.current;
+      const g = host.current.game;
       if (!paused.current) {
         if (!g.over) {
           acc += dt;
           for (let n = 0; acc >= TICK && n < MAX_TICKS_PER_FRAME; n++) {
-            view.onEvents(g, step(g, { [YOU.id]: keyboard.dir() }, TICK));
+            view.onEvents(g, step(g, { ...host.current.inputs(), [YOU.id]: keyboard.dir() }, TICK));
             acc -= TICK;
           }
           acc = Math.min(acc, TICK);
@@ -122,6 +157,10 @@ export function App() {
         clock += dt;
       }
       draw();
+      if (now - lastFlush >= NET.stateInterval * MS_PER_SECOND) {
+        lastFlush = now;
+        host.current.flush();
+      }
       if (now - lastHud >= HUD_REFRESH_MS) {
         lastHud = now;
         setHudTick((t) => t + 1);
@@ -139,14 +178,16 @@ export function App() {
       offTheme();
       disposePanel();
       keyboard.dispose();
+      net.current.link?.close();
+      net.current.link = null;
       window.removeEventListener('keydown', onKey);
     };
   }, []);
 
-  const g = game.current;
+  const g = host.current.game;
   return (
     <div className="screen">
-      <Hud g={g} you={YOU.id} />
+      <Hud g={g} you={YOU.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats }} />
       <div className="stage">
         <canvas ref={canvasRef} />
         {board && <Board g={g} you={YOU.id} />}

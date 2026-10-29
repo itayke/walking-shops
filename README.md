@@ -7,8 +7,10 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 | Path | What |
 |---|---|
 | `packages/sim` | The game simulation: pure, deterministic TypeScript. All tunables in `src/config.ts` |
-| `packages/screen` | Big-screen app (Vite + React, Canvas 2D street). For now offline: you play one shop from the keyboard, bots play the rest |
-| `packages/phone` | Phone controller (Vite + React). For now: the two tap-to-step, hold-to-walk halves, not yet connected |
+| `packages/screen` | Big-screen app (Vite + React, Canvas 2D street). Hosts the room: runs the game, you play one shop from the keyboard, phones take over bots' shops |
+| `packages/phone` | Phone controller (Vite + React): two tap-to-step, hold-to-walk halves in your shop's tint |
+| `packages/net` | Shared networking: message protocol, the screen's `Host` (seats phones in shops), the PartySocket client, the load test |
+| `packages/server` | The relay: a PartyServer Durable Object on Cloudflare, one per room. Checks and forwards; the screen is the authority |
 | `reference/` | The JavaScript prototype the sim was ported from. Behavior to match, not code to ship |
 
 ## Commands
@@ -22,12 +24,26 @@ npm run typecheck
 npm run bench                  # income by bot type, 30 rounds per row
 npm run bench -- 200           # more rounds
 npm run bench:compare          # the same rows on reference/sim.js too, line by line
+npm run dev:server             # the relay, on port 7322 (also on the LAN)
 npm run dev:screen             # http://localhost:7320
 npm run dev:phone              # http://localhost:7321 (also on the LAN, for a real phone)
+npm run loadtest               # a headless screen and 50 fake phones through the relay; -- --phones N --seconds S
 npm run build
 ```
 
-## Playing the screen offline
+## Playing with phones (local)
+
+Run `dev:server`, `dev:screen` and `dev:phone`, then open the screen at http://localhost:7320. The HUD shows the join URL (this machine's LAN address and a room code) and how many phones are connected; a green dot means the relay is reachable. Phones on the same Wi-Fi open that URL. A phone that joins mid-round takes over a bot's shop; `R` starts a new round with every connected phone and fewer bots. A phone keeps its shop across a dropped connection or a reload.
+
+The screen keeps its room across reloads (`?room=CODE` picks one). Over plain http on the LAN, phones can't keep the screen awake (Wake Lock needs https); the deployed version can.
+
+Without the relay, the screen still plays offline: keyboard and bots.
+
+## Deploying
+
+`npm run deploy:server` deploys the relay to Cloudflare (run `npx wrangler login` once first). Build the apps with `VITE_PARTY_HOST` (the relay's host, e.g. `walking-shops.<account>.workers.dev`) and, for the screen, `VITE_PHONE_URL` (where the phone app is served).
+
+## Keys on the screen
 
 | Key | Does |
 |---|---|

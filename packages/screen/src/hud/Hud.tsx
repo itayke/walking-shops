@@ -1,4 +1,6 @@
+import type { Seat } from '@walking-shops/net';
 import type { GameState, Shop } from '@walking-shops/sim';
+import { joinUrl } from '../net/room.ts';
 import { shopFillCss, shopHue } from '../render/colors.ts';
 
 const SECONDS_PER_MINUTE = 60;
@@ -21,8 +23,33 @@ function ranked(g: GameState): { s: Shop; index: number }[] {
   return g.shops.map((s, index) => ({ s, index })).sort((a, b) => b.s.income - a.s.income);
 }
 
-/** Phase, clock, round progress with the phase 2 mark, and your score. */
-export function Hud({ g, you }: { g: GameState; you: string }) {
+export interface RoomStatus {
+  code: string;
+  // Connected to the relay
+  online: boolean;
+  phones: ReadonlyMap<string, Seat>;
+}
+
+/** Where phones join, how many are connected, and whether the relay is reachable. QR and lobby come with the join flow. */
+function Join({ room }: { room: RoomStatus }) {
+  const url = joinUrl(room.code);
+  let phones = 0;
+  for (const s of room.phones.values()) if (s.online) phones++;
+  return (
+    <span className="join" title={room.online ? 'Connected to the relay' : 'Relay unreachable: keyboard and bots only'}>
+      <i className={room.online ? 'dot on' : 'dot'} />
+      <a href={url} target="_blank" rel="noreferrer">
+        {url.replace(/^https?:\/\//, '')}
+      </a>
+      <span className="phones">
+        {phones} {phones === 1 ? 'phone' : 'phones'}
+      </span>
+    </span>
+  );
+}
+
+/** Phase, clock, round progress with the phase 2 mark, where to join, and your score. */
+export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomStatus }) {
   const { ROUND } = g.config;
   const phase2 = g.t >= ROUND.paraStart;
   const mine = g.shops.find((s) => s.id === you);
@@ -34,6 +61,7 @@ export function Hud({ g, you }: { g: GameState; you: string }) {
         <i style={{ width: `${Math.min(PERCENT, (PERCENT * g.t) / ROUND.roundTime)}%` }} />
         <b style={{ left: `${Math.min(PERCENT, (PERCENT * ROUND.paraStart) / ROUND.roundTime)}%` }} />
       </div>
+      <Join room={room} />
       {mine && (
         <span className="you">
           {mine.label} <strong>{amount(mine.income)}</strong>

@@ -20,6 +20,8 @@ interface Tilt {
 
 interface Item {
   s: Shop;
+  // The shop played at this screen: highlighted and drawn on top of its layer
+  mine: boolean;
   index: number;
   a: ShopAnim;
   layer: number;
@@ -43,19 +45,17 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
         const wobble = Math.sin(now * MOTION_LOOK.strainRate) * MOTION_LOOK.strainWobble;
         tilt = { x: colX(L, a.x) + (st.dir * bw) / 2, y: floorY(L, a.y), angle: st.dir * st.amount * MOTION_LOOK.strainLean + wobble * st.amount };
       }
-      items.push({ s, index: i, a, layer: a.arc ? LAYER_FLYING : layer, tilt: st && s.level >= st.level ? tilt : null });
+      items.push({ s, mine: s.id === view.you, index: i, a, layer: a.arc ? LAYER_FLYING : layer, tilt: st && s.level >= st.level ? tilt : null });
     }
   }
-  const mine = (s: Shop) => (s.controller === 'human' ? 1 : 0);
-  items.sort((p, q) => p.layer - q.layer || mine(p.s) - mine(q.s));
+  items.sort((p, q) => p.layer - q.layer || Number(p.mine) - Number(q.mine));
   for (const it of items) drawShop(ctx, g, it, L, theme, now);
 }
 
 function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, theme: Theme, now: number): void {
-  const { s, a, tilt } = it;
+  const { s, a, tilt, mine: human } = it;
   const { MOVEMENT } = g.config;
   const look = SHOP_LOOK;
-  const human = s.controller === 'human';
   const bw = L.cellW * look.bodyWidth;
   const bh = L.cellH * look.bodyHeight;
   const lift = a.legs * MOVEMENT.walkLift * L.cellH;

@@ -1,13 +1,12 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { DEV_PORTS } from '../net/src/config.ts';
 
-// Non-default ports; Vite defaults are taken on this host
-const DEV_PORT = 7321;
 const PREVIEW_PORT = 7331;
 
 export default defineConfig({
   plugins: [react()],
   // Exposed on the LAN so a real phone can open it
-  server: { port: DEV_PORT, host: true },
+  server: { port: DEV_PORTS.phone, host: true },
   preview: { port: PREVIEW_PORT, host: true },
 });

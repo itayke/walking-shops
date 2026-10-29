@@ -12,7 +12,11 @@
 ```
 
 - **The presenter's laptop is the authority.** It runs the simulation at a fixed tick and renders. The server only relays messages: joins, inputs to the screen, and per-player state back to each phone.
-- **Tiny payloads.** Phones send input changes only (`-1 | 0 | 1` with a sequence number), not a stream. The screen sends each phone a small state packet a few times a second (phase, score, closed/open, tint).
+- **Tiny payloads.** Phones send input changes only (`-1 | 0 | 1` with a sequence number), not a stream. The screen sends each phone a small state packet when it changes, checked a few times a second and batched into one message (phase, score, rank, closed/open, tint, and the last input seq the sim has read).
+- **The protocol** lives in `packages/net/src/protocol.ts`; the relay and both apps parse every message with it. Connections name their role in the URL (`?role=screen|phone`), and a phone's connection id is its reconnect token.
+- **One screen per room.** The first screen to open a room stores a key with it; a screen without that key is refused, so a phone can't pose as the screen. A reloaded screen (same key) replaces the old one. Refusals arrive as a `refused` message before the close, because a hibernating Durable Object's close code doesn't always reach the client.
+- **The screen's `Host`** (`packages/net/src/host.ts`) owns the round and seats phones: a phone joining mid-round takes over a bot's shop (the last-listed bot first), a new round seats every connected phone and drops one bot per phone, and a phone that drops keeps its shop for the round.
+- **Taps are latched.** Inputs are events, but the sim reads a direction per tick, so each controller (keyboard or phone) goes through a `Latch`: a press released before the tick reads it still counts once.
 - **Latency tolerance is built into the rules.** Grid moves, steps that finish on their own, push times of ~0.9s and crossings of ~2.5s all absorb 100–300 ms of venue cellular.
 
 ## Stack
@@ -32,8 +36,8 @@
 
 ## Reliability
 
-- **Reconnect:** each phone stores a token in localStorage. On reconnect, it reclaims its shop.
-- **Wake Lock** on phones during play (tolerate rejection).
+- **Reconnect:** each phone stores a token in localStorage. On reconnect, it reclaims its shop and resends what it holds. Sequence numbers start from the clock, so they stay ahead after a reload. A phone briefly holding two sockets (reconnected before the old one closed) gets its state on both, and only counts as gone when the last one closes.
+- **Wake Lock** on phones during play (tolerate rejection; it needs https, so not on the LAN dev server).
 - **Dropped phones:** idle shutters close their shop automatically. No special handling needed in the game rules.
 - **Network dies:** the screen fills the town with bots and the presenter plays with the keyboard. The pitch survives.
 - **Cold starts:** warm the server before going on stage.
@@ -42,7 +46,7 @@
 
 - **Simulation:** unit tests on the rules (each row of the movement table), invariants after every tick (every shop indexed exactly once), and golden replays (same seed + inputs produce the same result).
 - **Balance:** a headless bench that runs hundreds of bot rounds and reports income by strategy (see `reference/bench.js`).
-- **Load:** scripted fake phones (50+) against a deployed room.
+- **Load:** `npm run loadtest` runs the real `Host` headless as the screen plus scripted fake phones (50 by default) through a relay, and reports seating and input-to-ack latency. Point it at a deployed room with `-- --host`.
 - **Rehearsal:** a small in-person session with real phones on cellular data.
 
 ## Join flow details

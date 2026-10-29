@@ -154,6 +154,36 @@ body {
   color: var(--accent);
 }
 
+.join {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-data);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.join a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.join .phones {
+  color: var(--muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.dot.on {
+  background: var(--ok);
+}
+
 .hint {
   color: var(--muted);
   font-size: 13px;

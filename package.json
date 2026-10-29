@@ -11,7 +11,10 @@
     "bench": "node packages/sim/bench/bench.ts",
     "bench:compare": "node packages/sim/bench/bench.ts --compare",
     "dev:screen": "npm run dev -w @walking-shops/screen",
-    "dev:phone": "npm run dev -w @walking-shops/phone"
+    "dev:phone": "npm run dev -w @walking-shops/phone",
+    "dev:server": "npm run dev -w @walking-shops/server",
+    "loadtest": "npm run loadtest -w @walking-shops/net --",
+    "deploy:server": "npm run deploy -w @walking-shops/server"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
