@@ -5,7 +5,7 @@ import { useState, type PointerEvent } from 'react';
 const TINT = 'hsl(200 70% 45%)';
 const HELD_BRIGHTNESS = 1.35;
 
-/** Stub controller: the whole phone is two halves, hold left or right to walk. Milestone 3 sends the input. */
+/** Stub controller: the whole phone is two halves, tap left or right to step, hold to keep walking. Milestone 3 sends the input. */
 export function App() {
   const [dir, setDir] = useState<Dir>(0);
   const hold = (d: Dir) => (e: PointerEvent) => {

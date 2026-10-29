@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { classify } from '../src/index.ts';
+import { classify, TICK } from '../src/index.ts';
 import { column, ofType, run, runUntil, shop, street } from './helpers.ts';
 
 // Long enough to cross a cell and settle
 const WALK = 0.6;
 // Comfortably past pushTime
 const LONG_PUSH = 1.5;
+// A tap: one tick of input
+const TAP = TICK;
+// A tick between two taps: one shop moves first, but neither has crossed half a cell when they meet
+const HEAD_START = TICK;
 
 describe('movement table (GAME_DESIGN §6)', () => {
   it('steps across into an empty column', () => {
@@ -64,16 +68,27 @@ describe('movement table (GAME_DESIGN §6)', () => {
     expect(column(g, 1)).toEqual(['C', 'D']);
   });
 
-  it('bumps two walkers pressing toward each other at the same level: both bounce back', () => {
+  it('bumps two walkers that start toward each other together: both bounce back', () => {
     const g = street([['A'], ['B']]);
     const events = run(g, 0.2, { A: 1, B: -1 });
-    expect(ofType(events, 'bump')).toHaveLength(1);
+    expect(ofType(events, 'bump')).toEqual([{ type: 'bump', a: expect.any(String), b: expect.any(String), winner: null }]);
     expect(column(g, 0)).toEqual(['A']);
     expect(column(g, 1)).toEqual(['B']);
     expect(shop(g, 'A').off).toBeLessThan(0);
     expect(shop(g, 'B').off).toBeGreaterThan(0);
     expect(shop(g, 'A').stunT).toBeGreaterThan(0);
     expect(shop(g, 'B').stunT).toBeGreaterThan(0);
+  });
+
+  it('lets the first mover win a bump: the other bounces back, and the first carries on onto it', () => {
+    const g = street([['A'], ['B'], []]);
+    const events = [...run(g, TAP, { A: 1 }), ...run(g, HEAD_START), ...run(g, TAP, { B: -1 }), ...run(g, WALK)];
+    const bumps = ofType(events, 'bump');
+    expect(bumps).toHaveLength(1);
+    expect(bumps[0].winner).toBe('A');
+    expect(shop(g, 'A').stunT).toBe(0);
+    expect(column(g, 0)).toEqual([]);
+    expect(column(g, 1)).toEqual(['B', 'A']);
   });
 
   it('waits behind a walker standing in the target column', () => {
@@ -90,33 +105,63 @@ describe('movement table (GAME_DESIGN §6)', () => {
   });
 });
 
-describe('spring-back', () => {
-  it('snaps back when released before crossing half a cell', () => {
-    const g = street([['A'], []]);
-    run(g, 0.15, { A: 1 });
-    expect(shop(g, 'A').off).toBeGreaterThan(0);
+describe('steps', () => {
+  it('walks a full column on a tap', () => {
+    const g = street([['A'], [], []]);
+    run(g, TAP, { A: 1 });
     run(g, WALK);
+    expect(column(g, 1)).toEqual(['A']);
+    expect(shop(g, 'A').off).toBe(0);
+    expect(shop(g, 'A').walking).toBe(false);
+  });
+
+  it('keeps walking while held, and finishes the column it is in on release', () => {
+    const g = street([['A'], [], [], []]);
+    run(g, g.config.MOVEMENT.cellTime * 1.2, { A: 1 });
+    expect(column(g, 1)).toEqual(['A']);
+    run(g, WALK);
+    expect(column(g, 2)).toEqual(['A']);
+    expect(shop(g, 'A').off).toBe(0);
+  });
+
+  it('turns back to where it came from on an opposite press mid-step', () => {
+    const g = street([['A'], [], []]);
+    run(g, TAP, { A: 1 });
+    run(g, HEAD_START);
+    run(g, TAP, { A: -1 });
+    run(g, WALK);
+    expect(column(g, 0)).toEqual(['A']);
+    expect(shop(g, 'A').off).toBe(0);
+  });
+
+  it('leans into a tower on a tap and springs back without pushing', () => {
+    const g = street([['A'], ['C', 'D'], []]);
+    run(g, TAP, { A: 1 });
+    const events = run(g, LONG_PUSH);
+    expect(ofType(events, 'topple')).toHaveLength(0);
     expect(column(g, 0)).toEqual(['A']);
     expect(shop(g, 'A').off).toBe(0);
     expect(shop(g, 'A').walking).toBe(false);
   });
 
-  it('commits once past half a cell', () => {
+  it('leans into a wall on a tap and springs back', () => {
     const g = street([['A'], []]);
-    run(g, 0.3, { A: 1 });
+    run(g, TAP, { A: -1 });
     run(g, WALK);
-    expect(column(g, 1)).toEqual(['A']);
+    expect(column(g, 0)).toEqual(['A']);
     expect(shop(g, 'A').off).toBe(0);
   });
 });
 
 describe('push-back defense', () => {
-  it('lets the pushed shop walk into its attacker: a bump that resets the push', () => {
+  it('lets the pushed shop walk into its attacker: a bump that bounces both and resets the push', () => {
     const g = street([['A'], ['C', 'D'], []]);
     run(g, 0.4, { A: 1 });
     expect(shop(g, 'A').pushT).toBeGreaterThan(0);
     const events = run(g, LONG_PUSH, { A: 1, D: -1 });
     expect(ofType(events, 'pushback').length).toBeGreaterThan(0);
+    // The attacker moved first, but a push-back bounces both
+    expect(ofType(events, 'bump')[0].winner).toBeNull();
     expect(ofType(events, 'topple')).toHaveLength(0);
     expect(column(g, 1)).toEqual(['C', 'D']);
   });

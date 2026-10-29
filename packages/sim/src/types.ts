@@ -39,6 +39,9 @@ export interface Shop {
   off: number;
   input: Dir;
   lastDir: Dir;
+  // The step under way: a press starts one and it finishes on its own. moveSince is when this walk began (first mover)
+  stepDir: Dir;
+  moveSince: number;
   walking: boolean;
   pressing: boolean;
   stunT: number;
@@ -107,7 +110,7 @@ export interface RngState {
 
 export type SimEvent =
   | { type: 'topple'; by: string; col: number; level: number; fallen: string[]; to: number }
-  | { type: 'bump'; a: string; b: string }
+  | { type: 'bump'; a: string; b: string; winner: string | null }
   | { type: 'pushback'; by: string; col: number; level: number }
   | { type: 'closed'; shop: string }
   | { type: 'reopened'; shop: string }

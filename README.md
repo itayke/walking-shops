@@ -8,7 +8,7 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 |---|---|
 | `packages/sim` | The game simulation: pure, deterministic TypeScript. All tunables in `src/config.ts` |
 | `packages/screen` | Big-screen app (Vite + React, Canvas 2D street). For now offline: you play one shop from the keyboard, bots play the rest |
-| `packages/phone` | Phone controller (Vite + React). For now: the two hold-to-walk halves, not yet connected |
+| `packages/phone` | Phone controller (Vite + React). For now: the two tap-to-step, hold-to-walk halves, not yet connected |
 | `reference/` | The JavaScript prototype the sim was ported from. Behavior to match, not code to ship |
 
 ## Commands
@@ -31,7 +31,7 @@ npm run build
 
 | Key | Does |
 |---|---|
-| `A` / `D` or `←` / `→` | Hold to walk your shop (the one with the arrow over it) |
+| `A` / `D` or `←` / `→` | Tap to step your shop (the one with the arrow over it) one column, hold to keep walking or to push |
 | `Space` | Pause |
 | `B` | Scoreboard |
 | `T` | Tuning panel |

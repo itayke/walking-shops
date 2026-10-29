@@ -17,7 +17,7 @@ A Jackbox-style room game: 10–30 people join from their phones, their business
 
 ## Principles
 
-- **The big screen carries everything.** The phone is a blind controller: two halves, hold to walk. No UI that makes people look down during play.
+- **The big screen carries everything.** The phone is a blind controller: two halves, tap to step, hold to walk. No UI that makes people look down during play.
 - **Every rule must be visible.** There is no tutorial. If a rule can't be seen on screen, it doesn't belong in the game.
 - **Simulation is pure and deterministic.** No DOM, timers, or `Math.random` in the sim. Seeded RNG, fixed tick, `step(state, inputs, dt)`. Rendering only reads state.
 - **All tunables in one config.** Never hard-code a gameplay number in rendering or networking code.

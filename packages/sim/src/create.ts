@@ -35,6 +35,8 @@ function makeShop(p: PlayerSpec): Shop {
     off: 0,
     input: 0,
     lastDir: 1,
+    stepDir: 0,
+    moveSince: 0,
     walking: false,
     pressing: false,
     stunT: 0,

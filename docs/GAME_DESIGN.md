@@ -33,7 +33,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ## 4. Controls (phone)
 
-- The whole phone is two halves: **hold left / hold right to walk.** Release to sit.
+- The whole phone is two halves: **tap left / tap right to step one column; hold to keep walking.** Release and you sit at the next column. Pushing a tower takes a hold.
 - No other UI during play. The phone shows your shop's tint, big, so you can play without looking at it.
 - All feedback is on the big screen: your shop lurches when you press, and pressing brings it to the front of a cluster.
 
@@ -55,10 +55,10 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 | At or below your feet | Step across / step down onto it |
 | One floor above your feet | **Climb** onto it |
 | Two or more floors above your feet | **Push.** Hold for `pushTime` and everything above your first floor **topples** to the far side, landing on top of whatever is there. You can then climb what is left |
-| A walker pressing toward you, within one floor of your level | **Bump:** both bounce back |
+| A walker heading toward you, within one floor of your level | **Bump:** whoever started walking first carries on; the other bounces back. Started together: both bounce |
 
-- **Spring-back:** release before crossing half a cell and you snap back. Past half a cell you commit.
-- **Push-back defense:** a shop being pushed can walk into the attacker. That is a bump (the pushed shop stands one floor above its attacker, which is why bumps reach one floor), which resets the push. This is the only defense and needs no extra rule.
+- **Steps commit (decided after M2 playtest):** a press starts a step that finishes on its own, so a tap moves a full column. Pressing the other way mid-step turns back. A released step that meets a wall or a tower leans and springs back; one that meets a walker waits for it. A tap into a tower never pushes.
+- **Push-back defense:** a shop being pushed can walk into the attacker. That is a bump (the pushed shop stands one floor above its attacker, which is why bumps reach one floor), which resets the push. It always bounces both, even though the attacker moved first. This is the only defense.
 - **After a topple:** fallen shops are stunned for `stunTime` and immune to being pushed for `immuneTime` (shown by a dizzy wobble).
 - **Edge towers can't be toppled** (nowhere to fall).
 - **Carrying:** a walking shop carries everything above it. Carried shops count as sitting, so they can still catch parachuters, but walk-ins can't get past the walker's legs to reach them. A rider can step off at any time.
@@ -94,7 +94,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 - A closed shop earns nothing. Any press reopens it.
 - Climbing onto a closed shop takes its customers (walk-ins go upstairs to you).
 - This also handles dropped or disconnected phones: their shop closes on its own instead of holding a column forever.
-- Known limit: it beats idle phones, not campers. A tap every ~10s keeps a shop open without moving. Waves and phase 2 are what make people move.
+- Known limit: it beats idle phones, not campers. A tap every ~10s keeps a shop open, and a tap into a wall or a tall neighbor does it without moving (elsewhere a tap costs a step). Waves and phase 2 are what make people move.
 
 ## 9. Scoring
 

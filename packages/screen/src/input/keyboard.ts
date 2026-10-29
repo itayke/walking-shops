@@ -4,15 +4,17 @@ const LEFT_KEYS = new Set(['a', 'arrowleft']);
 const RIGHT_KEYS = new Set(['d', 'arrowright']);
 
 export interface Keyboard {
-  /** The held direction: the most recently pressed side that is still down. */
+  /** The held direction (the most recently pressed side that is still down), else a tap not yet read. */
   dir(): Dir;
   dispose(): void;
 }
 
-/** Hold-to-walk on the keyboard, like the phone's two halves. Typing in a field doesn't count. */
+/** The phone's two halves on the keyboard: tap to step, hold to keep walking. Typing in a field doesn't count. */
 export function createKeyboard(): Keyboard {
   // Held walk keys, most recent last
   const held: string[] = [];
+  // A press released before the sim reads it still counts once, so a quick tap is never lost between ticks
+  let tapped: Dir = 0;
   const sideOf = (key: string): Dir => (LEFT_KEYS.has(key) ? -1 : RIGHT_KEYS.has(key) ? 1 : 0);
   const release = (key: string) => {
     const i = held.indexOf(key);
@@ -27,16 +29,24 @@ export function createKeyboard(): Keyboard {
     if (e.repeat) return;
     release(key);
     held.push(key);
+    tapped = sideOf(key);
   };
   const onUp = (e: KeyboardEvent) => release(e.key.toLowerCase());
   // Keys released while the window is in the background never send keyup
-  const onBlur = () => (held.length = 0);
+  const onBlur = () => {
+    held.length = 0;
+    tapped = 0;
+  };
 
   window.addEventListener('keydown', onDown);
   window.addEventListener('keyup', onUp);
   window.addEventListener('blur', onBlur);
   return {
-    dir: () => sideOf(held.at(-1) ?? ''),
+    dir: () => {
+      const d = held.length > 0 ? sideOf(held.at(-1)!) : tapped;
+      tapped = 0;
+      return d;
+    },
     dispose: () => {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);

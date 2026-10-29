@@ -6,7 +6,7 @@ import { botPlayers, createGame, makeConfig, step, type Dir, type GameState } fr
 const SEED = 2026;
 const DECIMALS = 2;
 
-// Two scripted phones: P1 sweeps back and forth, P2 sits and taps to stay open, then joins the push in phase 2
+// Two scripted phones: P1 sweeps back and forth, P2 taps now and then (each tap a step), then joins the push in phase 2
 function inputs(g: GameState): Record<string, Dir> {
   const sweep = Math.floor(g.t / 3) % 2 ? -1 : 1;
   const tap = Math.floor(g.t * 2) % 16 === 0 ? 1 : 0;
@@ -24,27 +24,27 @@ it('replays a fixed seed and inputs to a fixed score table', () => {
   const table = g.shops.map((s) => `${s.label} ${s.income.toFixed(DECIMALS)}`);
   expect({ table, topples: g.stats.topples, lost: g.stats.lost }).toMatchInlineSnapshot(`
     {
-      "lost": 144,
+      "lost": 148,
       "table": [
-        "P1 54.00",
-        "P2 87.90",
-        "N1 19.50",
-        "N2 47.00",
-        "N3 48.60",
-        "N4 20.00",
-        "N5 47.50",
-        "C1 20.00",
-        "C2 22.50",
-        "C3 13.50",
-        "C4 48.60",
-        "A1 44.70",
-        "A2 0.30",
-        "R1 33.00",
-        "R2 34.30",
+        "P1 5.00",
+        "P2 90.00",
+        "N1 32.40",
+        "N2 41.00",
+        "N3 44.40",
+        "N4 50.10",
+        "N5 51.80",
+        "C1 36.70",
+        "C2 25.20",
+        "C3 29.40",
+        "C4 13.90",
+        "A1 15.30",
+        "A2 24.30",
+        "R1 43.00",
+        "R2 26.50",
         "S1 0.00",
         "S2 0.60",
       ],
-      "topples": 4,
+      "topples": 3,
     }
   `);
 });

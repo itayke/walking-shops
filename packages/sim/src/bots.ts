@@ -1,4 +1,5 @@
 import { rand } from './rng.ts';
+import { classify } from './movement.ts';
 import { entryShop, NONE, shopAt } from './street.ts';
 import type { Dir, GameState, Shop } from './types.ts';
 
@@ -151,13 +152,15 @@ export function botUpdate(g: GameState, s: Shop, dt: number): void {
     return;
   }
 
-  // Keep-alive: notice the shutters starting to drop and tap a direction (a lean that springs back)
+  // Keep-alive: notice the shutters starting to drop and tap a direction, into a wall or tower if there is one (a
+  // lean that springs back), else a step
   if (s.controller !== 'sitter' && IDLE.idleOn && s.idleT > IDLE.idleTime - IDLE.idleWarn) {
     if (b.wakeAt < 0) b.wakeAt = g.t + (BOTS.wakeDelay + rand(rng) * BOTS.wakeDelayJitter) * BOTS.botReaction;
     if (g.t >= b.wakeAt) {
       b.wakeAt = NONE;
       b.tapUntil = g.t + BOTS.tapTime;
-      b.tapDir = s.col === 0 ? 1 : s.col === g.C - 1 ? -1 : rand(rng) < 0.5 ? -1 : 1;
+      const blocked = ([-1, 1] as const).filter((d) => ['wall', 'push'].includes(classify(g, s, d).type));
+      b.tapDir = blocked.length > 0 ? blocked[0] : rand(rng) < 0.5 ? -1 : 1;
     }
   } else b.wakeAt = NONE;
   if (g.t < b.tapUntil) {

@@ -21,8 +21,8 @@ export const STREET = {
 };
 
 // Walking, climbing, pushing and bumping. lean is how far a blocked shop leans into the next cell; bumpGap is how
-// close two walkers get before they bump, and bumpKnock how far a bump throws each back; springBack is how much faster
-// than walking a released shop snaps back to its cell
+// close two walkers get before they bump, and bumpKnock how far a bump throws the loser back; springBack is how much
+// faster than walking a blocked or knocked-back shop settles back into its cell
 export const MOVEMENT = {
   cellTime: 0.45,
   walkLift: 1,

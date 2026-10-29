@@ -13,7 +13,7 @@
 
 - **The presenter's laptop is the authority.** It runs the simulation at a fixed tick and renders. The server only relays messages: joins, inputs to the screen, and per-player state back to each phone.
 - **Tiny payloads.** Phones send input changes only (`-1 | 0 | 1` with a sequence number), not a stream. The screen sends each phone a small state packet a few times a second (phase, score, closed/open, tint).
-- **Latency tolerance is built into the rules.** Grid moves, spring-back, push times of ~0.9s and crossings of ~2.5s all absorb 100–300 ms of venue cellular.
+- **Latency tolerance is built into the rules.** Grid moves, steps that finish on their own, push times of ~0.9s and crossings of ~2.5s all absorb 100–300 ms of venue cellular.
 
 ## Stack
 
