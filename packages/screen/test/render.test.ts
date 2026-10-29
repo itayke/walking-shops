@@ -2,9 +2,9 @@ import { parachuteSky, TICK, type GameState, type SimEvent } from '@walking-shop
 import { describe, expect, it } from 'vitest';
 import { run, shop, street } from '../../sim/test/helpers.ts';
 import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN } from '../src/render/colors.ts';
-import { kneeIK, legPose, strideFrame } from '../src/render/legs.ts';
+import { kneeIK, legPose, strideFrame, type ClimbStep } from '../src/render/legs.ts';
 import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
-import { GRID, PEOPLE_LOOK, SHOP_LOOK } from '../src/render/look.ts';
+import { GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK } from '../src/render/look.ts';
 import { fitLines } from '../src/render/pix.ts';
 import { SHOP } from '../src/render/shopArt.ts';
 import { strainsByColumn } from '../src/render/strain.ts';
@@ -148,6 +148,22 @@ describe('riders', () => {
     expect(b.carried).toBeCloseTo(a.legs * g.config.MOVEMENT.walkLift);
   });
 
+  it('climb with the walker under them, a floor above it all the way', () => {
+    const g = street([['A', 'C'], ['B'], []]);
+    const view = new StreetView();
+    view.reset(g);
+    const a = view.anim(shop(g, 'A'));
+    const c = view.anim(shop(g, 'C'));
+    let climbed = false;
+    for (let i = 0; i < Math.round(SETTLE / TICK); i++) {
+      play(g, view, TICK, { A: 1 });
+      climbed ||= a.climb !== null;
+      expect(c.y - a.y).toBeCloseTo(1);
+      expect(c.carried).toBeCloseTo(a.carried + a.legs * g.config.MOVEMENT.walkLift);
+    }
+    expect(climbed).toBe(true);
+  });
+
   it('stand up within standTime', () => {
     const g = street([['A'], []]);
     const view = new StreetView();
@@ -199,6 +215,43 @@ describe('legs', () => {
       strode ||= a.moving;
     }
     expect(strode).toBe(true);
+  });
+
+  it('step up a floor: the front foot lifts onto the step and stays on it as the body rises', () => {
+    const g = street([['A'], ['B'], []]);
+    const view = new StreetView();
+    view.reset(g);
+    const a = view.anim(shop(g, 'A'));
+    const cap = GRID.cellH * LEG_LOOK.climbFootRaise;
+    let frames = 0;
+    let y = a.y;
+    for (let i = 0; i < Math.round(SETTLE / TICK) && (frames === 0 || a.climb); i++) {
+      play(g, view, TICK, { A: 1 });
+      if (!a.climb) continue;
+      frames++;
+      expect(a.y).toBeGreaterThanOrEqual(y);
+      y = a.y;
+      const rest = (a.climb.to - a.y) * GRID.cellH;
+      const front = legPose(lift, SHOP.W, true, 0, 1, { u: a.climb.u, rest, rise: GRID.cellH }).feet![1];
+      expect(front.dx).toBeGreaterThanOrEqual(0);
+      // Once lifted, the foot sits on the step: as high over the body's feet as the rise still ahead
+      if (a.climb.u >= LEG_LOOK.climbLiftShare && rest <= cap) expect(Math.abs(front.up - rest)).toBeLessThanOrEqual(1);
+    }
+    expect(frames).toBeGreaterThan(0);
+    expect(frames * TICK).toBeLessThanOrEqual(g.config.MOVEMENT.cellTime * SHOP_LOOK.climbShare + TICK);
+    expect(a.y).toBe(shop(g, 'A').level);
+  });
+
+  it('climb left as the mirror of climbing right', () => {
+    for (const u of [0.1, 0.4, 0.7]) {
+      const c: ClimbStep = { u, rest: GRID.cellH * (1 - u), rise: GRID.cellH };
+      const right = legPose(lift, SHOP.W, true, 0, 1, c).feet!;
+      const left = legPose(lift, SHOP.W, true, 0, -1, c).feet!;
+      expect([...left].reverse().map((ft) => [-ft.dx, ft.up])).toEqual(right.map((ft) => [ft.dx, ft.up]));
+      // The leading foot is the raised one
+      expect(right[1].up).toBeGreaterThan(0);
+      expect(right[0].up).toBe(0);
+    }
   });
 
   it('are hidden while sitting', () => {

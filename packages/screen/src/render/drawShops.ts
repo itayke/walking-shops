@@ -1,6 +1,6 @@
 import { shutterDrop, type GameState, type Shop } from '@walking-shops/sim';
 import { PALETTE, shopHue, shopTint } from './colors.ts';
-import { drawLegs, legPose, strideFrame, type LegPose } from './legs.ts';
+import { drawLegs, legPose, strideFrame, type ClimbStep, type LegPose } from './legs.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { GRID, MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
 import { Pix } from './pix.ts';
@@ -28,10 +28,18 @@ interface Item {
   lean: Lean | null;
   // Part of a tower about to fall
   danger: boolean;
-  // Feet in art pixels, with the body raised over them on its legs
+  // Feet in art pixels, with the body raised over them on its legs, facing dir
   fx: number;
   fy: number;
   pose: LegPose;
+  dir: 1 | -1;
+}
+
+/** Where a standing shop is in its climb, if it's climbing: the front foot needs the step's height. */
+function climbStep(a: ShopAnim): ClimbStep | null {
+  const c = a.climb;
+  if (!c || a.legs < 1 || c.to <= c.from) return null;
+  return { u: c.u, rest: (c.to - a.y) * GRID.cellH, rise: (c.to - c.from) * GRID.cellH };
 }
 
 /** How far a strained tower leans toward its fall, shaking harder as the push nears its end. */
@@ -60,7 +68,9 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
       const fx = Math.round(colX(a.x) + shake);
       const fy = Math.round(floorY(a.y + a.carried)) - bob;
       const lift = a.legs * walkLift * GRID.cellH;
-      const pose = legPose(lift, SHOP.W, a.moving, strideFrame(a.x), a.dir);
+      const climb = climbStep(a);
+      const dir = climb ? a.climb!.dir : a.dir;
+      const pose = legPose(lift, SHOP.W, a.moving, strideFrame(a.x), dir, climb);
       bob += pose.raise - Math.round(lift);
       if (st && s.level >= st.level && !danger) {
         // The tower turns about the bottom corner it falls over
@@ -70,7 +80,7 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
       // A pusher leans into the tower pulse for pulse, carrying its riders with it
       const pushing = s.pushT > 0 ? strains.get(s.pushCol) : undefined;
       if (pushing && !lean) lean = { x: fx, y: fy, angle: strainAngle(pushing, now) };
-      items.push({ s, index: i, a, layer: a.arc ? LAYER_FLYING : layer, lean, danger, fx, fy, pose });
+      items.push({ s, index: i, a, layer: a.arc ? LAYER_FLYING : layer, lean, danger, fx, fy, pose, dir });
     }
   }
   items.sort((p, q) => p.layer - q.layer);
@@ -86,7 +96,7 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
 }
 
 function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, halfText: boolean, now: number): void {
-  const { s, a, lean, pose } = it;
+  const { s, a, lean, pose, dir } = it;
   const { P } = L;
   ctx.save();
   if (lean) {
@@ -110,7 +120,7 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
   }
 
   const px = new Pix(ctx, P);
-  drawLegs(px, pose, SHOP.W, a.dir, PALETTE.ink);
+  drawLegs(px, pose, SHOP.W, dir, PALETTE.ink);
   const sprite = shopSprite({
     design: shopDesign(it.index),
     tint: shopTint(shopHue(it.index)),

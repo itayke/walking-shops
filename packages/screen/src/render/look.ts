@@ -95,9 +95,12 @@ export const SHOP_LOOK = {
   hueSpread: 137.508,
   hueOffset: 20,
   hueSnap: 15,
-  // Exponential follow toward the grid position: sideways, up and down
+  // Exponential follow toward the grid position: sideways, and down a floor
   followRate: 16,
-  climbRate: 11,
+  dropRate: 11,
+  // Climbing up a floor takes this share of a step (MOVEMENT.cellTime), easing in and out: the shop moves into the
+  // next column halfway through a step, so half a step finishes the climb as the step ends
+  climbShare: 0.5,
   // Standing up or sitting down takes this long
   standTime: 0.125,
   flashTime: 0.4,
@@ -124,6 +127,11 @@ export const LEG_LOOK = {
   framesPerStride: 4,
   // Closer than this to its grid position (in columns), a walking shop stands still
   moveSettle: 0.02,
+  // Climbing: over the first share of the climb the front foot lifts (of a floor) and reaches forward (of the body
+  // width), then plants on the step and straightens as the body rises over it
+  climbLiftShare: 0.4,
+  climbFootRaise: 0.5,
+  climbReach: 0.5,
 };
 
 export const MOTION_LOOK = {

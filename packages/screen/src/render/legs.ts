@@ -37,14 +37,27 @@ const RIGHT_STEPS = [
   [0, 0],
 ];
 
+/** A climb in progress: how far along it is (0 to 1), and the rise still ahead of the body out of the whole, in art pixels. */
+export interface ClimbStep {
+  u: number;
+  rest: number;
+  rise: number;
+}
+
+/** 0 to 1, easing in and out: the body starts rising slowly while the front foot lifts. */
+export function climbEase(u: number): number {
+  return u * u * (3 - 2 * u);
+}
+
 /**
  * The legs for a body `W` art pixels wide, standing `lift` art pixels tall. A moving shop strides (seen from the side,
  * body up a pixel on each pass); walking left runs the frames backward along the column, so they're flipped to keep
- * the stride moving forward.
+ * the stride moving forward. A climbing shop steps up instead.
  */
-export function legPose(lift: number, W: number, moving: boolean, frame: number, dir: 1 | -1): LegPose {
+export function legPose(lift: number, W: number, moving: boolean, frame: number, dir: 1 | -1, climb: ClimbStep | null = null): LegPose {
   const raise = Math.round(lift);
   if (lift < LEG_LOOK.minLift) return { raise, feet: null };
+  if (climb) return { raise, feet: climbFeet(W, dir, climb) };
   if (!moving) return { raise, feet: [{ dx: 0, up: 0 }, { dx: 0, up: 0 }] };
   const n = LEG_LOOK.framesPerStride;
   const f = mod(dir > 0 ? frame : -frame, n);
@@ -52,6 +65,20 @@ export function legPose(lift: number, W: number, moving: boolean, frame: number,
   const up = Math.max(1, Math.round(GRID.cellH * LEG_LOOK.footRaise));
   const foot = ([r, u]: number[]): Foot => ({ dx: r * reach * dir, up: u * up });
   return { raise: raise + (f % 2), feet: [foot(LEFT_STEPS[f]), foot(RIGHT_STEPS[f])] };
+}
+
+/**
+ * Stepping up: the front foot lifts and reaches forward until it meets the step, then stays on it, so it straightens
+ * and comes back under the hip as the body rises. The back foot pushes off behind.
+ */
+function climbFeet(W: number, dir: 1 | -1, c: ClimbStep): [Foot, Foot] {
+  const lift = Math.min(1, c.u / LEG_LOOK.climbLiftShare);
+  const raised = GRID.cellH * LEG_LOOK.climbFootRaise * lift;
+  const ahead = c.rise > 0 ? Math.min(lift, c.rest / c.rise) : 0;
+  const front = { dx: Math.round(dir * W * LEG_LOOK.climbReach * ahead), up: Math.round(Math.max(0, Math.min(raised, c.rest))) };
+  const back = { dx: -dir * Math.max(1, Math.round(W * LEG_LOOK.reach)), up: 0 };
+  // The right foot (second) leads walking right
+  return dir > 0 ? [back, front] : [front, back];
 }
 
 /** Two-segment leg: the knee sits off the hip-to-foot line on the outer side, keeping both segments their full length. */

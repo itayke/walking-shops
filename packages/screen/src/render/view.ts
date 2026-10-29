@@ -1,5 +1,6 @@
 import type { Dir, GameState, Shop, SimEvent } from '@walking-shops/sim';
 import { floorsNeeded } from './layout.ts';
+import { climbEase } from './legs.ts';
 import { FX_LOOK, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
 
 /** A toppled shop flying from where it was drawn to its new place. */
@@ -10,6 +11,14 @@ interface Arc {
   dir: Exclude<Dir, 0>;
 }
 
+/** A shop stepping up onto the next column, from one floor to another, and how far along it is (0 to 1). */
+export interface Climb {
+  from: number;
+  to: number;
+  u: number;
+  dir: Exclude<Dir, 0>;
+}
+
 /**
  * How a shop is drawn right now: smoothed toward its grid position. x in columns, y (feet) in floors counting one per
  * shop below; `carried` adds what the walkers below stand up on their legs, live, so riders never lag their walker.
@@ -17,6 +26,9 @@ interface Arc {
 export interface ShopAnim {
   x: number;
   y: number;
+  // The floor it's heading for, and the climb up to it
+  level: number;
+  climb: Climb | null;
   carried: number;
   // Leg extension, 0 sitting to 1 standing
   legs: number;
@@ -81,7 +93,7 @@ export class StreetView {
   anim(s: Shop): ShopAnim {
     let a = this.anims.get(s.id);
     if (!a) {
-      a = { x: s.col, y: s.level, carried: 0, legs: 0, dir: 1, moving: false, spin: 0, flash: 0, squash: 0, arc: null };
+      a = { x: s.col, y: s.level, level: s.level, climb: null, carried: 0, legs: 0, dir: 1, moving: false, spin: 0, flash: 0, squash: 0, arc: null };
       this.anims.set(s.id, a);
     }
     return a;
@@ -109,6 +121,7 @@ export class StreetView {
         case 'topple':
           for (const id of e.fallen) {
             const a = byId(id);
+            a.climb = null;
             a.arc = { fromX: a.x, fromY: a.y, age: 0, dir: e.to > e.col ? 1 : -1 };
           }
           this.add({ kind: 'callout', text: CALLOUT_TEXT.topple, color: 'danger', x: e.col, y: e.level + FX_LOOK.calloutAbove, age: 0 });
@@ -152,7 +165,8 @@ export class StreetView {
     const { MOVEMENT, ROUND } = g.config;
     const stand = dt / SHOP_LOOK.standTime;
     const xK = follow(SHOP_LOOK.followRate, dt);
-    const yK = follow(SHOP_LOOK.climbRate, dt);
+    const yK = follow(SHOP_LOOK.dropRate, dt);
+    const climbStep = dt / (MOVEMENT.cellTime * SHOP_LOOK.climbShare);
     for (let c = 0; c < g.C; c++) {
       // Riders move with the walker under them, and stand on its legs
       let offSum = 0;
@@ -170,6 +184,9 @@ export class StreetView {
         a.moving = s.walking && a.legs >= 1 && Math.abs(ahead) > LEG_LOOK.moveSettle;
         if (a.moving) a.dir = ahead > 0 ? 1 : -1;
         if (s.pushT > 0 && s.pushCol >= 0) a.dir = s.pushCol > s.col ? 1 : -1;
+        // Going up a floor is a climb, timed so the legs can step up with it; anything else drops back to following
+        if (ty !== a.level) a.climb = ty > a.level && !a.arc ? { from: a.y, to: ty, u: 0, dir: a.dir } : null;
+        a.level = ty;
         if (a.arc) {
           a.arc.age += dt;
           const u = Math.min(1, a.arc.age / MOTION_LOOK.arcTime);
@@ -182,6 +199,12 @@ export class StreetView {
             a.spin = 0;
             a.squash = MOTION_LOOK.squashTime;
           }
+        } else if (a.climb) {
+          const c = a.climb;
+          c.u = Math.min(1, c.u + climbStep);
+          a.x += (tx - a.x) * xK;
+          a.y = c.from + (c.to - c.from) * climbEase(c.u);
+          if (c.u >= 1) a.climb = null;
         } else {
           a.x += (tx - a.x) * xK;
           a.y += (ty - a.y) * yK;
