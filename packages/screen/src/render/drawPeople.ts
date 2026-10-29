@@ -10,6 +10,14 @@ const HEAD_Y = 2.75;
 const BODY_W = 1.4;
 const BODY_H = 2;
 const BODY_ROUND = 0.6;
+// Knuth's multiplicative hash: consecutive shopper ids land far apart across the lane
+const LANE_HASH = 2654435761;
+const UINT_RANGE = 2 ** 32;
+
+/** A shopper's lane: a steady offset from its column's center, in columns. */
+function lane(id: number): number {
+  return ((Math.imul(id, LANE_HASH) >>> 0) / UINT_RANGE - 0.5) * PEOPLE_LOOK.laneSpread;
+}
 
 /** A little person standing at (x, y): head over a rounded body, outlined so it reads on asphalt and sidewalk. */
 function drawPerson(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fill: string, line: string | null): void {
@@ -34,13 +42,13 @@ export function drawShoppers(ctx: CanvasRenderingContext2D, g: GameState, view: 
   const far = L.height;
   for (const sh of g.shoppers) {
     const across = sh.cross > 0 ? Math.max(0, sh.rise) / sh.cross : 0;
-    drawPerson(ctx, colX(L, sh.x), sidewalk + across * (far - sidewalk), r, theme.shopper, theme['shopper-line']);
+    drawPerson(ctx, colX(L, sh.x + lane(sh.id)), sidewalk + across * (far - sidewalk), r, theme.shopper, theme['shopper-line']);
   }
   for (const e of view.effects) {
     if (e.kind !== 'leaver') continue;
     const u = e.age / look.leaveTime;
     ctx.globalAlpha = look.leaveAlpha * (1 - u);
-    drawPerson(ctx, colX(L, e.x), sidewalk + u * (far - sidewalk), r, theme.muted, null);
+    drawPerson(ctx, colX(L, e.x + lane(e.shopper)), sidewalk + u * (far - sidewalk), r, theme.muted, null);
   }
   ctx.globalAlpha = 1;
 }

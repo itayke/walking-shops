@@ -85,7 +85,7 @@ describe('view', () => {
     const g = street([['A']]);
     const view = new StreetView();
     view.reset(g);
-    view.onEvents(g, [{ type: 'lost', x: 0 }]);
+    view.onEvents(g, [{ type: 'lost', x: 0, shopper: 0 }]);
     expect(view.effects.filter((e) => e.kind === 'leaver')).toHaveLength(1);
     view.update(g, PEOPLE_LOOK.leaveTime);
     expect(view.effects.filter((e) => e.kind === 'leaver')).toHaveLength(0);

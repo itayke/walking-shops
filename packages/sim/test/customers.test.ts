@@ -5,7 +5,7 @@ import { NEVER, ofType, run, shop, street } from './helpers.ts';
 // A shopper that has finished crossing and stands at column c
 function arrive(g: GameState, c: number): void {
   const { WALK_INS } = g.config;
-  g.shoppers.push({ x: c, origin: c, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
+  g.shoppers.push({ id: g.nextShopper++, x: c, origin: c, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
 }
 
 function dropParachuter(g: GameState, c: number, y: number): void {

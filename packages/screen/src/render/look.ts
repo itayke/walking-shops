@@ -107,6 +107,8 @@ export const PEOPLE_LOOK = {
   shopperLine: 1.5,
   // Where a shopper's feet are on the sidewalk, from its top edge
   sidewalkFeet: 0.7,
+  // Walk-ins cross on lanes spread over this middle share of their column, not all down its center
+  laneSpread: 0.6,
   // Shoppers with nowhere to go walk back across the street, greyed out
   leaveTime: 1,
   leaveAlpha: 0.6,

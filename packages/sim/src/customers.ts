@@ -15,7 +15,7 @@ const TIME_EPSILON = 1e-9;
 
 function crossShopper(g: GameState, c: number): void {
   const { WALK_INS } = g.config;
-  g.shoppers.push({ x: c, origin: c, rise: WALK_INS.crossTime, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
+  g.shoppers.push({ id: g.nextShopper++, x: c, origin: c, rise: WALK_INS.crossTime, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
   g.stats.spawned++;
 }
 
@@ -23,7 +23,7 @@ function crossShopper(g: GameState, c: number): void {
 function landShopper(g: GameState, c: number): void {
   const { WALK_INS } = g.config;
   g.stats.spawned++;
-  g.shoppers.push({ x: c, origin: c, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
+  g.shoppers.push({ id: g.nextShopper++, x: c, origin: c, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
 }
 
 /** Crosswalk cycle: pause -> telegraph (bars drawn) -> active (shoppers step off) -> crossing -> pause. Plus trickle. */
@@ -129,7 +129,7 @@ export function updateShoppers(g: GameState, dt: number): void {
     sh.life -= dt;
     if (!best || sh.life <= 0) {
       g.stats.lost++;
-      g.events.push({ type: 'lost', x: sh.x });
+      g.events.push({ type: 'lost', x: sh.x, shopper: sh.id });
       continue;
     }
     const dx = best.col - sh.x;

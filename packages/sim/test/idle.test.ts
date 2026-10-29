@@ -38,7 +38,7 @@ describe('idle shutters (GAME_DESIGN §8)', () => {
     run(g, 0.5);
     expect(column(g, 1)).toEqual(['B', 'A']);
     const { WALK_INS } = g.config;
-    g.shoppers.push({ x: 1, origin: 1, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
+    g.shoppers.push({ id: g.nextShopper++, x: 1, origin: 1, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
     expect(ofType(run(g, 0.1), 'paid').map((e) => e.shop)).toEqual(['A']);
   });
 
@@ -46,7 +46,7 @@ describe('idle shutters (GAME_DESIGN §8)', () => {
     const g = street([['A']], SHUTTERS);
     run(g, g.config.IDLE.idleTime + 1);
     const { WALK_INS } = g.config;
-    g.shoppers.push({ x: 0, origin: 0, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
+    g.shoppers.push({ id: g.nextShopper++, x: 0, origin: 0, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
     const events = run(g, 0.1);
     expect(ofType(events, 'paid')).toHaveLength(0);
     expect(ofType(events, 'lost')).toHaveLength(1);

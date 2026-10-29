@@ -64,6 +64,8 @@ export interface Shop {
 
 /** A walk-in: crosses the street toward `origin` for `rise` seconds, then walks the sidewalk at `x`. */
 export interface Shopper {
+  // Spawn order, unique per round: lets the renderer keep one shopper's look and lane
+  id: number;
   x: number;
   origin: number;
   rise: number;
@@ -115,7 +117,7 @@ export type SimEvent =
   | { type: 'closed'; shop: string }
   | { type: 'reopened'; shop: string }
   | { type: 'paid'; shop: string; value: number; kind: 'ground' | 'para' }
-  | { type: 'lost'; x: number };
+  | { type: 'lost'; x: number; shopper: number };
 
 /**
  * The whole game. Plain data: shops are referenced by index into `shops`, so the state survives JSON round trips.
@@ -131,6 +133,7 @@ export interface GameState {
   // Shop indices per column, bottom to top
   cols: number[][];
   shoppers: Shopper[];
+  nextShopper: number;
   paras: Parachuter[];
   wave: Wave;
   stats: Stats;

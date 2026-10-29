@@ -29,7 +29,7 @@ export type Effect =
   | { kind: 'callout'; text: string; color: CalloutColor; x: number; y: number; age: number }
   | { kind: 'coin'; para: boolean; x: number; y: number; age: number }
   | { kind: 'burst'; x: number; y: number; age: number }
-  | { kind: 'leaver'; x: number; age: number }
+  | { kind: 'leaver'; x: number; shopper: number; age: number }
   | { kind: 'banner'; text: string; age: number };
 
 export const CALLOUT_TEXT = { topple: 'TOPPLE!', pushback: 'BLOCKED', closed: 'CLOSED' };
@@ -129,7 +129,7 @@ export class StreetView {
           break;
         }
         case 'lost':
-          this.add({ kind: 'leaver', x: e.x, age: 0 });
+          this.add({ kind: 'leaver', x: e.x, shopper: e.shopper, age: 0 });
           break;
         case 'reopened':
           // The shutters snapping up says it
