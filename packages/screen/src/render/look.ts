@@ -134,6 +134,23 @@ export const LEG_LOOK = {
   climbReach: 0.5,
 };
 
+// Shorts over the top of the legs: every shop wears its own pair (colors.ts picks it)
+export const UNDIES_LOOK = {
+  // Height as a share of a floor, and the middle's share of that: each leg's part hangs lower than the middle
+  share: 0.24,
+  minRows: 4,
+  middle: 0.5,
+  // Each leg's part sits out past its hip by this share of a column
+  spread: 0.06,
+  // Dots on every other row, each dot row shifted along; stripes run down every few columns
+  dotStep: 3,
+  dotStagger: 2,
+  stripeStep: 2,
+  // While standing up the shorts stay this far off the ground, and aren't drawn shorter than minShow rows
+  groundGap: 2,
+  minShow: 3,
+};
+
 export const MOTION_LOOK = {
   // A tower under a push leans toward its fall and shakes harder as the push nears pushTime; the pusher leans with it
   strainLean: 0.07,

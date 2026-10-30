@@ -118,6 +118,12 @@ figure { margin: 0; display: grid; gap: 10px; }
         <button id="legs-hop" data-set="legs" data-val="hop">Hop</button>
       </div>
     </div>
+    <div class="ctl"><span>Underpants</span>
+      <div class="seg">
+        <button id="pants-off" data-set="pants" data-val="off">Off</button>
+        <button id="pants-on" data-set="pants" data-val="on">On</button>
+      </div>
+    </div>
     <button class="play" id="play" type="button">Pause</button>
   </div>
 
@@ -149,6 +155,7 @@ figure { margin: 0; display: grid; gap: 10px; }
     <div class="intro">
       <h2>Legs</h2>
       <p>Four ways to walk. Each shop stands up, steps one column, sits, and walks back. Legs keep their length: standing up and sitting down bend the knees out sideways instead of stretching the legs. Pick one in the toolbar to see it on the street and in the states above.</p>
+      <p>Every leg animation is drawn facing right; facing left mirrors the legs (only the legs) pixel for pixel. Underpants in the toolbar puts shorts over the top of the legs.</p>
     </div>
     <div class="ctl"><span>Speed</span>
       <div class="seg">
@@ -157,6 +164,14 @@ figure { margin: 0; display: grid; gap: 10px; }
       </div>
     </div>
     <div class="cards four" id="v-legs"></div>
+  </section>
+
+  <section>
+    <div class="intro">
+      <h2>Underwear</h2>
+      <p>Shorts over the top of the legs, with each leg's part hanging lower than the middle. Every shop wears one pair, picked from its name: a print (top row dots, bottom row stripes) in one of six tacky color combos. Turn them off with Underpants in the toolbar.</p>
+    </div>
+    <div class="cv" id="v-briefs"></div>
   </section>
 
   <section>
@@ -214,6 +229,7 @@ figure { margin: 0; display: grid; gap: 10px; }
       <li><strong>Rotation and scaling are fine.</strong> Lean, dizzy sway, push and topple rotate the drawn shop, and the landing squash scales it, even where tilted pixels leave the grid.</li>
       <li><strong>No marker over your own shop.</strong> Everyone shares one screen; each phone shows its shop's tint instead.</li>
       <li><strong>Thin ink legs with a side-view stride.</strong> The stride runs forward in both directions, and standing up or sitting down bends the knees out sideways in about an eighth of a second.</li>
+      <li><strong>Legs face right, and mirror to face left.</strong> Every leg animation (stride, stand, climb) is drawn facing right only; a shop facing left draws the same legs mirrored, never the shop itself.</li>
     </ul>
   </section>
 
@@ -250,6 +266,14 @@ const FX = { time: 0.9, rise: 0.6 };
 
 // Leg rig: two equal segments per leg with the knee bent outward, so sitting down folds the knees out sideways
 const LEG = { hipSpread: 0.24, kneeOut: 0.06, reach: 0.12, footRaise: 0.1, minLift: 2, hopHeight: 0.22, hopCrouch: 0.3, chunkyShare: 1 / 8 };
+// Shorts over the top of the legs: height as a share of a floor, the middle's share of that, how far each leg's part
+// sits out past its hip (of a column), and the print spacing
+const BRIEFS = { share: 0.24, middle: 0.5, minRows: 4, spread: 0.06, dotStep: 3, stripeStep: 2 };
+// Each shop's underwear, picked from its name: a print, and a tacky base and print color
+const UNDIES = {
+  prints: ['dots', 'stripes'],
+  colors: [['#ffffff', '#e04a3d'], ['#ff6ec7', '#b6ff3b'], ['#ffe14d', '#8b3fd6'], ['#3fe0ff', '#ff8a1f'], ['#b6ff3b', '#ff3fa4'], ['#ff8a1f', '#2f6bff']],
+};
 const LEG_STYLES = {
   stride: { name: 'Stride', gait: 'stride', look: 'thin', note: 'Scissor steps seen from the side, four frames per stride, thin ink legs.' },
   sidestep: { name: 'Side-step', gait: 'sidestep', look: 'thin', note: 'Seen from the front, like the shop: the leading foot steps out and the other closes in.' },
@@ -367,11 +391,11 @@ const STATES = [
 
 // ---------- settings ----------
 const STORE = 'pixel-street-settings';
-const settings = { grid: 32, pal: 'day', label: 'half', legs: 'stride', legSpeed: 1, playing: true };
+const settings = { grid: 32, pal: 'day', label: 'half', legs: 'stride', pants: 'on', legSpeed: 1, playing: true };
 try { Object.assign(settings, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) { /* storage blocked */ }
 if (!GRIDS[settings.grid]) settings.grid = 32;
 settings.playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-function save() { try { localStorage.setItem(STORE, JSON.stringify({ grid: settings.grid, pal: settings.pal, label: settings.label, legs: settings.legs })); } catch (e) { /* storage blocked */ } }
+function save() { try { localStorage.setItem(STORE, JSON.stringify({ grid: settings.grid, pal: settings.pal, label: settings.label, legs: settings.legs, pants: settings.pants })); } catch (e) { /* storage blocked */ } }
 
 // ---------- helpers ----------
 function mulberry32(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -416,9 +440,13 @@ function walkPose(k, ch) { return { lift: k.lift * ch, walking: k.moving, frame:
 
 // Draws in art pixels; P is device pixels per art pixel, so half pixels exist when P >= 2
 class Pix {
-  constructor(ctx, P) { this.c = ctx; this.P = P; }
+  // m: when set, everything is drawn mirrored left to right about x = m
+  constructor(ctx, P, m = null) { this.c = ctx; this.P = P; this.m = m; }
+  /** The same pen drawing mirrored about x = m, so a shape centered there faces the other way pixel for pixel. */
+  mirrored(m) { return new Pix(this.c, this.P, m); }
   r(x, y, w, h, col) {
     if (!col || w <= 0 || h <= 0) return;
+    if (this.m !== null) x = 2 * this.m - x - w;
     const P = this.P, X = Math.round(x * P), Y = Math.round(y * P);
     this.c.fillStyle = col;
     this.c.fillRect(X, Y, Math.round((x + w) * P) - X, Math.round((y + h) * P) - Y);
@@ -502,7 +530,8 @@ function drawShop(px, o) {
   const pose = legPose(o);
   const bx = Math.round(o.cx - W / 2), ground = Math.round(o.feetY);
   const by = ground - pose.raise - H;
-  if (pose.feet) drawLegs(px, o, by + H, ground, pose);
+  // Legs are drawn facing right; facing left mirrors them about the body's middle
+  if (pose.feet) drawLegs((o.dir || 1) > 0 ? px : px.mirrored(bx + W / 2), o, by + H, ground, pose);
   const L = shopLayout(W, H);
   const D = DESIGNS[o.design];
   // The roof ledge fills the rest of the floor, so stacked shops touch
@@ -663,7 +692,7 @@ function drawShutter(px, drop, bx, by, W, H, L, pal) {
   px.r(bx + 1, top + rows - 1, W - 2, 1, pal.shutterLo);
 }
 
-/** How high the body sits and where each foot goes (offset from its hip, height off the ground), for the chosen legs. */
+/** How high the body sits and where each foot goes (offset from its hip, height off the ground), facing right. */
 function legPose(o) {
   const lift = o.lift || 0;
   if (lift < LEG.minLift) return { raise: Math.round(lift), feet: null };
@@ -676,14 +705,13 @@ function legPose(o) {
   if (o.walking && gait === 'stride') {
     // Contact, passing, contact, passing; the body rises a pixel on each pass
     const L = [[r, 0], [0, 0], [-r, 0], [0, up]][f], R = [[-r, 0], [0, up], [r, 0], [0, 0]][f];
-    left = [L[0] * dir, L[1]];
-    right = [R[0] * dir, R[1]];
+    left = L;
+    right = R;
     raise += f & 1;
   } else if (o.walking && gait === 'sidestep') {
     // The leading foot steps out, then the trailing one closes in
-    const lead = [[r, 0], [half, 0], [0, 0], [half, up]][f], trail = [[0, 0], [half, up], [r, 0], [half, 0]][f];
-    const ld = [lead[0] * dir, lead[1]], tr = [trail[0] * dir, trail[1]];
-    if (dir > 0) { right = ld; left = tr; } else { left = ld; right = tr; }
+    right = [[r, 0], [half, 0], [0, 0], [half, up]][f];
+    left = [[0, 0], [half, up], [r, 0], [half, 0]][f];
     raise += f & 1;
   } else if (o.walking && gait === 'hop') {
     // Airborne mid-column, crouched at each takeoff and landing
@@ -715,13 +743,12 @@ function drawLegs(px, o, hipY, ground, pose) {
   const lw = chunky ? Math.max(3, Math.round(o.cw * LEG.chunkyShare)) : o.legW;
   // Seen from the front, shoes point at the camera; from the side, along the walk
   const front = st.gait !== 'stride';
-  const dir = o.dir || 1;
   const shoeW = lw + 2, shoeH = lw > 2 ? 2 : 1;
   const legs = [-1, 1].map((side, i) => {
     const hx = Math.round(o.cx + side * W * LEG.hipSpread), f = pose.feet[i];
     const sole = ground - 1 - f.up, fx = hx + f.dx, fy = sole - Math.floor((lw - 1) / 2);
     const k = kneeIK(hx, hipY, fx, fy, seg, side);
-    const sx = front ? fx - Math.floor(shoeW / 2) : fx - Math.floor((lw - 1) / 2) - (dir > 0 ? 0 : 2);
+    const sx = front ? fx - Math.floor(shoeW / 2) : fx - Math.floor((lw - 1) / 2);
     return { hx, fx, fy, sole, sx, kx: Math.round(k.x), ky: Math.round(k.y) };
   });
   if (chunky) {
@@ -736,6 +763,35 @@ function drawLegs(px, o, hipY, ground, pose) {
     px.line(l.hx, hipY, l.kx, l.ky, c, lw);
     px.line(l.kx, l.ky, l.fx, l.fy, c, lw);
     px.r(l.sx, l.sole - shoeH + 1, shoeW, shoeH, chunky ? pal.woodLo : pal.ink);
+  }
+  if (settings.pants === 'on') drawPants(px, o, hipY, ground, legs[0].hx, legs[1].hx, lw);
+}
+
+function undiesFor(o) {
+  let n = o.design || 0;
+  for (const ch of o.label || '') n = (Math.imul(n, 31) + ch.charCodeAt(0)) | 0;
+  const h = hash(n);
+  const [base, ink] = UNDIES.colors[h % UNDIES.colors.length];
+  return { print: UNDIES.prints[(h >>> 8) % UNDIES.prints.length], base, ink };
+}
+
+/** Shorts over the top of the legs, printed in the shop's underwear: each leg's part hangs lower than the middle. */
+function drawPants(px, o, hipY, ground, hl, hr, lw, u = undiesFor(o)) {
+  const { pal } = o;
+  // Never below the ground while standing up
+  const h = Math.min(Math.max(BRIEFS.minRows, Math.round(o.ch * BRIEFS.share)), ground - hipY - 2);
+  if (h < 3) return;
+  const out = Math.round(o.cw * BRIEFS.spread), pw = 2 * lw + 3;
+  const lx = hl - lw - 1 - out, rx = hr - lw - 1 + out;
+  const x0 = lx, w = rx + pw - lx, top = Math.ceil(h * BRIEFS.middle);
+  const parts = [[x0, w, top], [lx, pw, h], [rx, pw, h]];
+  // The print runs across the whole pair, so the parts line up where they overlap
+  const printed = (i, j) => u.print === 'stripes' ? i % BRIEFS.stripeStep === 1 : j % 2 === 1 && (i + (j >> 1) * 2) % BRIEFS.dotStep === 0;
+  // An ink outline a pixel out on the sides and below, then the base, then the print
+  for (const [x, wd, ht] of parts) px.r(x - 1, hipY, wd + 2, ht + 1, pal.ink);
+  for (const [x, wd, ht] of parts) px.r(x, hipY, wd, ht, u.base);
+  for (const [x, wd, ht] of parts) {
+    for (let j = 0; j < ht; j++) for (let i = x - x0; i < x - x0 + wd; i++) if (printed(i, j)) px.r(x0 + i, hipY + j, 1, 1, u.ink);
   }
 }
 
@@ -1097,6 +1153,24 @@ function drawPeople(px, d, pal, t, v) {
   }
 }
 
+// Every underwear option: one row per print, one column per color combo, each pair on a stub of its legs
+function briefsSize(d) {
+  const ph = Math.max(BRIEFS.minRows, Math.round(d.ch * BRIEFS.share)), cell = d.W + 6, row = ph + 9;
+  return { w: UNDIES.colors.length * cell, h: UNDIES.prints.length * row, cell, row, ph };
+}
+function drawBriefs(px, d, pal, t, v) {
+  const { cell, row, ph } = briefsSize(d);
+  px.r(0, 0, v.w, v.h, pal.sky[2]);
+  UNDIES.prints.forEach((print, r) => UNDIES.colors.forEach(([base, ink], k) => {
+    const cx = Math.round((k + 0.5) * cell), hipY = r * row + 3;
+    const hl = Math.round(cx - d.W * LEG.hipSpread), hr = Math.round(cx + d.W * LEG.hipSpread);
+    // The underside of the body, then the legs coming out below the shorts
+    px.r(Math.round(cx - d.W / 2), hipY - 1, d.W, 1, pal.ink);
+    for (const hx of [hl, hr]) px.line(hx, hipY, hx, hipY + ph + 4, pal.ink, d.legW);
+    drawPants(px, { pal, ch: d.ch, cw: d.cw }, hipY, Infinity, hl, hr, d.legW, { print, base, ink });
+  }));
+}
+
 function chuteSize(d) { const cell = 2 * d.R + 8, ph = paraHeight(d) + 4; return { w: 5 * cell, h: 2 * ph, cell, ph }; }
 function drawChutes(px, d, pal, t, v) {
   const { cell, ph } = chuteSize(d);
@@ -1199,6 +1273,7 @@ for (const [id, st] of Object.entries(LEG_STYLES)) {
 }
 
 addView($('v-motion'), { alt: 'A strained tower and a toppling shop', caption: $('c-motion'), size: (d) => ({ w: 5 * d.cw, h: Math.round(2.9 * d.ch) + LOOK.ground }), draw: drawMotion });
+addView($('v-briefs'), { alt: 'Every underwear print and color combo', maxCss: 6, size: briefsSize, draw: drawBriefs });
 addView($('v-people'), { alt: 'Walk-in sprites', maxCss: 7, size: peopleSize, draw: drawPeople });
 addView($('v-chutes'), { alt: 'Parachute canopy patterns and sway frames', maxCss: 6, size: chuteSize, draw: drawChutes });
 addView($('v-sky'), { alt: 'Parachuters falling', size: (d) => ({ w: 5 * d.cw, h: 3 * d.ch }), draw: drawFalling });

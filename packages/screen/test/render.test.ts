@@ -1,10 +1,10 @@
 import { parachuteSky, TICK, type GameState, type SimEvent } from '@walking-shops/sim';
 import { describe, expect, it } from 'vitest';
 import { run, shop, street } from '../../sim/test/helpers.ts';
-import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN } from '../src/render/colors.ts';
+import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN, undiesFor, type Undies } from '../src/render/colors.ts';
 import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/render/legs.ts';
 import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
-import { GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK } from '../src/render/look.ts';
+import { GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/render/look.ts';
 import { fitLines, Pix } from '../src/render/pix.ts';
 import { SHOP } from '../src/render/shopArt.ts';
 import { strainsByColumn } from '../src/render/strain.ts';
@@ -176,30 +176,53 @@ describe('riders', () => {
 describe('legs', () => {
   const lift = GRID.cellH;
 
-  /** The art pixels a pose covers, at one device pixel per art pixel, as "x,y" keys. */
-  function cells(pose: LegPose, flip: boolean): Set<string> {
-    const out = new Set<string>();
+  /** The art pixels a pose covers, at one device pixel per art pixel, as "x,y" keys with the color last drawn there. */
+  function cells(pose: LegPose, flip: boolean, undies: Undies | null = null): Map<string, string> {
+    const out = new Map<string, string>();
     const ctx = {
       fillStyle: '',
       fillRect(x: number, y: number, w: number, h: number) {
-        for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) out.add(`${i},${j}`);
+        for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) out.set(`${i},${j}`, this.fillStyle);
       },
     };
     const px = new Pix(ctx as unknown as CanvasRenderingContext2D, 1);
-    drawLegs(flip ? px.mirrored() : px, pose, SHOP.W, '#');
+    drawLegs(flip ? px.mirrored() : px, pose, SHOP.W, '#', undies);
     return out;
   }
 
   it('face left as the right-facing legs mirrored pixel for pixel, striding and climbing', () => {
     const poses = [0, 1, 2, 3].map((f) => legPose(lift, SHOP.W, true, f));
     for (const u of [0.1, 0.4, 0.7]) poses.push(legPose(lift, SHOP.W, true, 0, { u, rest: lift * (1 - u), rise: lift }));
+    const undies = undiesFor('Lettuce Pray');
     for (const pose of poses) {
-      const mirrored = [...cells(pose, false)].map((k) => {
+      const mirrored = [...cells(pose, false, undies)].map(([k, col]): [string, string] => {
         const [x, y] = k.split(',').map(Number);
-        return `${-x},${y}`;
+        return [`${-x},${y}`, col];
       });
-      expect(cells(pose, true)).toEqual(new Set(mirrored));
+      expect(cells(pose, true, undies)).toEqual(new Map(mirrored));
     }
+  });
+
+  it('wear the same underwear for the same name, and a mix of them along the street', () => {
+    const names = ['Knead to Know', 'Bean There', 'Novel Idea', 'Thyme Out', 'Rolling Scones', 'Petal Pushers', 'Hair Force One', 'Bloom'];
+    expect(names.map(undiesFor)).toEqual(names.map(undiesFor));
+    const looks = new Set(names.map((n) => JSON.stringify(undiesFor(n))));
+    expect(looks.size).toBeGreaterThan(names.length / 2);
+    expect(new Set(names.map((n) => undiesFor(n).print)).size).toBe(2);
+  });
+
+  it('keep the underwear off the ground while standing up, and over the tops of the legs', () => {
+    const undies = undiesFor('Bean There');
+    for (let raise = LEG_LOOK.minLift; raise <= lift; raise++) {
+      const drawn = cells(legPose(raise, SHOP.W, false, 0), false, undies);
+      for (const [k, col] of drawn) {
+        if (col === undies.base) expect(Number(k.split(',')[1])).toBeLessThan(-UNDIES_LOOK.groundGap + 1);
+      }
+    }
+    const standing = cells(legPose(lift, SHOP.W, false, 0), false, undies);
+    // The hips are covered by the shorts
+    const hip = Math.round(SHOP.W * LEG_LOOK.hipSpread);
+    expect(standing.get(`${hip},${-lift}`)).not.toBe('#');
   });
 
   it('keep both segments their length, folding the knee out as the hip comes down', () => {

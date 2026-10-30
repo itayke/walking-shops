@@ -113,5 +113,34 @@ export function personColors(id: number): PersonColors {
   };
 }
 
+// Underwear: a print, in a tacky base and print color pair
+export const UNDIES_PRINTS = ['dots', 'stripes'] as const;
+export const UNDIES_COLORS = [
+  ['#ffffff', '#e04a3d'],
+  ['#ff6ec7', '#b6ff3b'],
+  ['#ffe14d', '#8b3fd6'],
+  ['#3fe0ff', '#ff8a1f'],
+  ['#b6ff3b', '#ff3fa4'],
+  ['#ff8a1f', '#2f6bff'],
+];
+// The usual multiplier for folding a string into an integer
+const STRING_MULT = 31;
+const PRINT_BITS = 8;
+
+export interface Undies {
+  print: (typeof UNDIES_PRINTS)[number];
+  base: string;
+  ink: string;
+}
+
+/** A shop's underwear, from its name: the same name always wears the same pair. */
+export function undiesFor(name: string): Undies {
+  let n = 0;
+  for (const ch of name) n = (Math.imul(n, STRING_MULT) + ch.charCodeAt(0)) | 0;
+  const h = hash(n);
+  const [base, ink] = UNDIES_COLORS[h % UNDIES_COLORS.length];
+  return { print: UNDIES_PRINTS[(h >>> PRINT_BITS) % UNDIES_PRINTS.length], base, ink };
+}
+
 /** A shopper who gave up: all grey. */
 export const GREY_PERSON: PersonColors = { h: PALETTE.greyLo, s: PALETTE.grey, e: PALETTE.greyLo, c: PALETTE.grey, p: PALETTE.greyLo, f: PALETTE.greyLo };

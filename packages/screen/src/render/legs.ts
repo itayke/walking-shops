@@ -1,4 +1,5 @@
-import { GRID, LEG_LOOK } from './look.ts';
+import type { Undies } from './colors.ts';
+import { GRID, LEG_LOOK, UNDIES_LOOK } from './look.ts';
 import type { Pix } from './pix.ts';
 
 /** A foot: sideways from its hip, and lifted off the ground, in art pixels. */
@@ -96,9 +97,10 @@ export function kneeIK(hx: number, hy: number, fx: number, fy: number, seg: numb
 
 /**
  * Both legs, from the underside of a body centered on x = 0 down to the ground at y = 0, facing right (pass a mirrored
- * pen to face left). Segments are sized to reach a floor with the knees barely out, so a shorter lift folds them out.
+ * pen to face left), in the shop's underwear. Segments are sized to reach a floor with the knees barely out, so a
+ * shorter lift folds them out.
  */
-export function drawLegs(px: Pix, pose: LegPose, W: number, ink: string): void {
+export function drawLegs(px: Pix, pose: LegPose, W: number, ink: string, undies: Undies | null = null): void {
   if (!pose.feet) return;
   const lw = Math.max(1, Math.round(GRID.cellW * LEG_LOOK.legShare));
   const knee = Math.max(1, Math.round(W * LEG_LOOK.kneeOut));
@@ -108,9 +110,10 @@ export function drawLegs(px: Pix, pose: LegPose, W: number, ink: string): void {
   const shoeW = lw + 2;
   const shoeH = lw > 2 ? 2 : 1;
   const half = Math.floor((lw - 1) / 2);
+  const hips = [-1, 1].map((side) => Math.round(side * W * LEG_LOOK.hipSpread));
   for (const [i, side] of [-1, 1].entries()) {
     const f = pose.feet[i];
-    const hx = Math.round(side * W * LEG_LOOK.hipSpread);
+    const hx = hips[i];
     const sole = -1 - f.up;
     const fx = hx + f.dx;
     const fy = sole - half;
@@ -120,5 +123,33 @@ export function drawLegs(px: Pix, pose: LegPose, W: number, ink: string): void {
     px.line(hx, hipY, kx, ky, ink, lw);
     px.line(kx, ky, fx, fy, ink, lw);
     px.r(fx - half, sole - shoeH + 1, shoeW, shoeH, ink);
+  }
+  if (undies) drawUndies(px, pose.raise, hips, lw, undies, ink);
+}
+
+/** Shorts over the top of the legs, each leg's part hanging lower than the middle, printed across the whole pair. */
+function drawUndies(px: Pix, raise: number, [hl, hr]: number[], lw: number, u: Undies, ink: string): void {
+  const U = UNDIES_LOOK;
+  const h = Math.min(Math.max(U.minRows, Math.round(GRID.cellH * U.share)), raise - U.groundGap);
+  if (h < U.minShow) return;
+  const hipY = -raise;
+  const out = Math.round(GRID.cellW * U.spread);
+  // Each leg's part reaches a pixel past the leg's width either side of its hip
+  const reach = lw + 1;
+  const pw = 2 * reach + 1;
+  const lx = hl - reach - out;
+  const rx = hr - reach + out;
+  const parts = [
+    [lx, rx + pw - lx, Math.ceil(h * U.middle)],
+    [lx, pw, h],
+    [rx, pw, h],
+  ];
+  const printed = (i: number, j: number) =>
+    u.print === 'stripes' ? i % U.stripeStep === U.stripeStep - 1 : j % 2 === 1 && (i + (j >> 1) * U.dotStagger) % U.dotStep === 0;
+  // An ink outline a pixel out on the sides and below, then the base, then the print
+  for (const [x, w, ht] of parts) px.r(x - 1, hipY, w + 2, ht + 1, ink);
+  for (const [x, w, ht] of parts) px.r(x, hipY, w, ht, u.base);
+  for (const [x, w, ht] of parts) {
+    for (let j = 0; j < ht; j++) for (let i = x - lx; i < x - lx + w; i++) if (printed(i, j)) px.r(lx + i, hipY + j, 1, 1, u.ink);
   }
 }

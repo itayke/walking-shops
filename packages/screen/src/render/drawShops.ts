@@ -1,5 +1,5 @@
 import { shutterDrop, type GameState, type Shop } from '@walking-shops/sim';
-import { PALETTE, shopHue, shopTint } from './colors.ts';
+import { PALETTE, shopHue, shopTint, undiesFor } from './colors.ts';
 import { drawLegs, legPose, strideFrame, type ClimbStep, type LegPose } from './legs.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { GRID, MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
@@ -121,7 +121,7 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
   }
 
   const px = new Pix(ctx, P);
-  drawLegs(dir > 0 ? px : px.mirrored(), pose, SHOP.W, PALETTE.ink);
+  drawLegs(dir > 0 ? px : px.mirrored(), pose, SHOP.W, PALETTE.ink, undiesFor(s.label));
   const sprite = shopSprite({
     design: shopDesign(it.index),
     tint: shopTint(shopHue(it.index)),
