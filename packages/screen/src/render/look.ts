@@ -60,9 +60,11 @@ export const CROSSWALK_LOOK = {
   barShare: 0.55,
   minBar: 2,
   barAlpha: 0.9,
-  // A crossing wave fades out in steps, but never fully until it is gone
+  // Each bar fades in through the same steps the crossing wave fades out by (never fully until it is gone); a fade-in
+  // takes this share of the time between bars, so it's done before the next one
   fadeSteps: 3,
   fadeFloor: 0.15,
+  fadeInShare: 0.6,
 };
 
 export const SHOP_LOOK = {

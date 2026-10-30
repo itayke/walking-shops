@@ -123,6 +123,9 @@ function drawGround(px: Pix, L: Layout, x0: number, w: number): void {
   }
 }
 
+// Sim times sit on tick boundaries; this keeps float error from skipping or doubling a fade step
+const STEP_EPSILON = 1e-6;
+
 /**
  * The crosswalk telegraph: it appears empty (a blinking dashed outline), then its bars are drawn bottom to top, one
  * per waveLineInterval. The wave steps off with the last bar, and the crosswalk fades while the last shoppers cross.
@@ -151,16 +154,19 @@ function drawCrosswalk(px: Pix, g: GameState, L: Layout, now: number): void {
     }
   }
 
-  let alpha = look.barAlpha;
-  if (W.state === 'crossing') {
-    const left = (W.end - g.t) / Math.max(WALK_INS.crossTime, Number.EPSILON);
-    alpha = Math.max(look.fadeFloor, Math.ceil(left * look.fadeSteps) / look.fadeSteps) * look.barAlpha;
-  }
-  ctx.globalAlpha = alpha;
+  // Bars fade in one by one as they're drawn, and out together as the wave crosses, through the same stepped shades
+  const step = (u: number) => Math.max(look.fadeFloor, Math.ceil(Math.min(1, u) * look.fadeSteps - STEP_EPSILON) / look.fadeSteps);
+  const out = W.state === 'crossing' ? step((W.end - g.t) / Math.max(WALK_INS.crossTime, Number.EPSILON)) : 1;
+  const fadeIn = Math.max(WAVES.waveLineInterval * look.fadeInShare, Number.EPSILON);
   const lines = Math.max(1, Math.floor(WAVES.waveLines));
   const slot = (bottom - top) / lines;
   const bh = Math.max(look.minBar, Math.round(slot * look.barShare));
   const drawn = telegraphBars(g);
-  for (let k = 0; k < drawn; k++) px.r(x0 + 1, Math.round(bottom - (k + 1) * slot + (slot - bh) / 2), x1 - x0 - 2, bh, PALETTE.zebra);
+  for (let k = 0; k < drawn; k++) {
+    // Bar k is drawn once k + 1 intervals have passed since the crosswalk appeared
+    const shown = g.t - W.start - (k + 1) * WAVES.waveLineInterval;
+    ctx.globalAlpha = Math.min(step(Math.max(shown / fadeIn, STEP_EPSILON)), out) * look.barAlpha;
+    px.r(x0 + 1, Math.round(bottom - (k + 1) * slot + (slot - bh) / 2), x1 - x0 - 2, bh, PALETTE.zebra);
+  }
   ctx.globalAlpha = 1;
 }
