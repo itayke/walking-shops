@@ -10,10 +10,6 @@ export const TAU = Math.PI * 2;
 export const GRID = {
   cellW: 32,
   cellH: 26,
-  // Shop sprites are drawn at this many sub-pixels per art pixel, so sign text can use half pixels
-  spriteSub: 2,
-  // Smallest scale (device pixels per art pixel) at which half pixels still show
-  halfPixelMinScale: 2,
 };
 
 export const STREET_LOOK = {
@@ -80,6 +76,9 @@ export const SHOP_LOOK = {
   signPad: 1,
   signInset: 0.05,
   signLines: 2,
+  // Lines of a name are this share of a capital apart; a name never sets smaller than this capital height
+  signLineGap: 0.35,
+  signMinCap: 2.5,
   awningShare: 0.18,
   minAwning: 3,
   // Striped awnings: stripe width as a share of the body
@@ -230,7 +229,7 @@ export const FX_LOOK = {
   // The phase banner spans this share of the street, and washes in and out over this share of its life at each end
   bannerWidth: 0.35,
   bannerFade: 0.2,
-  // Effect text and titles are smooth display type, the HUD's --font-display; titles are outlined by this share of their size
+  // Effect text, titles and shop names are smooth display type, the HUD's --font-display; titles are outlined by this share of their size
   displayFont: "'Jersey 15', 'Arial Black', Impact, sans-serif",
   titleOutline: 0.18,
   // Oldest effects are dropped past this many, so a burst of events can't pile up

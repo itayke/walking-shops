@@ -5,6 +5,7 @@ import { colX, device, floorY, type Layout } from './layout.ts';
 import { GRID, MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
 import { Pix } from './pix.ts';
 import { SHOP, shopDesign, shopSprite, shutterRows } from './shopArt.ts';
+import { drawSignName } from './signs.ts';
 import { strainsByColumn, type Strain } from './strain.ts';
 import type { ShopAnim, StreetView } from './view.ts';
 
@@ -85,8 +86,7 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
     }
   }
   items.sort((p, q) => p.layer - q.layer);
-  const halfText = L.P >= GRID.halfPixelMinScale;
-  for (const it of items) drawShop(ctx, g, it, L, halfText, now);
+  for (const it of items) drawShop(ctx, g, it, L, now);
   // Meters and dizzy stars stay upright, over every shop
   const px = new Pix(ctx, L.P, L.ox, L.groundY);
   for (const it of items) {
@@ -96,7 +96,7 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
   }
 }
 
-function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, halfText: boolean, now: number): void {
+function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, now: number): void {
   const { s, a, lean, pose, dir } = it;
   const { P } = L;
   ctx.save();
@@ -125,10 +125,8 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
   const sprite = shopSprite({
     design: shopDesign(it.index),
     tint: shopTint(shopHue(it.index)),
-    label: s.label,
     shutter: Math.round(shutterRows() * Math.min(1, shutterDrop(g, s))),
     danger: it.danger,
-    halfText,
     t: now,
   });
   const x0 = SHOP.left - 1;
@@ -136,6 +134,7 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
   const X = Math.round(x0 * P);
   const Y = Math.round(y0 * P);
   ctx.drawImage(sprite, X, Y, Math.round((x0 + SHOP.spriteW) * P) - X, Math.round((y0 + SHOP.spriteH) * P) - Y);
+  drawSignName(ctx, s.label, X, Y, P);
 
   if (a.flash > 0) {
     ctx.globalAlpha = a.flash / SHOP_LOOK.flashTime;

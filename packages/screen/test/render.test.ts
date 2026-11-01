@@ -5,8 +5,9 @@ import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN, undiesFor, type U
 import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/render/legs.ts';
 import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
 import { GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/render/look.ts';
-import { fitLines, Pix } from '../src/render/pix.ts';
+import { Pix } from '../src/render/pix.ts';
 import { SHOP } from '../src/render/shopArt.ts';
+import { fitLines } from '../src/render/signs.ts';
 import { strainsByColumn } from '../src/render/strain.ts';
 import { PHASE2_BANNER, StreetView } from '../src/render/view.ts';
 
@@ -299,10 +300,13 @@ describe('legs', () => {
 
 describe('signs', () => {
   it('wrap words onto lines, and end a cut-off name with a dot', () => {
-    expect(fitLines('Hair Force One', 10, 2)).toEqual(['HAIR FORCE', 'ONE']);
-    expect(fitLines('Espresso Yourself Today', 10, 2)).toEqual(['ESPRESSO', 'YOURSELF.']);
-    expect(fitLines('Supercalifragilistics', 10, 2)).toEqual(['SUPERCALIF', 'RAGILISTI.']);
-    expect(fitLines('YOU', 10, 2)).toEqual(['YOU']);
+    const fits = (s: string) => s.length <= 10;
+    expect(fitLines('Hair Force One', fits, 2)).toEqual(['HAIR FORCE', 'ONE']);
+    expect(fitLines('Espresso Yourself Today', fits, 2)).toEqual(['ESPRESSO', 'YOURSELF.']);
+    expect(fitLines('Supercalifragilistics', fits, 2)).toEqual(['SUPERCALIF', 'RAGILISTI.']);
+    expect(fitLines('YOU', fits, 2)).toEqual(['YOU']);
+    // A sign too narrow for even one letter still ends
+    expect(fitLines('AB', () => false, 2)).toEqual(['A', 'B']);
   });
 });
 

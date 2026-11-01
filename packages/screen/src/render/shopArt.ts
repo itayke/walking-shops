@@ -1,6 +1,6 @@
 import { PALETTE, type PaletteColor, type Tint } from './colors.ts';
 import { GRID, SHOP_LOOK } from './look.ts';
-import { ADVANCE, fitLines, LINE, Pix, scratch, textWidth } from './pix.ts';
+import { Pix, scratch } from './pix.ts';
 
 type Swatch = keyof Tint | PaletteColor;
 
@@ -57,19 +57,22 @@ export const SHOP = (() => {
   const signH = Math.max(L.minSign, Math.round(H * L.signShare)) + L.signPad;
   const awnH = Math.max(L.minAwning, Math.round(H * L.awningShare));
   const lowTop = 1 + signH + awnH;
+  // The sign board, in sprite pixels (the body starts a pixel in, under the roof), and the area its name fills:
+  // a pixel in from each side, between the padding rows and the shade row
+  const si = Math.max(1, Math.round(W * L.signInset));
+  const sign = { x: 2 + si, y: roof + 1, w: W - 2 - 2 * si, h: signH };
+  const name = { x: sign.x + 1, y: sign.y + L.signPad, w: sign.w - 2, h: signH - 1 - L.signPad };
   // The sprite is the roof ledge's width (a pixel past the body each side) by one floor
-  return { W, H, roof, signH, awnH, lowTop, spriteW: W + 2, spriteH: cellH, left: Math.round(-W / 2) };
+  return { W, H, roof, signH, awnH, lowTop, sign, name, spriteW: W + 2, spriteH: cellH, left: Math.round(-W / 2) };
 })();
 
 /** Everything that changes how a shop's sprite looks. */
 export interface ShopLook {
   design: number;
   tint: Tint;
-  label: string;
   // Shutter rows down, out of shutterRows()
   shutter: number;
   danger: boolean;
-  halfText: boolean;
   t: number;
 }
 
@@ -88,16 +91,15 @@ function animFrame(design: number, t: number): number {
 
 const cache = new Map<string, OffscreenCanvas>();
 
-/** The shop's sprite, drawn once per look and state: one floor tall, the body's left edge at x = 1. */
+/** The shop's sprite, drawn once per look and state: one floor tall, the body's left edge at x = 1. The name is drawn over it. */
 export function shopSprite(o: ShopLook): OffscreenCanvas {
   const frame = animFrame(o.design, o.t);
-  const key = `${o.design}|${o.tint.base}|${o.label}|${o.shutter}|${o.danger}|${o.halfText}|${frame}`;
+  const key = `${o.design}|${o.tint.base}|${o.shutter}|${o.danger}|${frame}`;
   let cv = cache.get(key);
   if (!cv) {
     if (cache.size >= SHOP_LOOK.spriteCache) cache.clear();
-    const S = GRID.spriteSub;
-    const out = scratch(null, SHOP.spriteW * S, SHOP.spriteH * S);
-    drawShopArt(new Pix(out.ctx, S), o, frame);
+    const out = scratch(null, SHOP.spriteW, SHOP.spriteH);
+    drawShopArt(new Pix(out.ctx, 1), o, frame);
     cv = out.cv;
     cache.set(key, cv);
   }
@@ -117,7 +119,7 @@ function drawShopArt(px: Pix, o: ShopLook, frame: number): void {
   px.r(bx + W, 0, 1, roof, P.ink);
   px.r(bx, by, W, H, o.tint.base);
   drawWall(px, D, bx, by, o.tint);
-  drawSign(px, o, bx, by);
+  drawSign(px);
   drawFront(px, D, bx, by, o.tint, frame);
   if (o.shutter > 0) drawShutter(px, o.shutter, bx, by);
   const edge = o.danger ? P.danger : P.ink;
@@ -147,30 +149,11 @@ function drawWall(px: Pix, D: Design, bx: number, by: number, T: Tint): void {
   }
 }
 
-function drawSign(px: Pix, o: ShopLook, bx: number, by: number): void {
-  const { W, signH } = SHOP;
-  const L = SHOP_LOOK;
-  const P = PALETTE;
-  const si = Math.max(1, Math.round(W * L.signInset));
-  const sx = bx + 1 + si;
-  const sw = W - 2 - 2 * si;
-  const sy = by + 1;
-  px.r(sx, sy, sw, signH, P.cream);
-  px.r(sx, sy + signH - 1, sw, 1, P.creamLo);
-  const s = o.halfText ? 1 / 2 : 1;
-  const inner = sw - 2;
-  const cols = Math.floor((inner / s + 1) / ADVANCE);
-  // Text sits between the padding row and the shade row
-  const rows = signH - 1 - L.signPad;
-  const maxLines = Math.min(L.signLines, Math.floor((rows / s + 1) / LINE));
-  const lines = fitLines(o.label, cols, maxLines);
-  const free = rows / s - (lines.length * LINE - 1);
-  let ty = sy + L.signPad + Math.max(0, Math.floor(free / 2)) * s;
-  for (const ln of lines) {
-    const fx = inner / s - textWidth(ln);
-    px.text(ln, sx + 1 + Math.floor(fx / 2) * s, ty, s, P.ink);
-    ty += LINE * s;
-  }
+/** The blank sign board with its shade row; the name goes on at full resolution (see signs.ts). */
+function drawSign(px: Pix): void {
+  const { x, y, w, h } = SHOP.sign;
+  px.r(x, y, w, h, PALETTE.cream);
+  px.r(x, y + h - 1, w, 1, PALETTE.creamLo);
 }
 
 function drawFront(px: Pix, D: Design, bx: number, by: number, T: Tint, frame: number): void {
