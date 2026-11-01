@@ -81,10 +81,10 @@ export const IDLE = {
   idleWarn: 4,
 };
 
-// A customer pays the shop it enters. Phase 1 earnings count × phase1Weight; a parachuter is worth paraValue walk-ins
+// A customer pays the shop it enters, the same in both phases: a walk-in walkInValue, a parachuter paraValue
 export const SCORING = {
-  phase1Weight: 0.3,
-  paraValue: 3,
+  walkInValue: 5,
+  paraValue: 10,
 };
 
 // Bots that fill the street when no phones are playing (bench, offline fallback). Read when a game is created

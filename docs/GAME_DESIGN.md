@@ -115,8 +115,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 ## 9. Scoring
 
 - **A customer pays the shop they enter. Nothing is shared.** Shared tower revenue was tested and rejected: it balanced the bots but is invisible to players.
-- **Phase 1 earnings count ×`phase1Weight` (≈0.3)** so the tutorial phase doesn't decide the winner. Alternative: show the scoreboard only from phase 2.
-- **A parachuter is worth `paraValue` (≈3) walk-ins.**
+- **A walk-in pays `walkInValue` (5), a parachuter `paraValue` (10), the same in both phases (decided after M2).** Every coin on the street shows exactly what it added, so the final score adds up from what players saw. Whole numbers, no decimals. Phase 1 weighs less through timing and the walk-in to parachuter ratio, not a hidden multiplier.
 
 ## 10. Tunables (starting values from the prototype)
 
@@ -144,8 +143,8 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 | groundInPhase2 | true | Walk-ins continue in phase 2 |
 | idleTime | 12 s | No input before shutters close |
 | idleWarn | 4 s | Visible shutter drop before closing |
-| phase1Weight | 0.3 | Phase 1 score multiplier |
-| paraValue | 3 | Parachuter worth in walk-ins |
+| walkInValue | 5 | A walk-in's pay |
+| paraValue | 10 | A parachuter's pay |
 
 All tunables live in `packages/sim/src/config.ts`, together with the constants the prototype hard-coded (lean, bump gap, speeds, bot timings). The screen's tuning panel edits them live and, in dev, saves them back into that file.
 
@@ -179,3 +178,4 @@ From the prototype's headless bot runs (`reference/bench.js`). Bots are not peop
 | Fixed crosswalks | Whoever parks there wins and can't be moved |
 | Drifting crowd band | More position luck than waves |
 | Numeric countdown on crosswalks | Replaced by bars drawn one per second |
+| Phase 1 earnings weighted down (×0.3) | Invisible: a coin said +1 but added 0.3, so totals didn't match the street |

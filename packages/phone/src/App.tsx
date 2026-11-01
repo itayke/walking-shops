@@ -1,6 +1,6 @@
 import { DEV_PORTS, isRoomCode, randomId, type PhoneMsg, type PhoneState } from '@walking-shops/net';
 import { connectPhone, type Link } from '@walking-shops/net/client';
-import type { Dir } from '@walking-shops/sim';
+import { scoreText, type Dir } from '@walking-shops/sim';
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 
 // The reconnect token: the same token reclaims the same shop after a dropped connection or a reload
@@ -55,7 +55,7 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
     case 'waiting':
       return "The street is full: you're in next round";
     case 'results':
-      return `#${s.rank} of ${s.of} · ${s.income.toFixed(1)}`;
+      return `#${s.rank} of ${s.of} · ${scoreText(s.income)}`;
     default:
       return s.closed ? 'Shutters down: tap to open' : 'Tap to step · hold to walk';
   }

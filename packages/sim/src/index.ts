@@ -9,3 +9,4 @@ export { entryShop, maxHeight, NONE, shopAt } from './street.ts';
 export { crosswalkWidth, parachuteSky, telegraphBars } from './customers.ts';
 export { shutterDrop } from './idle.ts';
 export { runRound } from './run.ts';
+export { scoreText } from './scoring.ts';

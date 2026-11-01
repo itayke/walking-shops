@@ -1,5 +1,5 @@
 import type { Seat } from '@walking-shops/net';
-import type { GameState, Shop } from '@walking-shops/sim';
+import { scoreText, type GameState, type Shop } from '@walking-shops/sim';
 import { joinUrl } from '../net/room.ts';
 import { shopHue, shopTint } from '../render/colors.ts';
 
@@ -11,11 +11,6 @@ const RESULTS_SHOWN = 10;
 function clock(seconds: number): string {
   const s = Math.max(0, Math.ceil(seconds));
   return `${Math.floor(s / SECONDS_PER_MINUTE)}:${String(s % SECONDS_PER_MINUTE).padStart(2, '0')}`;
-}
-
-// Phase 1 earnings are weighted, so scores carry a decimal
-function amount(v: number): string {
-  return v.toFixed(1);
 }
 
 /** Shops by income, best first, each with its index (for its color). */
@@ -64,7 +59,7 @@ export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomSta
       <Join room={room} />
       {mine && (
         <span className="you">
-          {mine.label} <strong>{amount(mine.income)}</strong>
+          {mine.label} <strong>{scoreText(mine.income)}</strong>
         </span>
       )}
       <span className="hint">
@@ -96,9 +91,9 @@ export function Board({ g, you }: { g: GameState; you: string }) {
                 {s.label}
               </td>
               <td>{s.controller}</td>
-              <td className="num">{amount(s.incGround)}</td>
-              <td className="num">{amount(s.incPara)}</td>
-              <td className="num">{amount(s.income)}</td>
+              <td className="num">{scoreText(s.incGround)}</td>
+              <td className="num">{scoreText(s.incPara)}</td>
+              <td className="num">{scoreText(s.income)}</td>
             </tr>
           ))}
         </tbody>
@@ -124,14 +119,14 @@ export function Results({ g, you }: { g: GameState; you: string }) {
                   <span className="swatch" style={{ background: shopTint(shopHue(index)).base }} />
                   {s.label}
                 </td>
-                <td className="num">{amount(s.income)}</td>
+                <td className="num">{scoreText(s.income)}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {myRank >= RESULTS_SHOWN && (
           <p>
-            You: #{myRank + 1} with {amount(rows[myRank].s.income)}
+            You: #{myRank + 1} with {scoreText(rows[myRank].s.income)}
           </p>
         )}
         <p>

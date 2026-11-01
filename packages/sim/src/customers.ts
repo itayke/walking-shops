@@ -103,7 +103,7 @@ export function spawnParachuters(g: GameState, dt: number): void {
 
 /** Shoppers cross, then enter the open sitting shop in front of them (or a sidestep away), else leave. */
 export function updateShoppers(g: GameState, dt: number): void {
-  const { WALK_INS } = g.config;
+  const { WALK_INS, SCORING } = g.config;
   const entries: (Shop | null)[] = [];
   for (let c = 0; c < g.C; c++) entries.push(entryShop(g, c));
   const keep = [];
@@ -134,7 +134,7 @@ export function updateShoppers(g: GameState, dt: number): void {
     }
     const dx = best.col - sh.x;
     const stp = WALK_INS.shopperSpeed * dt;
-    if (Math.abs(dx) <= stp) pay(g, best, 1, 'ground');
+    if (Math.abs(dx) <= stp) pay(g, best, SCORING.walkInValue, 'ground');
     else {
       sh.x += Math.sign(dx) * stp;
       keep.push(sh);

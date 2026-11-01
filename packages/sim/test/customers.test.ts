@@ -27,7 +27,7 @@ describe('walk-ins', () => {
     const g = street([['A']]);
     arrive(g, 0);
     const paid = ofType(run(g, 0.1), 'paid');
-    expect(paid).toEqual([{ type: 'paid', shop: 'A', value: g.config.SCORING.phase1Weight, kind: 'ground' }]);
+    expect(paid).toEqual([{ type: 'paid', shop: 'A', value: g.config.SCORING.walkInValue, kind: 'ground' }]);
   });
 
   it('go upstairs past a closed shop to the lowest open one', () => {
@@ -156,16 +156,16 @@ describe('parachuters', () => {
 });
 
 describe('scoring', () => {
-  it('weights phase 1 earnings and pays parachuters paraValue', () => {
+  it('pays walk-ins the same in both phases, and parachuters paraValue', () => {
     const g = street([['A']], { ROUND: { paraStart: 1 } });
-    const { phase1Weight, paraValue } = g.config.SCORING;
+    const { walkInValue, paraValue } = g.config.SCORING;
     arrive(g, 0);
     run(g, 0.1);
-    expect(shop(g, 'A').income).toBeCloseTo(phase1Weight);
+    expect(shop(g, 'A').income).toBe(walkInValue);
     run(g, 1);
     arrive(g, 0);
     run(g, 0.1);
-    expect(shop(g, 'A').income).toBeCloseTo(phase1Weight + 1);
+    expect(shop(g, 'A').income).toBe(2 * walkInValue);
     dropParachuter(g, 0, 1.2);
     run(g, 0.5);
     expect(shop(g, 'A').incPara).toBeCloseTo(paraValue);

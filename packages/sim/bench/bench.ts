@@ -58,6 +58,9 @@ function flatten(cfg: Config): Record<string, unknown> {
   const flat: Record<string, unknown> = {};
   for (const [name, section] of Object.entries(cfg)) if (name !== 'BOT_MIX') Object.assign(flat, section);
   flat.waveAnnounce = cfg.WAVES.waveLines * cfg.WAVES.waveLineInterval;
+  // The reference pays a walk-in 1 and weights phase 1; ours pays the same in both phases
+  flat.phase1Weight = 1;
+  flat.paraValue = cfg.SCORING.paraValue / cfg.SCORING.walkInValue;
   return flat;
 }
 
@@ -91,7 +94,8 @@ function table(title: string, rows: Row[]): void {
 
 const b16: Mix = { newcomer: 5, climber: 4, aggressor: 2, random: 2, sitter: 3 };
 const b30: Mix = { newcomer: 10, climber: 8, aggressor: 4, random: 3, sitter: 5 };
-const phase1: ConfigOverrides = { ROUND: { paraStart: 999, roundTime: 60 }, SCORING: { phase1Weight: 1 } };
+const phase1: ConfigOverrides = { ROUND: { paraStart: 999, roundTime: 60 } };
+const paraDouble: ConfigOverrides = { SCORING: { paraValue: 2 * makeConfig().SCORING.paraValue } };
 const withPhase1 = (over: ConfigOverrides): ConfigOverrides => ({ ...phase1, ...over });
 
 console.log(`Walking Shops bench, ${ROUNDS} rounds per row${COMPARE ? ', port vs reference' : ''}`);
@@ -115,7 +119,7 @@ table('Full round, current defaults (top-only pay)', [
 table('Phase 2 balance levers (16 players, open question)', [
   { label: 'defaults', mix: b16 },
   { label: 'walk-ins stop in phase 2', mix: b16, over: { WALK_INS: { groundInPhase2: false } } },
-  { label: 'parachuters worth 5', mix: b16, over: { SCORING: { paraValue: 5 } } },
+  { label: 'parachuters worth double', mix: b16, over: paraDouble },
   { label: 'twice the parachuters', mix: b16, over: { PARACHUTES: { paraRate: 24 } } },
-  { label: 'all three', mix: b16, over: { WALK_INS: { groundInPhase2: false }, SCORING: { paraValue: 5 }, PARACHUTES: { paraRate: 24 } } },
+  { label: 'all three', mix: b16, over: { WALK_INS: { groundInPhase2: false }, ...paraDouble, PARACHUTES: { paraRate: 24 } } },
 ]);

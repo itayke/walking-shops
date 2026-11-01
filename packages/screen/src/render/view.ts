@@ -1,4 +1,4 @@
-import type { Dir, GameState, Shop, SimEvent } from '@walking-shops/sim';
+import { scoreText, type Dir, type GameState, type Shop, type SimEvent } from '@walking-shops/sim';
 import { floorsNeeded } from './layout.ts';
 import { climbEase } from './legs.ts';
 import { FX_LOOK, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
@@ -164,9 +164,7 @@ export class StreetView {
         case 'paid': {
           const a = byId(e.shop);
           a.flash = SHOP_LOOK.flashTime;
-          // Counted in walk-ins, the way the street teaches it
-          const worth = e.kind === 'para' ? g.config.SCORING.paraValue : 1;
-          this.add({ kind: 'coin', text: `+${worth}`, x: a.x, y: this.roof(g, a), age: 0 });
+          this.add({ kind: 'coin', text: `+${scoreText(e.value)}`, x: a.x, y: this.roof(g, a), age: 0 });
           break;
         }
         case 'lost':
