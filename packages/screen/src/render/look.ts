@@ -70,7 +70,7 @@ export const SHOP_LOOK = {
   bodyWidth: 0.84,
   roofShare: 0.1,
   minRoof: 2,
-  // Rows of the body: sign (plus a padding row above the text), awning, then the shopfront
+  // Rows of the body: sign (plus a padding row above and below the name), awning, then the shopfront
   signShare: 0.32,
   minSign: 5,
   signPad: 1,

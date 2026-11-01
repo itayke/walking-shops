@@ -54,14 +54,15 @@ export const SHOP = (() => {
   const roof = Math.max(L.minRoof, Math.round(cellH * L.roofShare));
   const W = Math.round(cellW * L.bodyWidth);
   const H = cellH - roof;
-  const signH = Math.max(L.minSign, Math.round(H * L.signShare)) + L.signPad;
+  // A padding row above and below the name, then the shade row
+  const signH = Math.max(L.minSign, Math.round(H * L.signShare)) + 2 * L.signPad;
   const awnH = Math.max(L.minAwning, Math.round(H * L.awningShare));
   const lowTop = 1 + signH + awnH;
   // The sign board, in sprite pixels (the body starts a pixel in, under the roof), and the area its name fills:
-  // a pixel in from each side, between the padding rows and the shade row
+  // a pixel in from each side, between the padding rows above and below it
   const si = Math.max(1, Math.round(W * L.signInset));
   const sign = { x: 2 + si, y: roof + 1, w: W - 2 - 2 * si, h: signH };
-  const name = { x: sign.x + 1, y: sign.y + L.signPad, w: sign.w - 2, h: signH - 1 - L.signPad };
+  const name = { x: sign.x + 1, y: sign.y + L.signPad, w: sign.w - 2, h: signH - 1 - 2 * L.signPad };
   // The sprite is the roof ledge's width (a pixel past the body each side) by one floor
   return { W, H, roof, signH, awnH, lowTop, sign, name, spriteW: W + 2, spriteH: cellH, left: Math.round(-W / 2) };
 })();
