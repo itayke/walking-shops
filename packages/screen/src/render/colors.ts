@@ -1,4 +1,4 @@
-import { SHOP_LOOK } from './look.ts';
+import { FX_LOOK, SHOP_LOOK } from './look.ts';
 
 // The street's daylight palette. The canvas doesn't follow the page theme: the street is always daytime
 export const PALETTE = {
@@ -72,10 +72,59 @@ const PANTS = ['#2f3a56', '#4b3a2f', '#3c414f', '#5a4a6b'];
 // A shirt closer than this to a skin tone (RGB distance) is never paired with it, so a face reads against its shirt
 export const SHIRT_SKIN_MIN = 100;
 
+/** A '#rrggbb' color's channels. */
+function rgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [n >> 16, (n >> 8) & 255, n & 255];
+}
+
+function toHex(c: readonly number[]): string {
+  return '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+}
+
 export function colorDistance(a: string, b: string): number {
-  const x = parseInt(a.slice(1), 16);
-  const y = parseInt(b.slice(1), 16);
-  return Math.hypot((x >> 16) - (y >> 16), ((x >> 8) & 255) - ((y >> 8) & 255), (x & 255) - (y & 255));
+  const x = rgb(a);
+  const y = rgb(b);
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+}
+
+/** A share t of the way from color a to color b. */
+export function mixColor(a: string, b: string, t: number): string {
+  const x = rgb(a);
+  const y = rgb(b);
+  return toHex(x.map((v, i) => v + (y[i] - v) * t));
+}
+
+// Perceived brightness weights of red, green and blue (Rec. 601)
+const LUMA = [0.299, 0.587, 0.114];
+
+/** The gray of the same brightness. */
+export function grayOf(hex: string): string {
+  const y = rgb(hex).reduce((sum, v, i) => sum + v * LUMA[i], 0);
+  return toHex([y, y, y]);
+}
+
+export interface Washed {
+  fill: string;
+  outline: string;
+}
+
+const washCache = new Map<string, Washed>();
+
+/**
+ * Text and marks fade out through palette keyframes instead of alpha, the 8-bit way: the fill washes toward white and
+ * loses its color while the ink outline lightens. Step 0 is full strength; steps run up to the last wash keyframe.
+ */
+export function washOut(fill: string, step: number): Washed {
+  if (step <= 0) return { fill, outline: PALETTE.ink };
+  const key = `${fill}|${step}`;
+  let w = washCache.get(key);
+  if (!w) {
+    const k = FX_LOOK.wash[Math.min(step, FX_LOOK.wash.length) - 1];
+    w = { fill: mixColor(mixColor(fill, grayOf(fill), k.gray), PALETTE.white, k.light), outline: PALETTE[k.outline] };
+    washCache.set(key, w);
+  }
+  return w;
 }
 
 export const SHIRTS_FOR_SKIN = SKIN.map((s) => SHIRT.filter((c) => colorDistance(c, s) >= SHIRT_SKIN_MIN));

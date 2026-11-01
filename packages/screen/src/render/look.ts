@@ -2,6 +2,8 @@
 // Sizes are in art pixels or fractions of a cell (GRID), times are in seconds, rates per second, angles in radians.
 // The look to match is reference/pixel-street.html.
 
+import type { PaletteColor } from './colors.ts';
+
 export const TAU = Math.PI * 2;
 
 // Art pixels per column and per floor. Everything on the street is drawn on this grid, then scaled up
@@ -210,17 +212,25 @@ export const FX_LOOK = {
   calloutAbove: 0.4,
   coinTime: 0.9,
   coinRise: 0.6,
-  // Text holds full strength for this share of its life, then fades in steps
+  // Text holds full strength for this share of its life, then washes out through the wash keyframes
   fadeHold: 0.6,
-  fadeSteps: 3,
+  // Fades are palette keyframes, never alpha: how far the fill goes toward white, how much of its color it loses, and the outline
+  wash: [
+    { light: 0.45, gray: 0, outline: 'greyLo' },
+    { light: 0.7, gray: 1, outline: 'grey' },
+  ] as const satisfies readonly { light: number; gray: number; outline: PaletteColor }[],
   burstTime: 0.3,
   burstSize: 0.3,
   burstRays: 8,
   // A burst's rays start this far out and grow to full length
   burstStart: 0.4,
   bannerTime: 2.5,
-  // The phase banner spans this share of the street
-  bannerWidth: 0.5,
+  // The phase banner spans this share of the street, and washes in and out over this share of its life at each end
+  bannerWidth: 0.35,
+  bannerFade: 0.2,
+  // Titles (the phase banner) are smooth display type, the HUD's --font-display, outlined by this share of their size
+  titleFont: "'Bungee', 'Arial Black', Impact, sans-serif",
+  titleOutline: 0.18,
   // Oldest effects are dropped past this many, so a burst of events can't pile up
   maxEffects: 300,
 };

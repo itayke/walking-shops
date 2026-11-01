@@ -17,12 +17,16 @@ export const GLYPH_H = 5;
 export const ADVANCE = GLYPH_W + 1;
 export const LINE = GLYPH_H + 1;
 const UNKNOWN = '?';
-// Outline offsets: a font pixel's four neighbors
+// Outline offsets: all eight neighbors, so the ring has no notches at the corners
 const AROUND = [
+  [-1, -1],
+  [0, -1],
+  [1, -1],
   [-1, 0],
   [1, 0],
-  [0, -1],
+  [-1, 1],
   [0, 1],
+  [1, 1],
 ];
 
 /** Width of a line of text in font pixels. */
