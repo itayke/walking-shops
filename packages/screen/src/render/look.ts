@@ -204,9 +204,11 @@ export const PEOPLE_LOOK = {
 };
 
 export const FX_LOOK = {
-  // Font pixels are this many art pixels: callouts, coins
-  calloutScale: 2,
-  coinScale: 1,
+  // Callouts and coins: capital height and outline thickness, in art pixels
+  calloutCap: 7.5,
+  calloutRing: 1,
+  coinCap: 5,
+  coinRing: 1,
   calloutTime: 0.9,
   calloutRise: 1,
   calloutAbove: 0.4,
@@ -228,8 +230,8 @@ export const FX_LOOK = {
   // The phase banner spans this share of the street, and washes in and out over this share of its life at each end
   bannerWidth: 0.35,
   bannerFade: 0.2,
-  // Titles (the phase banner) are smooth display type, the HUD's --font-display, outlined by this share of their size
-  titleFont: "'Jersey 15', 'Arial Black', Impact, sans-serif",
+  // Effect text and titles are smooth display type, the HUD's --font-display; titles are outlined by this share of their size
+  displayFont: "'Jersey 15', 'Arial Black', Impact, sans-serif",
   titleOutline: 0.18,
   // Oldest effects are dropped past this many, so a burst of events can't pile up
   maxEffects: 300,
