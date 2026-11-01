@@ -229,7 +229,7 @@ export const FX_LOOK = {
   bannerWidth: 0.35,
   bannerFade: 0.2,
   // Titles (the phase banner) are smooth display type, the HUD's --font-display, outlined by this share of their size
-  titleFont: "'Bungee', 'Arial Black', Impact, sans-serif",
+  titleFont: "'Jersey 15', 'Arial Black', Impact, sans-serif",
   titleOutline: 0.18,
   // Oldest effects are dropped past this many, so a burst of events can't pile up
   maxEffects: 300,

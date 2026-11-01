@@ -11,7 +11,7 @@
   --danger: #d2462a;
   --ok: #24935f;
   --hud-height: 48px;
-  --font-display: 'Bungee', 'Arial Black', Impact, sans-serif;
+  --font-display: 'Jersey 15', 'Arial Black', Impact, sans-serif;
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
@@ -80,6 +80,7 @@ body {
 
 .pill {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 15px;
   padding: 3px 12px;
   border-radius: 999px;
@@ -200,6 +201,7 @@ kbd {
 
 .overlay h2 {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: 400;
   font-size: clamp(28px, 4vw, 56px);
   margin: 0;
