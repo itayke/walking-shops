@@ -4,17 +4,21 @@ import { run, shop, street } from '../../sim/test/helpers.ts';
 import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN, undiesFor, type Undies } from '../src/render/colors.ts';
 import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/render/legs.ts';
 import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
-import { GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/render/look.ts';
+import { FX_LOOK, GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/render/look.ts';
 import { Pix } from '../src/render/pix.ts';
 import { SHOP } from '../src/render/shopArt.ts';
 import { fitLines } from '../src/render/signs.ts';
 import { strainsByColumn } from '../src/render/strain.ts';
-import { PHASE2_BANNER, StreetView } from '../src/render/view.ts';
+import { StreetView, type Banner } from '../src/render/view.ts';
 
 // Long enough for any eased motion to settle
 const SETTLE = 2;
 // Close enough to the grid position after settling, in columns or floors
 const NEAR = 0.01;
+
+function banners(view: StreetView, banner: Banner): number {
+  return view.effects.filter((e) => e.kind === 'banner' && e.banner === banner).length;
+}
 
 /** Advance the sim and the view together, as the screen loop does, one frame per tick. */
 function play(g: GameState, view: StreetView, seconds: number, inputs = {}): SimEvent[] {
@@ -100,11 +104,27 @@ describe('view', () => {
     const g = street([['A']], { ROUND: { paraStart: 1 } });
     const view = new StreetView();
     view.reset(g);
-    const banners = () => view.effects.filter((e) => e.kind === 'banner' && e.text === PHASE2_BANNER).length;
     play(g, view, 0.5);
-    expect(banners()).toBe(0);
+    expect(banners(view, 'phase2')).toBe(0);
     play(g, view, 1);
-    expect(banners()).toBe(1);
+    expect(banners(view, 'phase2')).toBe(1);
+  });
+
+  it('counts a round in with READY? then GO!, holding until GO!', () => {
+    const g = street([['A']]);
+    const view = new StreetView();
+    view.reset(g, true);
+    expect(view.holding).toBe(true);
+    expect(banners(view, 'ready')).toBe(1);
+    view.update(g, FX_LOOK.readyHold / 2);
+    expect(view.holding).toBe(true);
+    expect(banners(view, 'go')).toBe(0);
+    view.update(g, FX_LOOK.readyHold / 2);
+    expect(view.holding).toBe(false);
+    expect(banners(view, 'go')).toBe(1);
+    view.reset(g);
+    expect(view.holding).toBe(false);
+    expect(view.effects).toHaveLength(0);
   });
 });
 

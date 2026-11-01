@@ -25,7 +25,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 ## 3. Flow
 
 1. **Join (≈40s):** scan QR, type business name (pre-filled with a funny suggestion so blank never stalls), pick one of 4 shop designs drawn at random from a larger pool, name rendered on the sign. Each player also gets a unique tint so duplicates are findable.
-2. **Phase 1, walk-ins (≈40–60s):** the tutorial in disguise. Low stakes.
+2. **Phase 1, walk-ins (≈40–60s):** the tutorial in disguise. Low stakes. Opens on READY? then GO! across the street: the street holds still until GO!, and the round clock starts with it.
 3. **Phase 2, parachutes (≈60s):** the real game.
 4. **Results (≈20s):** leaderboard on screen; each phone shows "Your shop: N customers".
 5. **Town hub:** shops walk back and settle into Main Street. Untame's own buildings (Workshop = client work, Arcade = original games) are stops for the rest of the talk.
@@ -55,7 +55,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 - **Legs:** thin ink legs with a side-view four-frame stride. Every leg animation is drawn facing right; facing left mirrors the legs (only the legs) pixel for pixel. Two equal segments per leg: standing up and sitting down bend the knees out sideways (about 0.125 s) instead of stretching the legs. Climbing a floor steps up: the front foot lifts onto the shop ahead and straightens as the body rises with it, so the climb reads as stepping up a stair.
 - **Underwear:** shorts over the top of the legs, each leg's part hanging lower than the middle. Every shop wears one pair, picked from its name: dots or vertical stripes in one of six tacky color pairs. They mirror with the legs.
 - **People** (walk-ins, parachuters) are hand-drawn pixel maps, 5×10 with a one-pixel outline. A shirt is never paired with a skin tone too close to it.
-- **Text and fades:** effect text (callouts, coins) and titles (the phase banner) are smooth display type, the HUD's Jersey 15, outlined in ink: coins as tall as the 3×5 pixel font they replaced, callouts a little taller, titles larger (a pixel font scaled up stops reading as pixel art). Text never fades with real alpha: it washes out toward white through a few palette keyframes (a title washes in and out the same way).
+- **Text and fades:** effect text (callouts, coins) and titles (the READY? GO! countdown and the phase banner, all one size) are smooth display type, the HUD's Jersey 15, outlined in ink: coins as tall as the 3×5 pixel font they replaced, callouts a little taller, titles larger (a pixel font scaled up stops reading as pixel art). Text never fades with real alpha: it washes out toward white through a few palette keyframes (a title washes in and out the same way).
 - **No marker over your own shop:** everyone shares one screen, and each phone shows its shop's tint.
 - **Scale:** the street scales by whatever fits every column and the sky (centered when the height is what limits it), and eases as towers grow. At a scale that isn't a whole number, some art pixels are a device pixel wider than others.
 - **Open:** whether to step the zoom between whole-number scales instead; tints for 30 players (hues snap to 15°, which gives 24).

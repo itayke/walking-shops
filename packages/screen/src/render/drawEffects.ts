@@ -2,9 +2,11 @@ import { PALETTE, washOut, type Washed } from './colors.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { FX_LOOK, GRID, TAU } from './look.ts';
 import { Pix } from './pix.ts';
-import type { CalloutColor, StreetView } from './view.ts';
+import { BANNERS, lifetime, type Banner, type CalloutColor, type StreetView } from './view.ts';
 
 const CALLOUT_COLORS: Record<CalloutColor, string> = { danger: PALETTE.danger, ok: PALETTE.ok, muted: PALETTE.grey };
+// The countdown goes amber to green, like a starting light
+const BANNER_COLORS: Record<Banner, string> = { ready: PALETTE.yellow, go: PALETTE.ok, phase2: PALETTE.blue };
 
 /** The wash keyframe to draw, 0 at full strength: steps through every keyframe over the last `span` before `left` runs out. */
 function washStep(left: number, span: number): number {
@@ -39,11 +41,11 @@ function outlined(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.restore();
 }
 
-/** A title centered on device (x, y), sized to span `width` device pixels, with a rounded outline. */
-function title(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, w: Washed): void {
+/** A title centered on device (x, y), set at the size where `sizer` spans `width` device pixels, with a rounded outline. */
+function title(ctx: CanvasRenderingContext2D, text: string, sizer: string, x: number, y: number, width: number, w: Washed): void {
   ctx.font = font(MEASURE_PX);
+  const px = (MEASURE_PX * width) / ctx.measureText(sizer).width;
   const m = ctx.measureText(text);
-  const px = (MEASURE_PX * width) / m.width;
   // Centered on its capitals
   const mid = ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 / MEASURE_PX) * px;
   outlined(ctx, text, x, y + mid, px, px * FX_LOOK.titleOutline, 'round', w);
@@ -91,11 +93,11 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
         break;
       }
       case 'banner': {
-        const u = e.age / look.bannerTime;
+        const u = e.age / lifetime(e);
         // Washes in and out through the same keyframes
-        const w = washOut(PALETTE.blue, washStep(Math.min(u, 1 - u), look.bannerFade));
+        const w = washOut(BANNER_COLORS[e.banner], washStep(Math.min(u, 1 - u), look.bannerFade));
         const [x, y] = device(L, L.gridW / 2, L.top / 2);
-        title(ctx, e.text, x, y, L.gridW * look.bannerWidth * L.P, w);
+        title(ctx, BANNERS[e.banner].text, BANNERS.phase2.text, x, y, L.gridW * look.bannerWidth * L.P, w);
         break;
       }
       case 'leaver':

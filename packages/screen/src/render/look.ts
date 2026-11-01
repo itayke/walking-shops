@@ -226,7 +226,12 @@ export const FX_LOOK = {
   // A burst's rays start this far out and grow to full length
   burstStart: 0.4,
   bannerTime: 2.5,
-  // The phase banner spans this share of the street, and washes in and out over this share of its life at each end
+  // A round opens with the street held for readyHold, READY? showing over the start of it, then GO! as play starts
+  readyHold: 1.5,
+  readyTime: 1.5,
+  goTime: 1.5,
+  // Every banner is set at the size that makes the phase banner span this share of the street, and washes in and out
+  // over this share of its life at each end
   bannerWidth: 0.35,
   bannerFade: 0.2,
   // Effect text, titles and shop names are smooth display type, the HUD's --font-display; titles are outlined by this share of their size

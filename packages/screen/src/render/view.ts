@@ -49,18 +49,27 @@ export type Effect =
   | { kind: 'coin'; text: string; x: number; y: number; age: number }
   | { kind: 'burst'; x: number; y: number; age: number }
   | { kind: 'leaver'; x: number; shopper: number; age: number }
-  | { kind: 'banner'; text: string; age: number };
+  | { kind: 'banner'; banner: Banner; age: number };
 
 export const CALLOUT_TEXT = { topple: 'TOPPLE!', pushback: 'BLOCKED', closed: 'CLOSED' };
-export const PHASE2_BANNER = 'PARACHUTES!';
+// Titles across the street: the countdown into a round, and phase 2
+export const BANNERS = {
+  ready: { text: 'READY?', time: FX_LOOK.readyTime },
+  go: { text: 'GO!', time: FX_LOOK.goTime },
+  phase2: { text: 'PARACHUTES!', time: FX_LOOK.bannerTime },
+};
+export type Banner = keyof typeof BANNERS;
 
-const LIFETIME: Record<Effect['kind'], number> = {
+const LIFETIME: Record<Exclude<Effect['kind'], 'banner'>, number> = {
   callout: FX_LOOK.calloutTime,
   coin: FX_LOOK.coinTime,
   burst: FX_LOOK.burstTime,
   leaver: PEOPLE_LOOK.leaveTime,
-  banner: FX_LOOK.bannerTime,
 };
+
+export function lifetime(e: Effect): number {
+  return e.kind === 'banner' ? BANNERS[e.banner].time : LIFETIME[e.kind];
+}
 
 /** Fraction of the way from a to b, eased to slow into the landing. */
 function easeOut(u: number): number {
@@ -82,12 +91,22 @@ export class StreetView {
   // Floors of sky shown, eased toward what the street needs
   floors = 0;
   private phase2 = false;
+  // Seconds of READY? left before the round may start
+  private readyLeft = 0;
 
-  reset(g: GameState): void {
+  /** Start over on a new round, with or without the READY? GO! countdown into it. */
+  reset(g: GameState, countdown = false): void {
     this.anims.clear();
     this.effects = [];
     this.floors = floorsNeeded(g);
     this.phase2 = g.t >= g.config.ROUND.paraStart;
+    this.readyLeft = countdown ? FX_LOOK.readyHold : 0;
+    if (countdown) this.add({ kind: 'banner', banner: 'ready', age: 0 });
+  }
+
+  /** The countdown is still on: the screen holds the sim until GO!. */
+  get holding(): boolean {
+    return this.readyLeft > 0;
   }
 
   anim(s: Shop): ShopAnim {
@@ -215,10 +234,15 @@ export class StreetView {
     }
 
     for (const e of this.effects) e.age += dt;
-    this.effects = this.effects.filter((e) => e.age < LIFETIME[e.kind]);
+    this.effects = this.effects.filter((e) => e.age < lifetime(e));
+
+    if (this.readyLeft > 0) {
+      this.readyLeft -= dt;
+      if (this.readyLeft <= 0) this.add({ kind: 'banner', banner: 'go', age: 0 });
+    }
 
     const phase2 = g.t >= ROUND.paraStart;
-    if (phase2 && !this.phase2 && !g.over) this.add({ kind: 'banner', text: PHASE2_BANNER, age: 0 });
+    if (phase2 && !this.phase2 && !g.over) this.add({ kind: 'banner', banner: 'phase2', age: 0 });
     this.phase2 = phase2;
 
     this.floors += (floorsNeeded(g) - this.floors) * follow(STREET_LOOK.zoomRate, dt);

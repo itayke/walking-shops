@@ -64,7 +64,8 @@ export function App() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const view = new StreetView();
-    view.reset(host.current.game);
+    // A fast-forwarded round is already under way, so it skips the countdown
+    view.reset(host.current.game, START_AT === 0);
     fastForward(host.current.game, view, START_AT);
     const connect = () => {
       const n = net.current;
@@ -102,7 +103,7 @@ export function App() {
 
     let acc = 0;
     const restart = () => {
-      view.reset(host.current.restart());
+      view.reset(host.current.restart(), true);
       acc = 0;
       paused.current = false;
       setHudTick((t) => t + 1);
@@ -133,7 +134,11 @@ export function App() {
       last = now;
       const g = host.current.game;
       if (!paused.current) {
-        if (!g.over) {
+        if (view.holding) {
+          // Taps during the countdown are dropped, so play starts on what's held at GO!
+          host.current.inputs();
+          keyboard.dir();
+        } else if (!g.over) {
           acc += dt;
           for (let n = 0; acc >= TICK && n < MAX_TICKS_PER_FRAME; n++) {
             view.onEvents(g, step(g, { ...host.current.inputs(), [YOU.id]: keyboard.dir() }, TICK));
