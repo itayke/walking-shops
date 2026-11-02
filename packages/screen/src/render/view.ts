@@ -50,6 +50,8 @@ export type Effect =
   | { kind: 'coin'; text: string; x: number; y: number; shopper: number | null; age: number }
   | { kind: 'burst'; x: number; y: number; age: number }
   | { kind: 'leaver'; x: number; shopper: number; age: number }
+  // A customer who just paid, flashing out where it stood: a walk-in, or a parachuter at its feet's height
+  | { kind: 'buyer'; x: number; y: number; who: number; para: boolean; age: number }
   | { kind: 'banner'; banner: Banner; age: number };
 
 export const CALLOUT_TEXT = { topple: 'TOPPLE!', pushback: 'BLOCKED', closed: 'CLOSED' };
@@ -66,6 +68,7 @@ const LIFETIME: Record<Exclude<Effect['kind'], 'banner'>, number> = {
   coin: FX_LOOK.coinTime,
   burst: FX_LOOK.burstTime,
   leaver: PEOPLE_LOOK.leaveTime,
+  buyer: PEOPLE_LOOK.buyTime,
 };
 
 export function lifetime(e: Effect): number {
@@ -165,6 +168,7 @@ export class StreetView {
         case 'paid': {
           const a = byId(e.shop);
           a.flash = SHOP_LOOK.flashTime;
+          this.add({ kind: 'buyer', x: e.x, y: e.y, who: e.who, para: e.kind === 'para', age: 0 });
           this.add({ kind: 'coin', text: `+${scoreText(e.value)}`, x: e.x, y: e.y, shopper: e.kind === 'ground' ? e.who : null, age: 0 });
           break;
         }

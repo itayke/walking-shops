@@ -16,7 +16,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, g: GameState, view: Str
   drawStreet(ctx, g, L, now);
   drawShops(ctx, g, view, L, now);
   drawShoppers(ctx, g, view, L, now);
-  drawParachuters(ctx, g, L, now);
+  drawParachuters(ctx, g, view, L, now);
   drawEffects(ctx, view, L);
   return L;
 }

@@ -1,5 +1,5 @@
 import { PALETTE, washOut, type Washed } from './colors.ts';
-import { lane, PARA_ROWS, PERSON_ROWS, sidewalkFeet } from './drawPeople.ts';
+import { lane, PARA_TALL, PERSON_ROWS, sidewalkFeet } from './drawPeople.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { FX_LOOK, GRID, TAU } from './look.ts';
 import { Pix } from './pix.ts';
@@ -61,7 +61,7 @@ function small(ctx: CanvasRenderingContext2D, L: Layout, text: string, x: number
   outlined(ctx, text, dx, dy, px, 2 * ring * L.P, 'miter', w);
 }
 
-/** Callouts, coins and the phase banner in display type, bump bursts in art pixels. Leavers are drawn with the shoppers. */
+/** Callouts, coins and the phase banner in display type, bump bursts in art pixels. Leavers and buyers are drawn with the people. */
 export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: Layout): void {
   const look = FX_LOOK;
   const px = new Pix(ctx, L.P, L.ox, L.groundY);
@@ -77,7 +77,7 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
         const u = e.age / look.coinTime;
         const w = washOut(PALETTE.yellow, fadeOut(u));
         const x = e.shopper === null ? e.x : e.x + lane(e.shopper);
-        const head = e.shopper === null ? floorY(e.y) - PARA_ROWS : sidewalkFeet(L) - PERSON_ROWS;
+        const head = e.shopper === null ? floorY(e.y) - PARA_TALL : sidewalkFeet(L) - PERSON_ROWS;
         const y = head - look.coinAbove + floorY(u * look.coinRise);
         small(ctx, L, e.text, colX(x), y, look.coinCap, look.coinRing, w);
         break;
@@ -105,6 +105,7 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
         break;
       }
       case 'leaver':
+      case 'buyer':
         break;
     }
   }

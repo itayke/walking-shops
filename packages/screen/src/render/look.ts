@@ -197,6 +197,9 @@ export const PEOPLE_LOOK = {
   leaveTime: 1,
   leaveAlpha: 0.6,
   leaveFade: 0.5,
+  // A customer who pays stays put as a coin-yellow silhouette, then washes out through the text wash keyframes, each
+  // frame an equal share of buyTime
+  buyTime: 0.5,
   // Canopy radius as a share of a column; rows, and the gap down to the hands, as shares of the radius
   canopyShare: 0.2,
   minCanopy: 4,
@@ -217,7 +220,7 @@ export const FX_LOOK = {
   calloutRing: 1,
   coinCap: 5,
   coinRing: 1,
-  // A coin starts this many art pixels above the head of the customer who paid
+  // A coin starts this many art pixels above the customer who paid: a walk-in's head, a parachuter's canopy
   coinAbove: 2,
   calloutTime: 0.9,
   calloutRise: 1,
