@@ -16,7 +16,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 | Constraint | Value |
 |---|---|
-| Players | 10–30, on their own phones, joined by QR, no app, no signup |
+| Players | 10–30, on their own phones, joined by QR, no app, no signup. Bots fill the street up to `minPlayers` |
 | Length | 2–3 minutes of play |
 | Tutorial | None. Every rule must be visible on the big screen |
 | Attention | Eyes stay on the big screen. The phone is a blind controller |
@@ -24,14 +24,31 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ## 3. Flow
 
-1. **Join (≈40s):** scan QR, type business name (pre-filled with a funny suggestion so blank never stalls), pick one of 4 shop designs drawn at random from a larger pool, name rendered on the sign. Each player also gets a unique tint so duplicates are findable.
-2. **Phase 1, walk-ins (≈40–60s):** the tutorial in disguise. Low stakes. Opens on READY? then GO! across the street: the street holds still until GO!, and the round clock starts with it.
-3. **Phase 2, parachutes (≈60s):** the real game.
-4. **Results (≈20s):** leaderboard on screen; each phone shows "Your shop: N customers".
-5. **Town hub:** shops walk back and settle into Main Street. Untame's own buildings (Workshop = client work, Arcade = original games) are stops for the rest of the talk.
-6. **Close:** every phone shows a contact card: site, LinkedIn, Save contact (vCard), a shareable image of their shop, and a permanent URL that works tomorrow.
+1. **Lobby (≈40s):** the screen shows the title and a QR code over the street. Players scan it and set up their shop on the phone (see "Joining"), and each shop drops from the sky into a random column as it opens. From then on the phone is its controller, and the street is a brawl without consequences: every movement rule applies, but no customers come, nothing scores and shutters stay open. The street widens as shops arrive. Only the lobby takes new players.
+2. **Begin:** the presenter starts the round. The title and QR clear, bots drop into the widest empty gaps until there are `minPlayers` shops, then READY? GO! across the street: the street holds still until GO!, and the round clock starts with it. Shops start where the brawl left them.
+3. **Phase 1, walk-ins (≈40–60s):** the tutorial in disguise. Low stakes.
+4. **Phase 2, parachutes (≈60s):** the real game.
+5. **Results (≈20s):** leaderboard on screen; each phone shows "Your shop: N customers". A replay goes back to the lobby: the bots leave, the QR comes back, new players join, and everyone else keeps their shop.
+6. **Town hub:** shops walk back and settle into Main Street. Untame's own buildings (Workshop = client work, Arcade = original games) are stops for the rest of the talk.
+7. **Close:** every phone shows a contact card: site, LinkedIn, Save contact (vCard), a shareable image of their shop, and a permanent URL that works tomorrow.
 
-## 4. Controls (phone)
+## 4. Phone
+
+### Joining
+
+- **One field: the shop's name.** Its placeholder is a funny suggestion, and opening the shop with the field blank uses it.
+- **Live preview:** the phone draws the shop exactly as the big screen will, with the same sign fitting and font, so the name wraps and shrinks on the sign as you type. A letter that would push the name under the sign's smallest size isn't accepted, so nothing is ever cut off on the big screen.
+- **Shop type:** one shop on screen; arrows or a swipe cycle through the types, starting at a random one.
+- **Color is assigned,** never picked: hues are handed out so that a repeated hue always goes to a different shop type, which keeps every shop findable.
+- **Editing:** until the round begins, a player can go back to the form. The shop stays on the street with its current name and type, and an edit applies only when confirmed. If the round begins mid-edit, the edit is dropped and the phone becomes the controller.
+- A player who hasn't opened their shop by the time the round begins waits for the replay.
+
+### Presenter list
+
+- Next to the QR, the screen lists the shops that have joined, like the scoreboard, and how many phones are still setting up. Clicking a name renames the shop; a remove button takes it off the street. That stands in for a profanity filter.
+- A phone that disconnects in the lobby keeps its shop until the presenter removes it.
+
+### Controls
 
 - The whole phone is two halves: **tap left / tap right to step one column; hold to keep walking.** Release and you sit at the next column. Pushing a tower takes a hold.
 - No other UI during play. The phone shows your shop's tint, big, so you can play without looking at it.
@@ -58,7 +75,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 - **Text and fades:** effect text (callouts, coins) and titles (the READY? GO! countdown and the phase banner, all one size) are smooth display type, the HUD's Jersey 15, outlined in ink: coins as tall as the 3×5 pixel font they replaced, callouts a little taller, titles larger (a pixel font scaled up stops reading as pixel art). Text never fades with real alpha: it washes out toward white through a few palette keyframes (a title washes in and out the same way).
 - **No marker over your own shop:** everyone shares one screen, and each phone shows its shop's tint.
 - **Scale:** the street scales by whatever fits every column and the sky (centered when the height is what limits it), and eases as towers grow. At a scale that isn't a whole number, some art pixels are a device pixel wider than others.
-- **Open:** whether to step the zoom between whole-number scales instead; tints for 30 players (hues snap to 15°, which gives 24).
+- **Open:** whether to step the zoom between whole-number scales instead.
 
 ## 6. Movement rules (locked)
 
@@ -109,6 +126,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 - A shop with no input for `idleTime` (≈12s) **pulls its shutters down**. The shutters drop visibly over the last `idleWarn` seconds (≈4s).
 - A closed shop earns nothing. Any press reopens it.
 - Climbing onto a closed shop takes its customers (walk-ins go upstairs to you).
+- Off in the lobby: players are looking down to set up their shop.
 - This also handles dropped or disconnected phones: their shop closes on its own instead of holding a column forever.
 - Known limit: it beats idle phones, not campers. A tap every ~10s keeps a shop open, and a tap into a wall or a tall neighbor does it without moving (elsewhere a tap costs a step). Waves and phase 2 are what make people move.
 
@@ -121,6 +139,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 
 | Name | Default | Meaning |
 |---|---|---|
+| minPlayers | 12 | Bots fill the street up to this many shops when the round begins |
 | roundTime | 120 s | Whole round |
 | paraStart | 60 s | Phase 2 begins |
 | cellTime | 0.45 s | Time to walk one column |
@@ -179,3 +198,7 @@ From the prototype's headless bot runs (`reference/bench.js`). Bots are not peop
 | Drifting crowd band | More position luck than waves |
 | Numeric countdown on crosswalks | Replaced by bars drawn one per second |
 | Phase 1 earnings weighted down (×0.3) | Invisible: a coin said +1 but added 0.3, so totals didn't match the street |
+| Pick one of 4 designs | One shop to swipe through, with your name already on it, shows the result directly |
+| Picking your own color | Colors must stay findable with up to 30 players; assigned hues guarantee it |
+| Joining mid-round | Joining is slow and pulls eyes down; a replay reopens the lobby instead |
+| Profanity filter | Filters miss things; the presenter's list renames or removes a shop |

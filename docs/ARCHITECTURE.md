@@ -51,10 +51,12 @@
 
 ## Join flow details
 
-- QR on screen, short URL as a backup.
-- Business name field pre-filled with a funny suggestion; profanity filter; truncate long names; fall back to "Shop #7".
-- Pick from 4 designs drawn at random from a larger pool. Designs are a static facade sprite plus one shared procedural leg rig, so adding designs costs one image each.
-- Each player gets a unique tint on top of the design.
+The design is in `GAME_DESIGN.md` ("Flow" and "Phone"). Planned build:
+
+- **Sim:** a lobby mode (movement rules only: no customers, clock, scoring or shutters), adding a shop mid-game into a column, a street that widens by adding columns at its edge, and filling with bots up to `minPlayers` when the round begins. The round carries on from the lobby's state.
+- **Shared shop art:** the shop parts and the sign fitting move out of `packages/screen` into a package the phone also draws with, so the phone's preview is pixel for pixel what the screen shows.
+- **Protocol:** the phone sends its profile (name, shop type) when it opens its shop and on each confirmed edit; the relay checks its length and characters. The screen assigns the hue and can rename or remove a shop. The phone keeps its profile in localStorage with the reconnect token.
+- **Screen:** title and QR (short URL underneath), the presenter list, and a begin key and button. Joins are refused outside the lobby; a reconnecting phone still gets its shop back.
 
 ## Ending
 
