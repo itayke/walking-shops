@@ -16,8 +16,8 @@ const MAX_TICKS_PER_FRAME = 10;
 const MAX_FRAME_SECONDS = 0.25;
 const MS_PER_SECOND = 1000;
 const HUD_REFRESH_MS = 100;
-// Sharper than this costs fill rate on a 4K projector for nothing
-const MAX_PIXEL_RATIO = 2;
+// Drawn at CSS pixels at most: a retina screen scales it up hard-edged, rather than filling several times the pixels
+const MAX_PIXEL_RATIO = 1;
 const SEED_RANGE = 2 ** 32;
 const PAUSE_KEY = ' ';
 const BOARD_KEY = 'b';
@@ -86,7 +86,7 @@ export function App() {
     };
     connect();
 
-    // The street draws in device pixels, so art pixels land on whole ones
+    // The street draws in canvas pixels, so art pixels land on whole ones
     const resize = () => {
       const r = canvas.getBoundingClientRect();
       const ratio = Math.min(MAX_PIXEL_RATIO, devicePixelRatio || 1);
