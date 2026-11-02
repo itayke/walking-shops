@@ -42,7 +42,7 @@ Without the relay, the screen still plays offline: keyboard and bots.
 
 ## Deploying
 
-`npm run deploy:server` deploys the relay to Cloudflare (run `npx wrangler login` once first). Build the apps with `VITE_PARTY_HOST` (the relay's host, e.g. `walking-shops.<account>.workers.dev`) and, for the screen, `VITE_PHONE_URL` (where the phone app is served).
+Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:server` deploys the relay (run `npx wrangler login` once first). The screen and phone are static builds, so they can go on Cloudflare Pages, which is also free. Build the apps with `VITE_PARTY_HOST` (the relay's host, e.g. `walking-shops.<account>.workers.dev`) and, for the screen, `VITE_PHONE_URL` (where the phone app is served).
 
 ## Keys on the screen
 
