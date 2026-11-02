@@ -4,7 +4,18 @@ import type { Layout } from './layout.ts';
 import { CROSSWALK_LOOK, GRID, STREET_LOOK } from './look.ts';
 import { mulberry32, Pix, scratch } from './pix.ts';
 
-const CLOUD = ['....wwww......', '..wwwwwwww.ww.', '.wwwwwwwwwwwww', 'wwwwwwwwwwwwww', 'llllllllllllll'];
+const CLOUD = [
+  '.........wwwwww.............',
+  '.......wwwwwwwwww...........',
+  '.....wwwwwwwwwwwww...www....',
+  '....wwwwwwwwwwwwwwww.wwwww..',
+  '..wwwwwwwwwwwwwwwwwwwwwwwww.',
+  '.wwwwwwwwwwwwwwwwwwwwwwwwwww',
+  'wwwwwwwwwwwwwwwwwwwwwwwwwwww',
+  'wwwwwwwwwwwwwwwwwwwwwwwwwwww',
+  'llllllllllllllllllllllllllll',
+  '.llllllllllllllllllllllllll.',
+];
 const CLOUD_COLORS = { w: PALETTE.cloud, l: PALETTE.cloudLo };
 // Hash multipliers that spread a pixel's x and y, so specks don't line up
 const SPECK_MIX_X = 73856093;
@@ -82,21 +93,52 @@ function drawClouds(px: Pix, L: Layout, now: number): void {
   }
 }
 
-/** Distant buildings along the ground line. They grow out from x = 0 both ways, so they keep their place as the view zooms. */
+/** A distant building: where it stands, its size, and whether it sits behind its neighbor. */
+interface Building {
+  x: number;
+  w: number;
+  h: number;
+  far: boolean;
+}
+
+/**
+ * Distant buildings along the ground line. They grow out from x = 0 both ways, so they keep their place as the view
+ * zooms. Neighbors that touch or overlap alternate tints, the hazier one sitting behind.
+ */
 function drawSkyline(px: Pix, x0: number, w: number): void {
   const S = STREET_LOOK;
-  const step = S.skylineWindowStep;
+  const P = PALETTE;
+  const { skylineWindowSize: ws, skylineWindowStep: step, skylineWindowInset: inset } = S;
+  const row: Building[] = [];
   for (const side of [1, -1]) {
     const rng = mulberry32(S.skylineSeed + side);
+    let last: Building | null = null;
     for (let edge = 0; side > 0 ? edge < x0 + w : edge > x0; ) {
       const bw = Math.round(S.skylineMinW + rng() * (S.skylineMaxW - S.skylineMinW));
       const bh = Math.round((S.skylineMinH + rng() * (S.skylineMaxH - S.skylineMinH)) * GRID.cellH);
-      const x = side > 0 ? edge : edge - bw;
-      px.r(x, -bh, bw, bh, PALETTE.skyline);
-      for (let wy = -bh + 2; wy < -2; wy += step) {
-        for (let wx = x + 2; wx < x + bw - 2; wx += step) if (rng() < S.skylineWindowChance) px.r(wx, wy, 1, 1, PALETTE.skylineWin);
+      // Touching or overlapping neighbors always differ in tint, so they never merge into one shape
+      let far: boolean = last ? !last.far : false;
+      if (last && rng() < S.skylineOverlapChance) {
+        const share = S.skylineOverlapMin + rng() * (S.skylineOverlapMax - S.skylineOverlapMin);
+        edge -= side * Math.round(Math.min(bw, last.w) * share);
+      } else if (rng() < S.skylineGapChance) {
+        edge += side * S.skylineGap;
+        far = false;
       }
-      edge += side * (bw + (rng() < S.skylineGapChance ? 1 : 0));
+      last = { x: side > 0 ? edge : edge - bw, w: bw, h: bh, far };
+      row.push(last);
+      edge += side * bw;
+    }
+  }
+  // Far ones first, so the near ones cover them
+  for (const b of [...row.filter((b) => b.far), ...row.filter((b) => !b.far)]) {
+    px.r(b.x, -b.h, b.w, b.h, b.far ? P.skylineFar : P.skyline);
+    // Window columns centered across the wall
+    const cols = Math.floor((b.w - 2 * inset - ws) / step) + 1;
+    const left = b.x + Math.floor((b.w - (cols - 1) * step - ws) / 2);
+    const rng = mulberry32(S.skylineSeed + b.x);
+    for (let wy = -b.h + inset; wy + ws <= -inset; wy += step) {
+      for (let i = 0; i < cols; i++) if (rng() < S.skylineWindowChance) px.r(left + i * step, wy, ws, ws, b.far ? P.skylineFarWin : P.skylineWin);
     }
   }
 }

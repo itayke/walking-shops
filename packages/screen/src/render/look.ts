@@ -26,18 +26,27 @@ export const STREET_LOOK = {
   // Light specks in the asphalt: one per this many art pixels of road
   speckArea: 40,
   // Distant buildings along the ground line: widths in art pixels, heights in floors
-  skylineMinW: 10,
-  skylineMaxW: 24,
-  skylineMinH: 0.4,
-  skylineMaxH: 1.3,
-  skylineWindowStep: 3,
+  skylineMinW: 14,
+  skylineMaxW: 34,
+  skylineMinH: 1,
+  skylineMaxH: 3,
+  // Square windows on a grid, kept clear of the walls and the ground
+  skylineWindowSize: 2,
+  skylineWindowStep: 6,
+  skylineWindowInset: 4,
   skylineWindowChance: 0.45,
+  // Sometimes a narrow gap between neighbors
+  skylineGap: 2,
   skylineGapChance: 0.4,
+  // Sometimes tucked behind the last one instead, by a share of the narrower of the two (at most half, so only neighbors overlap)
+  skylineOverlapChance: 0.4,
+  skylineOverlapMin: 0.2,
+  skylineOverlapMax: 0.5,
   // Clouds drift right; each one is faster than the last, on its own row of the sky
   clouds: 3,
   cloudSpeed: 2,
   cloudSpeedStep: 0.5,
-  cloudSpacing: 97,
+  cloudSpacing: 194,
   cloudTop: 0.1,
   cloudRowStep: 0.2,
   // Fixed seeds, so the skyline and the specks are the same every round

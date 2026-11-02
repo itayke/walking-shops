@@ -7,6 +7,9 @@ export const PALETTE = {
   cloudLo: '#cbe6f1',
   skyline: '#b2d4e0',
   skylineWin: '#9fc7d6',
+  // A building tucked behind its neighbor, a little hazier
+  skylineFar: '#c2dde8',
+  skylineFarWin: '#b0d1de',
   curbTop: '#ece2cf',
   walk: '#cdbd9f',
   walkLine: '#b2a183',
