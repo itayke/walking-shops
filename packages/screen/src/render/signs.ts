@@ -1,8 +1,11 @@
 import { PALETTE } from './colors.ts';
 import { FX_LOOK, SHOP_LOOK } from './look.ts';
+import { scratch } from './pix.ts';
 import { SHOP } from './shopArt.ts';
 
-// Shop names are drawn at full resolution over the sprite, in the display font, as large as their sign allows
+// Shop names are drawn at full resolution over the sprite, in the display font, as large as their sign allows.
+// Like everything else on the street they are hard-edged: each name is set once into a bitmap whose every pixel is
+// solid ink or clear, then stamped over the sprite one bitmap pixel per device pixel
 
 // Names are measured at this size, then scaled to fit
 const MEASURE_PX = 100;
@@ -15,6 +18,23 @@ interface SignSet {
 }
 
 const sets = new Map<string, SignSet>();
+
+// A name's bitmap is redrawn as the scale changes in steps this fine, so a zoom doesn't redraw every name every frame
+const SCALE_STEPS = 8;
+// Smooth text at least this opaque (of 255) becomes ink, the rest clear
+const INK_ALPHA = 128;
+// Room around the name area, in art pixels, for glyphs that reach past it
+const BITMAP_PAD = 1;
+const RGBA = 4;
+const ALPHA = 3;
+const OPAQUE = 255;
+
+interface SignBitmap {
+  scale: number;
+  cv: OffscreenCanvas;
+}
+
+const bitmaps = new Map<string, SignBitmap>();
 
 function font(px: number): string {
   return `${px}px ${FX_LOOK.displayFont}`;
@@ -95,29 +115,50 @@ function setName(ctx: CanvasRenderingContext2D, label: string): SignSet {
   return best!;
 }
 
-/** A shop's name on its sign, for a sprite drawn at device (x, y) with P device pixels per art pixel. */
-export function drawSignName(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, P: number): void {
-  if (!label.trim()) return;
-  let set = sets.get(label);
-  if (!set) {
-    set = setName(ctx, label);
-    // Measured in a fallback font until the display font loads, so only kept once it has
-    if (document.fonts.check(font(MEASURE_PX))) sets.set(label, set);
-  }
+/** A name set into a hard-edged bitmap at `scale` device pixels per art pixel, centered in the name area. */
+function nameBitmap(set: SignSet, scale: number): OffscreenCanvas {
   const { name } = SHOP;
-  const px = set.size * P;
+  const w = Math.ceil((name.w + 2 * BITMAP_PAD) * scale);
+  const h = Math.ceil((name.h + 2 * BITMAP_PAD) * scale);
+  const { cv, ctx } = scratch(null, w, h);
+  const px = set.size * scale;
   const cap = set.cap * px;
   const gap = cap * SHOP_LOOK.signLineGap;
   const tall = set.lines.length * cap + (set.lines.length - 1) * gap;
-  let base = y + (name.y + name.h / 2) * P - tall / 2 + cap;
-  ctx.save();
+  let base = h / 2 - tall / 2 + cap;
   ctx.font = font(px);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = PALETTE.ink;
   for (const ln of set.lines) {
-    ctx.fillText(ln, x + (name.x + name.w / 2) * P, base);
+    ctx.fillText(ln, w / 2, base);
     base += cap + gap;
   }
-  ctx.restore();
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  for (let i = ALPHA; i < d.length; i += RGBA) d[i] = d[i] >= INK_ALPHA ? OPAQUE : 0;
+  ctx.putImageData(img, 0, 0);
+  return cv;
+}
+
+/** A shop's name on its sign, for a sprite drawn at device (x, y) with P device pixels per art pixel. */
+export function drawSignName(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, P: number): void {
+  if (!label.trim()) return;
+  const scale = Math.round(P * SCALE_STEPS) / SCALE_STEPS;
+  let bm = bitmaps.get(label);
+  if (!bm || bm.scale !== scale) {
+    let set = sets.get(label);
+    // Measured in a fallback font until the display font loads, so only kept once it has
+    const loaded = document.fonts.check(font(MEASURE_PX));
+    if (!set) {
+      set = setName(ctx, label);
+      if (loaded) sets.set(label, set);
+    }
+    bm = { scale, cv: nameBitmap(set, scale) };
+    if (loaded) bitmaps.set(label, bm);
+  }
+  const { name } = SHOP;
+  const cx = x + (name.x + name.w / 2) * P;
+  const cy = y + (name.y + name.h / 2) * P;
+  ctx.drawImage(bm.cv, Math.round(cx - bm.cv.width / 2), Math.round(cy - bm.cv.height / 2));
 }
