@@ -18,6 +18,8 @@ export const STREET_LOOK = {
   sidewalkShare: 0.32,
   // Sky above the highest parachuter spawn, so a canopy is never cut off
   skyHeadroom: 1,
+  // Neighboring sky bands blend over this share of a band's height, centered on the edge
+  skyBlend: 0.3,
   // How fast the view zooms out (or back in) as towers grow
   zoomRate: 1.5,
   // Paving joints across the sidewalk, as a share of a column, offset from the column edge

@@ -20,11 +20,19 @@ const CLOUD_COLORS = { w: PALETTE.cloud, l: PALETTE.cloudLo };
 // Hash multipliers that spread a pixel's x and y, so specks don't line up
 const SPECK_MIX_X = 73856093;
 const SPECK_MIX_Y = 19349663;
-// Band edges are dithered over two rows: every other pixel, then every fourth
-const DITHER = [
-  [0, 2],
-  [1, 4],
+// Ordered dither thresholds (4x4 Bayer): the blend between sky bands fills in evenly, a level at a time
+const BAYER = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
 ];
+const BAYER_LEVELS = BAYER.length * BAYER.length;
+
+/** n mod m, never negative: the view reaches left of x = 0 and above y = 0. */
+function mod(n: number, m: number): number {
+  return ((n % m) + m) % m;
+}
 
 /** A static layer drawn at art resolution, redrawn only when the visible area changes. */
 interface Layer {
@@ -67,17 +75,24 @@ export function drawStreet(ctx: CanvasRenderingContext2D, g: GameState, L: Layou
   drawCrosswalk(px, g, L, now);
 }
 
-/** Bands of sky from the top of the view down to the ground line. */
+/** Bands of sky from the top of the view down to the ground line, each edge dithered into a gradual blend. */
 function drawSky(px: Pix, x0: number, y0: number, w: number): void {
   const bands = PALETTE.sky;
   const bh = -y0 / bands.length;
+  const blend = Math.round(bh * STREET_LOOK.skyBlend);
   for (let i = 0; i < bands.length; i++) {
     const a = y0 + Math.round(i * bh);
     const b = y0 + Math.round((i + 1) * bh);
     px.r(x0, a, w, b - a, bands[i]);
-    if (i === 0) continue;
-    for (const [row, [start, step]] of DITHER.entries()) {
-      for (let x = x0 + start; x < x0 + w; x += step) px.r(x, a + row, 1, 1, bands[i - 1]);
+  }
+  for (let i = 1; i < bands.length && blend > 0; i++) {
+    const top = y0 + Math.round(i * bh) - Math.floor(blend / 2);
+    for (let row = 0; row < blend; row++) {
+      // The lower band's share, rising down the blend
+      const level = ((row + 0.5) / blend) * BAYER_LEVELS;
+      const y = top + row;
+      const m = BAYER[mod(y, BAYER.length)];
+      for (let x = x0; x < x0 + w; x++) px.r(x, y, 1, 1, m[mod(x, BAYER.length)] < level ? bands[i] : bands[i - 1]);
     }
   }
 }
