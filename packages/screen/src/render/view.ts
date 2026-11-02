@@ -46,7 +46,8 @@ export type CalloutColor = 'danger' | 'ok' | 'muted';
 // Effects live in world units (columns, floors), so they stay put while the view zooms
 export type Effect =
   | { kind: 'callout'; text: string; color: CalloutColor; x: number; y: number; age: number }
-  | { kind: 'coin'; text: string; x: number; y: number; age: number }
+  // A coin rises from the customer who paid: a walk-in on the sidewalk in its lane (shopper), or a parachuter (null)
+  | { kind: 'coin'; text: string; x: number; y: number; shopper: number | null; age: number }
   | { kind: 'burst'; x: number; y: number; age: number }
   | { kind: 'leaver'; x: number; shopper: number; age: number }
   | { kind: 'banner'; banner: Banner; age: number };
@@ -164,7 +165,7 @@ export class StreetView {
         case 'paid': {
           const a = byId(e.shop);
           a.flash = SHOP_LOOK.flashTime;
-          this.add({ kind: 'coin', text: `+${scoreText(e.value)}`, x: a.x, y: this.roof(g, a), age: 0 });
+          this.add({ kind: 'coin', text: `+${scoreText(e.value)}`, x: e.x, y: e.y, shopper: e.kind === 'ground' ? e.who : null, age: 0 });
           break;
         }
         case 'lost':

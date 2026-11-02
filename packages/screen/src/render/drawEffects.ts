@@ -1,4 +1,5 @@
 import { PALETTE, washOut, type Washed } from './colors.ts';
+import { lane, PARA_ROWS, PERSON_ROWS, sidewalkFeet } from './drawPeople.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { FX_LOOK, GRID, TAU } from './look.ts';
 import { Pix } from './pix.ts';
@@ -75,7 +76,10 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
       case 'coin': {
         const u = e.age / look.coinTime;
         const w = washOut(PALETTE.yellow, fadeOut(u));
-        small(ctx, L, e.text, colX(e.x), floorY(e.y + u * look.coinRise), look.coinCap, look.coinRing, w);
+        const x = e.shopper === null ? e.x : e.x + lane(e.shopper);
+        const head = e.shopper === null ? floorY(e.y) - PARA_ROWS : sidewalkFeet(L) - PERSON_ROWS;
+        const y = head - look.coinAbove + floorY(u * look.coinRise);
+        small(ctx, L, e.text, colX(x), y, look.coinCap, look.coinRing, w);
         break;
       }
       case 'burst': {

@@ -27,7 +27,8 @@ describe('walk-ins', () => {
     const g = street([['A']]);
     arrive(g, 0);
     const paid = ofType(run(g, 0.1), 'paid');
-    expect(paid).toEqual([{ type: 'paid', shop: 'A', value: g.config.SCORING.walkInValue, kind: 'ground' }]);
+    // Paid from where the shopper stood, on the street in front of A
+    expect(paid).toEqual([{ type: 'paid', shop: 'A', value: g.config.SCORING.walkInValue, kind: 'ground', who: expect.any(Number), x: expect.closeTo(0, 0), y: 0 }]);
   });
 
   it('go upstairs past a closed shop to the lowest open one', () => {
@@ -115,7 +116,8 @@ describe('parachuters', () => {
     const g = street([['A', 'B']], PHASE2);
     dropParachuter(g, 0, 2.5);
     const paid = ofType(run(g, 1), 'paid');
-    expect(paid).toEqual([{ type: 'paid', shop: 'B', value: g.config.SCORING.paraValue, kind: 'para' }]);
+    // Paid from where it touched down, on B's roof
+    expect(paid).toEqual([{ type: 'paid', shop: 'B', value: g.config.SCORING.paraValue, kind: 'para', who: expect.any(Number), x: 0, y: expect.closeTo(2, 0) }]);
   });
 
   it('pass a closed top shop to the open one below', () => {

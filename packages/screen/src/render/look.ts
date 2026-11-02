@@ -208,6 +208,8 @@ export const FX_LOOK = {
   calloutRing: 1,
   coinCap: 5,
   coinRing: 1,
+  // A coin starts this many art pixels above the head of the customer who paid
+  coinAbove: 2,
   calloutTime: 0.9,
   calloutRise: 1,
   calloutAbove: 0.4,

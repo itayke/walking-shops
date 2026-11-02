@@ -134,7 +134,7 @@ export function updateShoppers(g: GameState, dt: number): void {
     }
     const dx = best.col - sh.x;
     const stp = WALK_INS.shopperSpeed * dt;
-    if (Math.abs(dx) <= stp) pay(g, best, SCORING.walkInValue, 'ground');
+    if (Math.abs(dx) <= stp) pay(g, best, SCORING.walkInValue, 'ground', { id: sh.id, x: sh.x, y: 0 });
     else {
       sh.x += Math.sign(dx) * stp;
       keep.push(sh);
@@ -173,7 +173,7 @@ export function updateParachuters(g: GameState, dt: number): void {
           }
         }
         // Every shop in the column is shuttered: the parachuter lands on the sidewalk and walks
-        if (catcher) pay(g, catcher, SCORING.paraValue, 'para');
+        if (catcher) pay(g, catcher, SCORING.paraValue, 'para', pa);
         else landShopper(g, pc);
         continue;
       }

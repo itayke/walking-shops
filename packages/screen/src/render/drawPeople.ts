@@ -17,10 +17,11 @@ const PERSON = {
     ['.p.p.', '.f.p.', '...f.'],
   ],
 };
-const PERSON_ROWS = PERSON.front.length + PERSON.legs[0].length;
+export const PERSON_ROWS = PERSON.front.length + PERSON.legs[0].length;
 // A parachuter holds the lines with hands up beside its face, at this row of the map
 const PARA = ['.hhh.', 'sssss', 'cesec', 'csssc', 'ccccc', '.ccc.', '.ppp.', '.p.p.', '.p.p.', 'f...f'];
 const PARA_HAND = 1;
+export const PARA_ROWS = PARA.length;
 
 type ChuteColor = 'red' | 'white' | 'blue' | 'yellow' | 'pink' | 'leaf';
 interface Chute {
@@ -43,8 +44,13 @@ const LANE_HASH = 2654435761;
 const UINT_RANGE = 2 ** 32;
 
 /** A shopper's lane: a steady offset from its column's center, in columns. */
-function lane(id: number): number {
+export function lane(id: number): number {
   return ((Math.imul(id, LANE_HASH) >>> 0) / UINT_RANGE - 0.5) * PEOPLE_LOOK.laneSpread;
+}
+
+/** Where shoppers' feet are on the sidewalk, in art pixels below the ground line. */
+export function sidewalkFeet(L: Layout): number {
+  return Math.round(L.sidewalkH * PEOPLE_LOOK.sidewalkFeet);
 }
 
 function drawPerson(px: Pix, view: 'front' | 'back', frame: number, cx: number, feetY: number, colors: PersonColors, outline: string): void {
@@ -56,7 +62,7 @@ function drawPerson(px: Pix, view: 'front' | 'back', frame: number, cx: number, 
 export function drawShoppers(ctx: CanvasRenderingContext2D, g: GameState, view: StreetView, L: Layout, now: number): void {
   const look = PEOPLE_LOOK;
   const px = new Pix(ctx, L.P, L.ox, L.groundY);
-  const sidewalk = Math.round(L.sidewalkH * look.sidewalkFeet);
+  const sidewalk = sidewalkFeet(L);
   const far = L.streetH + PERSON_ROWS + look.farBelow;
   const frame = (id: number) => Math.floor(now * look.stepRate + id);
   const people: { y: number; draw: () => void }[] = [];

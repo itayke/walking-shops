@@ -118,7 +118,8 @@ export type SimEvent =
   | { type: 'pushback'; by: string; col: number; level: number }
   | { type: 'closed'; shop: string }
   | { type: 'reopened'; shop: string }
-  | { type: 'paid'; shop: string; value: number; kind: 'ground' | 'para' }
+  // who paid (the shopper's or parachuter's id) and where, in columns and floors
+  | { type: 'paid'; shop: string; value: number; kind: 'ground' | 'para'; who: number; x: number; y: number }
   | { type: 'lost'; x: number; shopper: number };
 
 /**
