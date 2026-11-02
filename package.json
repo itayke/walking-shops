@@ -14,10 +14,12 @@
     "dev:phone": "npm run dev -w @walking-shops/phone",
     "dev:server": "npm run dev -w @walking-shops/server",
     "loadtest": "npm run loadtest -w @walking-shops/net --",
-    "deploy:server": "npm run deploy -w @walking-shops/server"
+    "deploy:server": "npm run deploy -w @walking-shops/server",
+    "dev": "concurrently -k -n server,screen,phone -c magenta,cyan,yellow \"npm:dev:server\" \"npm:dev:screen\" \"npm:dev:phone\""
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "concurrently": "^10.0.6",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"
   }
