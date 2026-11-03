@@ -1,4 +1,4 @@
-# Walking Shops: Game Design
+# Shop Shuffle: Game Design
 
 The opening game of the Untame pitch. A room of 10–30 potential clients (mostly local business owners) joins from their phones. Each person's business becomes a shop on a shared Main Street on the big screen. Shops grow legs and walk to where the customers are. Then the town becomes the hub for the rest of the talk.
 

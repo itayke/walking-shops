@@ -98,7 +98,7 @@ const phase1: ConfigOverrides = { ROUND: { paraStart: 999, roundTime: 60 } };
 const paraDouble: ConfigOverrides = { SCORING: { paraValue: 2 * makeConfig().SCORING.paraValue } };
 const withPhase1 = (over: ConfigOverrides): ConfigOverrides => ({ ...phase1, ...over });
 
-console.log(`Walking Shops bench, ${ROUNDS} rounds per row${COMPARE ? ', port vs reference' : ''}`);
+console.log(`Shop Shuffle bench, ${ROUNDS} rounds per row${COMPARE ? ', port vs reference' : ''}`);
 table('Idle shutters, phase 1 only (sitter vs everyone)', [
   { label: '16 players, idle off', mix: b16, over: withPhase1({ IDLE: { idleOn: false } }) },
   { label: '16 players, idle on', mix: b16, over: phase1 },

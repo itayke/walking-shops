@@ -1,4 +1,4 @@
-# Walking Shops (Untame pitch game)
+# Shop Shuffle (Untame pitch game)
 
 A Jackbox-style room game: 10–30 people join from their phones, their businesses become walking shops on a shared street on the big screen. It opens a pitch for Untame (games for local businesses).
 

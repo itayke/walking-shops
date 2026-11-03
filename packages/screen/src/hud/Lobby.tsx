@@ -1,6 +1,7 @@
 import type { GameState } from '@walking-shops/sim';
 import { encode } from 'uqr';
 import { joinUrl } from '../net/room.ts';
+import { PixelText } from './PixelText.tsx';
 
 // Light modules around the code, so a scanner finds its edge against the card, with corners rounded inside that margin
 const QR_QUIET = 2;
@@ -20,13 +21,16 @@ function Qr({ text }: { text: string }) {
   );
 }
 
-/** Before the round: the title and where to join, over the street where shops brawl as they arrive. */
+/** Before the round: the title, its tagline and where to join, over the street where shops brawl as they arrive. */
 export function Lobby({ g, room, onBegin }: { g: GameState; room: string; onBegin: () => void }) {
   const url = joinUrl(room);
   const shops = g.shops.length;
   return (
     <div className="lobby">
-      <h1 className="title">Walking Shops</h1>
+      <header className="masthead">
+        <h1 className="title">Shop Shuffle</h1>
+        <PixelText className="tagline" text="Get your business moving" />
+      </header>
       <div className="join-card">
         <Qr text={url} />
         <p className="join-url">{url.replace(/^https?:\/\//, '')}</p>

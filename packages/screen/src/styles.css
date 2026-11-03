@@ -12,6 +12,10 @@
   --ok: #24935f;
   --hud-height: 48px;
   --font-display: 'Jersey 15', 'Arial Black', Impact, sans-serif;
+  --font-display-chunky: 'Jersey 10', 'Arial Black', Impact, sans-serif;
+  /* Font pixels per em of each display font: a size with whole screen pixels per font pixel stays crisp */
+  --display-grid: 27;
+  --display-chunky-grid: calc(56 / 3);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
@@ -284,7 +288,7 @@ tr.closed td {
   border: 1px solid var(--ink);
 }
 
-/* The lobby: the title over the sky, and where to join, while shops brawl on the street below */
+/* The lobby: the title and tagline over the sky, and where to join, while shops brawl on the street below */
 .lobby {
   position: absolute;
   inset: 0;
@@ -296,18 +300,41 @@ tr.closed td {
   pointer-events: none;
 }
 
-.lobby .title {
+.lobby .masthead {
   flex: 1;
+  /* Free to shrink below the tagline's current width, so it can wrap */
+  min-width: 0;
+  text-align: center;
+  /* Screen pixels per font pixel of the title, whole so it stays crisp */
+  --title-pixel: round(down, clamp(2px, 9vw / var(--display-grid), 6px), 1px);
+  /* The tagline's font pixels against the title's: at this ratio the two lines set about the same width */
+  --tagline-scale: 0.8;
+  /* Room above the tagline, in title pixels, on top of the space under the title's letters */
+  --tagline-gap: 3.6;
+}
+
+.lobby .title {
   margin: 0;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 400;
   text-transform: uppercase;
-  font-size: clamp(48px, 9vw, 160px);
+  font-size: calc(var(--title-pixel) * var(--display-grid));
   line-height: 1;
   color: var(--accent);
   -webkit-text-stroke: 0.12em #17202b;
   paint-order: stroke fill;
+}
+
+.lobby .tagline {
+  display: block;
+  margin: calc(var(--title-pixel) * var(--tagline-gap)) auto 0;
+  image-rendering: pixelated;
+  font-family: var(--font-display-chunky);
+  font-size: calc(round(var(--title-pixel) * var(--tagline-scale), 1px) * var(--display-chunky-grid));
+  line-height: 1;
+  /* Fixed: it sits on the daylight sky in either theme */
+  color: #2b3a55;
 }
 
 .join-card {
