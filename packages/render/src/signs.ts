@@ -10,12 +10,15 @@ import { SHOP } from './shopArt.ts';
 // Names are measured at this size, then scaled to fit
 const MEASURE_PX = 100;
 
-/** A name set on its sign: its lines, the font size in art pixels, and a capital's height per font pixel. */
+/** A name set on its sign: its lines, the font size in art pixels, a capital's height per font pixel, and whether it was cut short. */
 interface SignSet {
   lines: string[];
   size: number;
   cap: number;
+  cut: boolean;
 }
+
+type Measurer = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 const sets = new Map<string, SignSet>();
 
@@ -93,7 +96,7 @@ function groupings(words: string[], lines: number): string[][] {
  * The grouping that sets the name largest within the sign's name area (fewer lines win a tie). A name that would
  * come out smaller than the smallest readable size is set at that size instead, wrapped and cut to fit.
  */
-function setName(ctx: CanvasRenderingContext2D, label: string): SignSet {
+function setName(ctx: Measurer, label: string): SignSet {
   const L = SHOP_LOOK;
   const { w, h } = SHOP.name;
   ctx.save();
@@ -105,11 +108,12 @@ function setName(ctx: CanvasRenderingContext2D, label: string): SignSet {
     const widest = Math.max(...lines.map(em));
     const tall = cap * (lines.length + (lines.length - 1) * L.signLineGap);
     const size = Math.min(w / widest, h / tall);
-    if (!best || size > best.size) best = { lines, size, cap };
+    if (!best || size > best.size) best = { lines, size, cap, cut: false };
   }
   if (best!.size * cap < L.signMinCap) {
     const size = L.signMinCap / cap;
-    best = { lines: fitLines(label, (s) => em(s) * size <= w, L.signLines), size, cap };
+    const fits = (s: string) => em(s) * size <= w;
+    best = { lines: fitLines(label, fits, L.signLines), size, cap, cut: fitLines(label, fits, Infinity).length > L.signLines };
   }
   ctx.restore();
   return best!;
@@ -139,6 +143,14 @@ function nameBitmap(set: SignSet, scale: number): OffscreenCanvas {
   for (let i = ALPHA; i < d.length; i += RGBA) d[i] = d[i] >= INK_ALPHA ? OPAQUE : 0;
   ctx.putImageData(img, 0, 0);
   return cv;
+}
+
+let measurer: Measurer | null = null;
+
+/** Whether a name fits its sign whole: set no smaller than the smallest readable size, or wrapped without being cut. */
+export function nameFits(label: string): boolean {
+  measurer ??= scratch(null, 1, 1).ctx;
+  return !setName(measurer, label).cut;
 }
 
 /** A shop's name on its sign, for a sprite drawn at device (x, y) with P device pixels per art pixel. */

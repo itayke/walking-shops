@@ -8,6 +8,8 @@ export const NET = {
   // Relay guards against a misbehaving phone: messages per second and bytes per message beyond these are dropped
   phoneMsgsPerSecond: 40,
   phoneMsgBytes: 200,
+  // Longest shop name the relay passes on, in characters; the sign is what really limits a name
+  nameMax: 40,
   roomCodeLength: 4,
 };
 

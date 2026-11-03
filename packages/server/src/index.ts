@@ -68,7 +68,8 @@ export class Room extends Server {
     if (state.role === 'phone') {
       if (!this.allow(state.nonce)) return;
       const msg = parsePhoneMsg(message);
-      if (msg) this.toScreen({ t: 'input', phone: conn.id, seq: msg.seq, dir: msg.dir });
+      if (msg?.t === 'input') this.toScreen({ t: 'input', phone: conn.id, seq: msg.seq, dir: msg.dir });
+      else if (msg?.t === 'profile') this.toScreen({ t: 'profile', phone: conn.id, name: msg.name, design: msg.design });
       return;
     }
     const msg = parseScreenMsg(message);

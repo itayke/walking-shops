@@ -4,7 +4,7 @@ import { drawLegs, legPose, strideFrame, type ClimbStep, type LegPose } from './
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { GRID, MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
 import { Pix } from './pix.ts';
-import { SHOP, shopDesign, shopSprite, shutterRows } from './shopArt.ts';
+import { lookOf, SHOP, shopSprite, shutterRows } from './shopArt.ts';
 import { drawSignName } from './signs.ts';
 import { strainsByColumn, type Strain } from './strain.ts';
 import type { ShopAnim, StreetView } from './view.ts';
@@ -122,9 +122,10 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
 
   const px = new Pix(ctx, P);
   drawLegs(dir > 0 ? px : px.mirrored(), pose, SHOP.W, PALETTE.ink, undiesFor(s.label));
+  const look = lookOf(s, it.index);
   const sprite = shopSprite({
-    design: shopDesign(it.index),
-    tint: shopTint(shopHue(it.index)),
+    design: look.design,
+    tint: shopTint(shopHue(look.hue)),
     shutter: Math.round(shutterRows() * Math.min(1, shutterDrop(g, s))),
     danger: it.danger,
     t: now,

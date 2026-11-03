@@ -1,0 +1,14 @@
+{
+  "name": "@walking-shops/render",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@walking-shops/sim": "*"
+  }
+}

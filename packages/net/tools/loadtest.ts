@@ -21,6 +21,8 @@ const TAP_SHARE = 0.6;
 const JOIN_SPREAD = 2;
 // Inputs sent in the last moments may not be acked before the end; they don't count as lost
 const TAIL_GRACE = 1;
+// Seconds for the last phones to get their setup state and open their shops before the round begins
+const SETUP_GRACE = 1;
 const PERCENTILES = [50, 95, 99];
 
 const { values } = parseArgs({
@@ -39,7 +41,9 @@ const sleep = (s: number) => new Promise((r) => setTimeout(r, s * MS));
 // The screen: same Host the browser runs, minus the canvas. No keyboard player
 let screenLink: Link<ScreenMsg> | null = null;
 let screenUp = false;
-const host = new Host({ config: makeConfig(), local: [], seed: () => Math.floor(Math.random() * 2 ** 32), tint: () => null, send: (m) => screenLink?.send(m) });
+// Any counts do: nothing is drawn
+const LOOKS = { designs: 1, hues: 1 };
+const host = new Host({ config: makeConfig(), local: [], seed: () => Math.floor(Math.random() * 2 ** 32), looks: LOOKS, tint: () => '', send: (m) => screenLink?.send(m) });
 let received = 0;
 screenLink = connectScreen({
   host: HOST,
@@ -73,15 +77,17 @@ interface FakePhone {
   waiting: boolean;
   drops: number;
   up: boolean;
+  named: boolean;
 }
 
 const latencies: number[] = [];
 let sent = 0;
 let lostEarly = 0;
+let named = 0;
 const end = Date.now() + (JOIN_SPREAD + SECONDS) * MS;
 
 function phone(): FakePhone {
-  const p: FakePhone = { link: null!, seq: Date.now(), sentAt: new Map(), seated: false, waiting: false, drops: 0, up: false };
+  const p: FakePhone = { link: null!, seq: Date.now(), sentAt: new Map(), seated: false, waiting: false, drops: 0, up: false, named: false };
   const send = (dir: Dir) => {
     if (!p.up) return;
     p.seq++;
@@ -99,7 +105,12 @@ function phone(): FakePhone {
     },
     onMessage: (m) => {
       if (m.t !== 'state') return;
-      p.seated = m.state.phase !== 'waiting';
+      // Opens its shop as soon as it's asked to, like a player who doesn't bother with a name
+      if (m.state.phase === 'setup' && !p.named) {
+        p.named = true;
+        p.link.send({ t: 'profile', name: `Load ${++named}`, design: 0 });
+      }
+      p.seated = m.state.phase !== 'waiting' && m.state.phase !== 'setup';
       p.waiting = m.state.phase === 'waiting';
       const now = performance.now();
       for (const [seq, at] of p.sentAt) {
@@ -131,8 +142,8 @@ async function main(): Promise<void> {
     phones.push(phone());
     await sleep(JOIN_SPREAD / PHONES);
   }
-  // Like the presenter starting the round once the room has joined in the lobby
-  await sleep(NET.stateInterval);
+  // Like the presenter starting the round once the room has opened its shops in the lobby
+  await sleep(SETUP_GRACE);
   host.begin();
   await sleep(SECONDS + TAIL_GRACE);
   const cutoff = performance.now() - TAIL_GRACE * MS;

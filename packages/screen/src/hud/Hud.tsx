@@ -1,7 +1,8 @@
 import type { Seat } from '@walking-shops/net';
 import { isPhase2, scoreText, type GameState, type Shop } from '@walking-shops/sim';
 import { joinUrl } from '../net/room.ts';
-import { shopHue, shopTint } from '../render/colors.ts';
+import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
+import { lookOf } from '@walking-shops/render/shopArt.ts';
 
 const SECONDS_PER_MINUTE = 60;
 const PERCENT = 100;
@@ -89,7 +90,7 @@ export function Board({ g, you }: { g: GameState; you: string }) {
           {ranked(g).map(({ s, index }) => (
             <tr key={s.id} className={s.id === you ? 'me' : s.closed ? 'closed' : undefined}>
               <td>
-                <span className="swatch" style={{ background: shopTint(shopHue(index)).base }} />
+                <span className="swatch" style={{ background: shopTint(shopHue(lookOf(s, index).hue)).base }} />
                 {s.label}
               </td>
               <td>{s.controller}</td>
@@ -118,7 +119,7 @@ export function Results({ g, you }: { g: GameState; you: string }) {
               <tr key={s.id} className={s.id === you ? 'me' : undefined}>
                 <td className="num">{i + 1}</td>
                 <td>
-                  <span className="swatch" style={{ background: shopTint(shopHue(index)).base }} />
+                  <span className="swatch" style={{ background: shopTint(shopHue(lookOf(s, index).hue)).base }} />
                   {s.label}
                 </td>
                 <td className="num">{scoreText(s.income)}</td>

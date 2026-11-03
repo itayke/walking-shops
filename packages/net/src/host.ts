@@ -1,15 +1,22 @@
-import { addShop, beginRound, botPlayers, createLobby, isPhase2, toLobby, type Config, type Dir, type GameState, type PlayerSpec } from '@walking-shops/sim';
+import { addShop, beginRound, botPlayers, createLobby, isPhase2, toLobby, type Config, type Dir, type GameState, type Look, type PlayerSpec } from '@walking-shops/sim';
 import { Latch } from './latch.ts';
 import type { Phase, PhoneState, ScreenMsg, ToScreen } from './protocol.ts';
 
-// Phone shops are labelled P1, P2, … in join order until the join flow gives them names (Milestone 4)
-const PHONE_LABEL = 'P';
+// Phone shops get ids P1, P2, … in join order; their names are the players' own
+const PHONE_ID = 'P';
+// A hue already worn by the same shop type counts as this many more shops wearing it, so it's handed out last
+const SAME_TYPE_PENALTY = 1000;
 
-/** A phone's place in the session. It keeps its seat (and its shop, this round) across disconnects. */
+/** A phone's place in the session. It keeps its seat, its look and its shop across disconnects. */
 export interface Seat {
   phone: string;
-  label: string;
-  // The shop this phone plays, or null when it joined after the lobby closed and waits for the next one
+  // Its shop's id, fixed for the session
+  id: string;
+  // The shop's name, once the phone has opened it
+  name: string | null;
+  // Assigned when the phone first connects, so its preview shows its color; the phone picks the type
+  look: Look;
+  // Its shop on the street, or null before it opens or while it waits for the next lobby
   shop: string | null;
   online: boolean;
   latch: Latch;
@@ -23,18 +30,20 @@ export interface Seat {
 export interface HostOptions {
   // Held by reference, so tuning applies live; STREET is read for a new street, BOT_MIX when a round begins
   config: Config;
-  // Shops played on this machine (the keyboard), always in the round
+  // Shops played on this machine (the keyboard), always on the street
   local: readonly PlayerSpec[];
   seed: () => number;
-  // A shop's tint for its phone, by index in game.shops
-  tint: (shopIndex: number) => string | null;
+  // How many shop types and colors the renderer has, and a look's color for its phone
+  looks: { designs: number; hues: number };
+  tint: (look: Look) => string;
   send: (msg: ScreenMsg) => void;
 }
 
 /**
- * The screen's side of the room: owns the game, seats phones in shops, turns their messages into sim input and sends
- * each phone its state. Phones get a shop only in the lobby; one that joins during a round waits for the replay. A
- * phone keeps its shop across disconnects. Pure: no DOM, no sockets.
+ * The screen's side of the room: owns the game, seats phones, turns their messages into sim input and sends each
+ * phone its state. A phone opens its shop by sending its name and type; that puts it on the street in the lobby, or
+ * in the next lobby if a round is under way. Colors are handed out so a repeated one goes to a different shop type.
+ * Pure: no DOM, no sockets.
  */
 export class Host {
   game: GameState;
@@ -47,7 +56,7 @@ export class Host {
     this.game = this.newStreet();
   }
 
-  /** A new street in the lobby: local players and every connected phone drop in again. */
+  /** A new street in the lobby: local players and every connected phone that opened its shop drop in again. */
   reset(): GameState {
     this.game = this.newStreet();
     return this.game;
@@ -55,8 +64,12 @@ export class Host {
 
   /** Close the lobby and start the round; bots fill the street up to minPlayers. */
   begin(): void {
-    if (!this.game.lobby) return;
-    beginRound(this.game, botPlayers(this.opts.config.BOT_MIX));
+    const g = this.game;
+    if (!g.lobby) return;
+    const need = Math.max(0, this.opts.config.ROUND.minPlayers - g.N);
+    const bots: PlayerSpec[] = [];
+    for (const p of botPlayers(this.opts.config.BOT_MIX).slice(0, need)) bots.push({ ...p, look: this.newLook(bots) });
+    beginRound(g, bots);
     for (const s of this.seats.values()) s.latch.clear();
   }
 
@@ -66,7 +79,7 @@ export class Host {
     toLobby(this.game);
     for (const s of this.seats.values()) {
       s.latch.clear();
-      if (s.online && s.shop === null) s.shop = this.seat(s);
+      if (s.online && s.shop === null) this.open(s);
     }
   }
 
@@ -74,20 +87,41 @@ export class Host {
     const { config, local, seed } = this.opts;
     const g = createLobby(config, seed());
     this.game = g;
-    for (const p of local) addShop(g, p);
+    for (const p of local) addShop(g, { ...p, look: p.look ?? this.newLook() });
     for (const s of this.seats.values()) {
       s.latch.clear();
-      s.shop = s.online ? this.seat(s) : null;
+      s.shop = null;
+      if (s.online) this.open(s);
     }
     return g;
   }
 
-  /** A shop for this phone, if the lobby is open. */
-  private seat(seat: Seat): string | null {
+  /** Put a phone's shop on the street, if it has a name and the lobby is open. */
+  private open(seat: Seat): void {
     const g = this.game;
-    if (!g.lobby) return null;
-    if (!g.shops.some((s) => s.id === seat.label)) addShop(g, { id: seat.label, label: seat.label, controller: 'human' });
-    return seat.label;
+    if (seat.name === null || !g.lobby) return;
+    if (!g.shops.some((s) => s.id === seat.id)) addShop(g, { id: seat.id, label: seat.name, controller: 'human', look: seat.look });
+    seat.shop = seat.id;
+  }
+
+  /**
+   * A color for a new look: the one fewest shops (and phones still setting up) wear, earliest in the list on a tie. With
+   * a shop type, a color already worn by that type comes last. `extra` counts looks not on the street yet.
+   */
+  private newLook(extra: readonly PlayerSpec[] = [], design = this.opts.seed() % this.opts.looks.designs): Look {
+    const worn: Look[] = [...this.game.shops.flatMap((s) => (s.look ? [s.look] : [])), ...extra.flatMap((p) => (p.look ? [p.look] : []))];
+    for (const s of this.seats.values()) if (s.online && s.shop === null) worn.push(s.look);
+    let best = 0;
+    let bestScore = Infinity;
+    for (let hue = 0; hue < this.opts.looks.hues; hue++) {
+      const on = worn.filter((l) => l.hue === hue);
+      const score = on.length + (on.some((l) => l.design === design) ? SAME_TYPE_PENALTY : 0);
+      if (score < bestScore) {
+        best = hue;
+        bestScore = score;
+      }
+    }
+    return { design, hue: best };
   }
 
   receive(msg: ToScreen): void {
@@ -112,17 +146,40 @@ export class Host {
         seat.latch.set(msg.dir);
         break;
       }
+      case 'profile':
+        this.profile(this.join(msg.phone), msg.name, msg.design);
+        break;
     }
+  }
+
+  /** A phone's name and shop type: opens its shop, or edits it while the lobby is open. */
+  private profile(seat: Seat, name: string, design: number): void {
+    if (design >= this.opts.looks.designs) return;
+    const shop = seat.shop === null ? null : this.game.shops.find((s) => s.id === seat.shop);
+    // Once the round is under way a shop on the street keeps its name and type
+    if (shop && !this.game.lobby) return;
+    seat.name = name;
+    if (design !== seat.look.design) {
+      // Its own color doesn't count against it
+      const hue = seat.look.hue;
+      seat.look = { design, hue: -1 };
+      const clash = this.game.shops.some((s) => s !== shop && s.look?.hue === hue && s.look.design === design);
+      seat.look = clash ? this.newLook([], design) : { design, hue };
+    }
+    if (shop) {
+      shop.label = name;
+      shop.look = seat.look;
+    } else this.open(seat);
   }
 
   private join(phone: string): Seat {
     let seat = this.seats.get(phone);
     if (!seat) {
-      seat = { phone, label: `${PHONE_LABEL}${++this.joins}`, shop: null, online: true, latch: new Latch(), seq: 0, ack: 0, sent: '' };
+      const look = this.newLook();
+      seat = { phone, id: `${PHONE_ID}${++this.joins}`, name: null, look, shop: null, online: true, latch: new Latch(), seq: 0, ack: 0, sent: '' };
       this.seats.set(phone, seat);
     }
     seat.online = true;
-    if (seat.shop === null) seat.shop = this.seat(seat);
     return seat;
   }
 
@@ -161,12 +218,12 @@ export class Host {
 
   phoneState(seat: Seat): PhoneState {
     const g = this.game;
-    const index = seat.shop === null ? -1 : g.shops.findIndex((s) => s.id === seat.shop);
-    const shop = index < 0 ? null : g.shops[index];
-    const phase: Phase = !shop ? 'waiting' : g.lobby ? 'lobby' : g.over ? 'results' : isPhase2(g) ? 'parachutes' : 'walk-ins';
+    const shop = seat.shop === null ? null : (g.shops.find((s) => s.id === seat.shop) ?? null);
+    const phase: Phase = !shop ? (g.lobby ? 'setup' : 'waiting') : g.lobby ? 'lobby' : g.over ? 'results' : isPhase2(g) ? 'parachutes' : 'walk-ins';
     return {
-      label: seat.label,
-      tint: shop ? this.opts.tint(index) : null,
+      label: seat.name ?? '',
+      look: seat.look,
+      tint: this.opts.tint(seat.look),
       phase,
       income: shop ? shop.income : 0,
       rank: shop ? 1 + g.shops.filter((s) => s.income > shop.income).length : 0,

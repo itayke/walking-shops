@@ -6,11 +6,18 @@ export const BOT_TYPES = ['newcomer', 'climber', 'aggressor', 'random', 'sitter'
 export type BotType = (typeof BOT_TYPES)[number];
 export type Controller = 'human' | BotType;
 
+/** How a shop looks: its type and color, as indices the renderer understands. The sim carries it and never reads it. */
+export interface Look {
+  design: number;
+  hue: number;
+}
+
 /** Who plays a shop. Human shops take their input from step(); bots compute their own. */
 export interface PlayerSpec {
   id: string;
   label: string;
   controller: Controller;
+  look?: Look;
 }
 
 /** A bot's plan and timers. Every shop carries one so a phone can hand its shop to a bot mid-round. */
@@ -33,6 +40,8 @@ export interface Shop {
   id: string;
   label: string;
   controller: Controller;
+  // None for shops made without one (bench, tests): the renderer picks from its place in the list
+  look: Look | null;
   // Grid position: column and stack level, plus the offset into the next cell while walking (-1..1)
   col: number;
   level: number;

@@ -1,4 +1,4 @@
-import type { Dir } from '@walking-shops/sim';
+import type { Dir, Look } from '@walking-shops/sim';
 import { NET } from './config.ts';
 
 // Messages between phones, the relay and the screen. All JSON. The relay only checks and forwards; the screen is the
@@ -6,12 +6,17 @@ import { NET } from './config.ts';
 
 export type Role = 'screen' | 'phone';
 
-export type Phase = 'waiting' | 'lobby' | 'walk-ins' | 'parachutes' | 'results';
+export type Phase = 'setup' | 'waiting' | 'lobby' | 'walk-ins' | 'parachutes' | 'results';
 
-/** What a phone shows. waiting: no shop this round (the street is full). ack is the last input seq the sim has read. */
+/**
+ * What a phone shows. setup: the lobby is open and the phone hasn't opened its shop; waiting: the round started
+ * without it. look is the phone's shop type and color (assigned before it opens, so the preview shows it), tint the
+ * color as CSS. ack is the last input seq the sim has read.
+ */
 export interface PhoneState {
   label: string;
-  tint: string | null;
+  look: Look;
+  tint: string;
   phase: Phase;
   income: number;
   rank: number;
@@ -20,8 +25,11 @@ export interface PhoneState {
   ack: number;
 }
 
-/** Phone -> relay: the held direction after each change, numbered so a stale one can be dropped. */
-export type PhoneMsg = { t: 'input'; seq: number; dir: Dir };
+/**
+ * Phone -> relay: the held direction after each change, numbered so a stale one can be dropped; or the shop's name
+ * and type, which opens it (or edits it, in the lobby).
+ */
+export type PhoneMsg = { t: 'input'; seq: number; dir: Dir } | { t: 'profile'; name: string; design: number };
 
 /** Relay -> client, just before it closes the connection for good (a CLOSE code). Close codes alone don't always arrive. */
 export type Refused = { t: 'refused'; code: number };
@@ -32,7 +40,8 @@ export type ToScreen =
   | { t: 'roster'; phones: string[] }
   | { t: 'joined'; phone: string }
   | { t: 'left'; phone: string }
-  | { t: 'input'; phone: string; seq: number; dir: Dir };
+  | { t: 'input'; phone: string; seq: number; dir: Dir }
+  | { t: 'profile'; phone: string; name: string; design: number };
 
 /** Screen -> relay: changed phone states, batched into one message. */
 export type ScreenMsg = { t: 'states'; states: [phone: string, state: PhoneState][] };
@@ -50,6 +59,13 @@ export const isRoomCode = (code: unknown): code is string => typeof code === 'st
 const isDir = (d: unknown): d is Dir => d === -1 || d === 0 || d === 1;
 const isSeq = (n: unknown): n is number => Number.isSafeInteger(n) && (n as number) >= 0;
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+const isName = (n: unknown): n is string => typeof n === 'string' && cleanName(n).length > 0 && n.length <= NET.nameMax;
+const isLook = (l: unknown): l is Look => isRecord(l) && isSeq(l.design) && isSeq(l.hue);
+
+/** A shop name as it goes on the sign: no control characters, single spaces, trimmed. */
+export function cleanName(raw: string): string {
+  return raw.replace(/\p{Cc}/gu, ' ').replace(/\s+/g, ' ').trim();
+}
 
 // Bytes in a random id (hex, so twice as many characters)
 const ID_BYTES = 16;
@@ -81,12 +97,14 @@ function json(raw: unknown): unknown {
 export function parsePhoneMsg(raw: unknown): PhoneMsg | null {
   if (typeof raw !== 'string' || raw.length > NET.phoneMsgBytes) return null;
   const m = json(raw);
-  if (!isRecord(m) || m.t !== 'input' || !isSeq(m.seq) || !isDir(m.dir)) return null;
-  return { t: 'input', seq: m.seq, dir: m.dir };
+  if (!isRecord(m)) return null;
+  if (m.t === 'input' && isSeq(m.seq) && isDir(m.dir)) return { t: 'input', seq: m.seq, dir: m.dir };
+  if (m.t === 'profile' && isName(m.name) && isSeq(m.design)) return { t: 'profile', name: cleanName(m.name), design: m.design };
+  return null;
 }
 
 function isPhoneState(s: unknown): s is PhoneState {
-  return isRecord(s) && typeof s.label === 'string' && typeof s.phase === 'string' && typeof s.income === 'number' && isSeq(s.ack);
+  return isRecord(s) && typeof s.label === 'string' && isLook(s.look) && typeof s.phase === 'string' && typeof s.income === 'number' && isSeq(s.ack);
 }
 
 export function parseScreenMsg(raw: unknown): ScreenMsg | null {
@@ -109,6 +127,8 @@ export function parseToScreen(raw: unknown): ToScreen | null {
       return isClientId(m.phone) ? { t: m.t, phone: m.phone } : null;
     case 'input':
       return isClientId(m.phone) && isSeq(m.seq) && isDir(m.dir) ? { t: 'input', phone: m.phone, seq: m.seq, dir: m.dir } : null;
+    case 'profile':
+      return isClientId(m.phone) && isName(m.name) && isSeq(m.design) ? { t: 'profile', phone: m.phone, name: cleanName(m.name), design: m.design } : null;
   }
   return null;
 }

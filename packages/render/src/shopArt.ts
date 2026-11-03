@@ -1,3 +1,4 @@
+import type { Look, Shop } from '@walking-shops/sim';
 import { PALETTE, type PaletteColor, type Tint } from './colors.ts';
 import { GRID, SHOP_LOOK } from './look.ts';
 import { Pix, scratch } from './pix.ts';
@@ -22,9 +23,12 @@ const DESIGNS: readonly Design[] = [
   { awning: 'fringe', aw: ['hi', 'white'], wall: 'brick', window: 'pole' },
 ];
 
-/** A shop's design from its place in the shop list. Placeholder until players pick one (Milestone 4). */
-export function shopDesign(index: number): number {
-  return index % DESIGNS.length;
+/** How many shop types there are to pick from. */
+export const DESIGN_COUNT = DESIGNS.length;
+
+/** A shop's look: its own, or (for a shop made without one) one from its place in the shop list. */
+export function lookOf(s: Shop, index: number): Look {
+  return s.look ?? { design: index % DESIGN_COUNT, hue: index };
 }
 
 // Siding boards and brick courses repeat every this many rows; bricks are this wide (with mortar)

@@ -7,9 +7,10 @@ import { Board, Hud, Paused, Results } from './hud/Hud.tsx';
 import { Lobby } from './hud/Lobby.tsx';
 import { createKeyboard } from './input/keyboard.ts';
 import { currentRoom, isRoomTaken, newRoom, PARTY_HOST, type RoomInfo } from './net/room.ts';
-import { shopHue, shopTint } from './render/colors.ts';
-import { drawFrame } from './render/draw.ts';
-import { StreetView } from './render/view.ts';
+import { HUES, shopHue, shopTint } from '@walking-shops/render/colors.ts';
+import { drawFrame } from '@walking-shops/render/draw.ts';
+import { DESIGN_COUNT } from '@walking-shops/render/shopArt.ts';
+import { StreetView } from '@walking-shops/render/view.ts';
 
 // Most ticks run in one frame after a stall (a background tab), so the sim never spirals
 const MAX_TICKS_PER_FRAME = 10;
@@ -56,7 +57,14 @@ export function App() {
   // The game holds CONFIG by reference, so tuning applies live
   const host = useRef<Host>(null!);
   // Phones get their shop's tint as a plain color, the same one the street draws it in
-  host.current ??= new Host({ config: CONFIG, local: [YOU], seed, tint: (i) => shopTint(shopHue(i)).base, send: (m) => net.current.link?.send(m) });
+  host.current ??= new Host({
+    config: CONFIG,
+    local: [YOU],
+    seed,
+    looks: { designs: DESIGN_COUNT, hues: HUES.length },
+    tint: (look) => shopTint(shopHue(look.hue)).base,
+    send: (m) => net.current.link?.send(m),
+  });
   const paused = useRef(false);
   // Set once the frame loop is running: starts the round from a button or a key
   const begin = useRef<() => void>(() => {});

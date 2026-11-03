@@ -1,10 +1,16 @@
 import { DEV_PORTS, isRoomCode, randomId, type PhoneMsg, type PhoneState } from '@walking-shops/net';
 import { connectPhone, type Link } from '@walking-shops/net/client';
+import { FX_LOOK } from '@walking-shops/render/look.ts';
 import { scoreText, type Dir } from '@walking-shops/sim';
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { Setup, type Draft } from './Setup.tsx';
 
 // The reconnect token: the same token reclaims the same shop after a dropped connection or a reload
 const TOKEN_KEY = 'walking-shops.token';
+// The shop being set up, so a reload mid-form keeps what was typed
+const DRAFT_KEY = 'walking-shops.draft';
+// The size the display font is loaded at before signs are measured; any size loads it
+const FONT_PROBE = `16px ${FX_LOOK.displayFont}`;
 const ROOM = new URLSearchParams(location.search).get('room')?.toUpperCase() ?? '';
 const PARTY_HOST: string = import.meta.env.VITE_PARTY_HOST || `${location.hostname}:${DEV_PORTS.server}`;
 // Short buzzes where supported (not iOS): a press, and the shutters coming down
@@ -24,7 +30,35 @@ function token(): string {
   }
 }
 
+function storedDraft(): Draft | null {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? 'null') as Draft | null;
+    return d && typeof d.name === 'string' && Number.isInteger(d.design) ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeDraft(d: Draft): void {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+  } catch {
+    // No storage: a reload starts the form over
+  }
+}
+
 const buzz = (pattern: number | number[]) => navigator.vibrate?.(pattern);
+
+/** Signs are measured in the display font, so the form waits for it. */
+function useFontReady(): boolean {
+  const [ready, setReady] = useState(() => document.fonts.check(FONT_PROBE));
+  useEffect(() => {
+    if (ready) return;
+    // A font that fails to load still lets the form open, measured in the fallback
+    document.fonts.load(FONT_PROBE).finally(() => setReady(true));
+  }, [ready]);
+  return ready;
+}
 
 /** Keep the phone awake while it is a controller. Not available on plain http (LAN dev) or every browser: fine. */
 function useWakeLock(): () => void {
@@ -52,6 +86,8 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
   if (!host) return 'Waiting for the big screen';
   if (!s) return 'Joining…';
   switch (s.phase) {
+    case 'setup':
+      return 'Set up your shop';
     case 'waiting':
       return "Round under way: you're in the next one";
     case 'lobby':
@@ -75,6 +111,10 @@ export function App() {
   const [online, setOnline] = useState(false);
   const [host, setHost] = useState(false);
   const [state, setState] = useState<PhoneState | null>(null);
+  // Editing an open shop's name or type, in the lobby
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Draft | null>(storedDraft);
+  const fontReady = useFontReady();
   const wake = useWakeLock();
 
   const send = () => link.current?.send({ t: 'input', seq: ++seq.current, dir: dir.current });
@@ -124,10 +164,52 @@ export function App() {
     update();
   };
 
+  // An edit can't outlast the lobby: the round started, so it's dropped and the phone is the controller again
+  useEffect(() => {
+    if (editing && state?.phase !== 'lobby') setEditing(false);
+  }, [editing, state?.phase]);
+
+  const changeDraft = (d: Draft) => {
+    setDraft(d);
+    storeDraft(d);
+  };
+  const submit = (d: Draft) => {
+    link.current?.send({ t: 'profile', name: d.name, design: d.design });
+    changeDraft(d);
+    setEditing(false);
+    wake();
+  };
+  const startEdit = () => {
+    if (!state) return;
+    setDraft({ name: state.label, design: state.look.design });
+    setEditing(true);
+  };
+
   if (!isRoomCode(ROOM)) {
     return (
       <main className="message">
         <p>Open the link shown on the big screen to join.</p>
+      </main>
+    );
+  }
+  const settingUp = state && (state.phase === 'setup' || (state.phase === 'waiting' && !state.label) || editing);
+  if (state && settingUp) {
+    return (
+      <main className="setup-page" style={{ background: state.tint }}>
+        <header className="status">
+          <span>{editing ? 'Edit your shop' : status(online, host, state)}</span>
+          {state.phase === 'waiting' && <span>Set up now, and it opens next round</span>}
+        </header>
+        {fontReady && (
+          <Setup
+            draft={draft ?? { name: '', design: state.look.design }}
+            hue={state.look.hue}
+            editing={editing}
+            onChange={changeDraft}
+            onSubmit={submit}
+            onCancel={() => setEditing(false)}
+          />
+        )}
       </main>
     );
   }
@@ -137,12 +219,17 @@ export function App() {
     </div>
   );
   return (
-    <main className="pad" style={state?.tint ? { background: state.tint } : undefined} onContextMenu={(e) => e.preventDefault()}>
+    <main className="pad" style={state ? { background: state.tint } : undefined} onContextMenu={(e) => e.preventDefault()}>
       {half(-1)}
       {half(1)}
       <header className="status">
         <strong>{state?.label ?? ''}</strong>
         <span>{status(online, host, state)}</span>
+        {state?.phase === 'lobby' && (
+          <button type="button" className="edit" onClick={startEdit}>
+            Edit shop
+          </button>
+        )}
       </header>
     </main>
   );

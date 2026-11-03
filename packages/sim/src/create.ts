@@ -38,6 +38,7 @@ export function makeShop(p: PlayerSpec): Shop {
     id: p.id,
     label: p.label,
     controller: p.controller,
+    look: p.look ?? null,
     col: 0,
     level: 0,
     off: 0,

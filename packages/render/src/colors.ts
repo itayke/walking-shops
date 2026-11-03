@@ -55,10 +55,24 @@ export interface Tint {
   lo: string;
 }
 
-/** A shop's hue from its place in the shop list, snapped to a step. Placeholder until players pick a tint (Milestone 4). */
-export function shopHue(index: number): number {
+const DEGREES = 360;
+// Golden-angle steps tried before giving up on finding every snapped hue (they're all found long before)
+const HUE_SEARCH = 1000;
+
+/** Every hue a shop can take, snapped to a step, in the order they're handed out: neighbors in the list never look alike. */
+export const HUES: readonly number[] = (() => {
   const { hueSpread, hueOffset, hueSnap } = SHOP_LOOK;
-  return (Math.round(((index * hueSpread + hueOffset) % 360) / hueSnap) * hueSnap) % 360;
+  const out: number[] = [];
+  for (let i = 0; i < HUE_SEARCH && out.length < DEGREES / hueSnap; i++) {
+    const h = (Math.round(((i * hueSpread + hueOffset) % DEGREES) / hueSnap) * hueSnap) % DEGREES;
+    if (!out.includes(h)) out.push(h);
+  }
+  return out;
+})();
+
+/** The hue of a color slot. */
+export function shopHue(slot: number): number {
+  return HUES[slot % HUES.length];
 }
 
 /** The three shades of a hue. `base` is the shop's color everywhere else too: its phone, the scoreboard. */

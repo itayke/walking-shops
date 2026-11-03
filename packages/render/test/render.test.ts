@@ -1,15 +1,15 @@
 import { addShop, createLobby, makeConfig, parachuteSky, TICK, type GameState, type SimEvent } from '@walking-shops/sim';
 import { describe, expect, it } from 'vitest';
 import { run, shop, street } from '../../sim/test/helpers.ts';
-import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN, undiesFor, type Undies } from '../src/render/colors.ts';
-import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/render/legs.ts';
-import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
-import { FX_LOOK, GRID, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/render/look.ts';
-import { Pix } from '../src/render/pix.ts';
-import { SHOP } from '../src/render/shopArt.ts';
-import { fitLines } from '../src/render/signs.ts';
-import { strainsByColumn } from '../src/render/strain.ts';
-import { StreetView, type Banner } from '../src/render/view.ts';
+import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN, undiesFor, type Undies } from '../src/colors.ts';
+import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/legs.ts';
+import { floorsNeeded, layoutStreet } from '../src/layout.ts';
+import { FX_LOOK, GRID, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/look.ts';
+import { Pix } from '../src/pix.ts';
+import { SHOP } from '../src/shopArt.ts';
+import { fitLines } from '../src/signs.ts';
+import { strainsByColumn } from '../src/strain.ts';
+import { StreetView, type Banner } from '../src/view.ts';
 
 // Long enough for any eased motion to settle
 const SETTLE = 2;

@@ -5,6 +5,9 @@
   --shade: rgb(0 0 0 / 0.28);
   --held: rgb(255 255 255 / 0.22);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Jersey 15', 'Arial Black', Impact, sans-serif;
+  --field: rgb(255 255 255 / 0.92);
+  --field-ink: #17202b;
   color-scheme: dark;
 }
 
@@ -67,7 +70,8 @@ body,
 }
 
 .status strong {
-  font-size: 28px;
+  font: 400 32px var(--font-display);
+  text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
@@ -83,4 +87,99 @@ body,
   padding: 0 16px;
   text-align: center;
   font-size: 20px;
+}
+
+.status .edit {
+  pointer-events: auto;
+  margin-top: 4px;
+  font: 600 14px var(--font-body);
+  color: var(--ink);
+  background: var(--shade);
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+
+/* Setting up a shop: the preview on top, the name under it, all above where the keyboard comes up */
+.setup-page {
+  position: relative;
+  height: 100%;
+  overflow: auto;
+  transition: background 0.3s;
+}
+
+.setup-page .status {
+  position: static;
+}
+
+.setup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 16px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.stand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 16px;
+  touch-action: pan-y;
+}
+
+.preview {
+  flex: 1;
+  min-width: 0;
+  height: 30dvh;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.turn {
+  font-size: 28px;
+  color: var(--ink);
+  background: var(--shade);
+  border: 0;
+  border-radius: 12px;
+  width: 48px;
+  height: 64px;
+}
+
+.name {
+  font: 400 26px var(--font-display);
+  text-transform: uppercase;
+  text-align: center;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--field);
+  color: var(--field-ink);
+}
+
+.name::placeholder {
+  color: rgb(23 32 43 / 0.4);
+}
+
+.go,
+.cancel {
+  font: 400 24px var(--font-display);
+  text-transform: uppercase;
+  padding: 12px;
+  border-radius: 999px;
+  border: 0;
+}
+
+.go {
+  background: var(--field-ink);
+  color: #fff;
+}
+
+.cancel {
+  background: transparent;
+  color: var(--ink);
+  font-size: 18px;
 }

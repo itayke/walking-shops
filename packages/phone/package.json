@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@walking-shops/net": "*",
+    "@walking-shops/render": "*",
     "@walking-shops/sim": "*",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
