@@ -1,10 +1,10 @@
-import { parachuteSky, TICK, type GameState, type SimEvent } from '@walking-shops/sim';
+import { addShop, createLobby, makeConfig, parachuteSky, TICK, type GameState, type SimEvent } from '@walking-shops/sim';
 import { describe, expect, it } from 'vitest';
 import { run, shop, street } from '../../sim/test/helpers.ts';
 import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN, undiesFor, type Undies } from '../src/render/colors.ts';
 import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/render/legs.ts';
 import { floorsNeeded, layoutStreet } from '../src/render/layout.ts';
-import { FX_LOOK, GRID, LEG_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/render/look.ts';
+import { FX_LOOK, GRID, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/render/look.ts';
 import { Pix } from '../src/render/pix.ts';
 import { SHOP } from '../src/render/shopArt.ts';
 import { fitLines } from '../src/render/signs.ts';
@@ -125,6 +125,21 @@ describe('view', () => {
     view.reset(g);
     expect(view.holding).toBe(false);
     expect(view.effects).toHaveLength(0);
+  });
+});
+
+describe('joining', () => {
+  it('drops a shop that joins from above the sky into its place, and leaves shops already there', () => {
+    const g = createLobby(makeConfig(), 1);
+    addShop(g, { id: 'A', label: 'A', controller: 'human' });
+    const view = new StreetView();
+    view.reset(g);
+    const B = addShop(g, { id: 'B', label: 'B', controller: 'human' });
+    expect(view.anim(B).y).toBeGreaterThan(view.floors);
+    expect(view.anim(shop(g, 'A')).y).toBe(0);
+    play(g, view, MOTION_LOOK.dropTime);
+    expect(view.anim(B).drop).toBeNull();
+    expect(view.anim(B).y).toBeCloseTo(B.level, 5);
   });
 });
 

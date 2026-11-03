@@ -57,7 +57,10 @@ screenLink = connectScreen({
   },
 });
 const tick = setInterval(() => {
-  if (host.game.over) host.restart();
+  if (host.game.over) {
+    host.replay();
+    host.begin();
+  }
   step(host.game, host.inputs(), TICK);
 }, TICK * MS);
 const flush = setInterval(() => host.flush(), NET.stateInterval * MS);
@@ -128,9 +131,9 @@ async function main(): Promise<void> {
     phones.push(phone());
     await sleep(JOIN_SPREAD / PHONES);
   }
-  // Like the presenter starting the round once the room has joined: every phone gets a shop
+  // Like the presenter starting the round once the room has joined in the lobby
   await sleep(NET.stateInterval);
-  host.restart();
+  host.begin();
   await sleep(SECONDS + TAIL_GRACE);
   const cutoff = performance.now() - TAIL_GRACE * MS;
   for (const p of phones) for (const at of p.sentAt.values()) if (at < cutoff) lostEarly++;

@@ -6,7 +6,7 @@ import { NET } from './config.ts';
 
 export type Role = 'screen' | 'phone';
 
-export type Phase = 'waiting' | 'walk-ins' | 'parachutes' | 'results';
+export type Phase = 'waiting' | 'lobby' | 'walk-ins' | 'parachutes' | 'results';
 
 /** What a phone shows. waiting: no shop this round (the street is full). ack is the last input seq the sim has read. */
 export interface PhoneState {

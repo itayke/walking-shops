@@ -4,7 +4,7 @@ import { spawnParachuters, spawnWalkIns, updateParachuters, updateShoppers } fro
 import { updateShutters } from './idle.ts';
 import { moveShop } from './movement.ts';
 import { shuffle } from './rng.ts';
-import { maxHeight } from './street.ts';
+import { isPhase2, maxHeight } from './street.ts';
 import type { GameState, Inputs, SimEvent } from './types.ts';
 
 /** Advance the game one tick in place. Callers pass the fixed TICK; returns this tick's events. */
@@ -15,7 +15,7 @@ export function step(g: GameState, inputs: Inputs, dt: number = TICK): SimEvent[
   // The lobby's clock still runs, for who started walking first; the round rebases it to zero
   g.t += dt;
   if (!g.lobby && g.t >= ROUND.roundTime) g.over = true;
-  const phase2 = !g.lobby && g.t >= ROUND.paraStart;
+  const phase2 = isPhase2(g);
 
   for (const s of g.shops) {
     if (s.stunT > 0) s.stunT = Math.max(0, s.stunT - dt);

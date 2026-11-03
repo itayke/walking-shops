@@ -53,7 +53,9 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
   if (!s) return 'Joining…';
   switch (s.phase) {
     case 'waiting':
-      return "The street is full: you're in next round";
+      return "Round under way: you're in the next one";
+    case 'lobby':
+      return 'Warm up! The round starts soon';
     case 'results':
       return `#${s.rank} of ${s.of} · ${scoreText(s.income)}`;
     default:

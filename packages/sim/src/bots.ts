@@ -1,6 +1,6 @@
 import { rand } from './rng.ts';
 import { classify } from './movement.ts';
-import { entryShop, NONE, shopAt } from './street.ts';
+import { entryShop, isPhase2, NONE, shopAt } from './street.ts';
 import type { Dir, GameState, Shop } from './types.ts';
 
 // Think time for a bot that never moves: longer than any round
@@ -93,10 +93,10 @@ function nearestTower(g: GameState, s: Shop, minH: number): number {
 }
 
 function botThink(g: GameState, s: Shop): void {
-  const { BOTS, ROUND } = g.config;
+  const { BOTS } = g.config;
   const b = s.mind;
   const rng = g.rng.bots;
-  const phase2 = !g.lobby && g.t >= ROUND.paraStart;
+  const phase2 = isPhase2(g);
   let next = NEVER;
   switch (s.controller) {
     case 'newcomer':

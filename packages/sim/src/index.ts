@@ -6,7 +6,7 @@ export { step } from './step.ts';
 export { checkInvariants } from './invariants.ts';
 export { summarize, type Summary, type TypeSummary } from './summarize.ts';
 export { classify, type MoveResult } from './movement.ts';
-export { entryShop, maxHeight, NONE, shopAt } from './street.ts';
+export { entryShop, isPhase2, maxHeight, NONE, shopAt } from './street.ts';
 export { crosswalkWidth, parachuteSky, telegraphBars } from './customers.ts';
 export { shutterDrop } from './idle.ts';
 export { runRound } from './run.ts';

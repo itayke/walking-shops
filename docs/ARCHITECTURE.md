@@ -15,7 +15,7 @@
 - **Tiny payloads.** Phones send input changes only (`-1 | 0 | 1` with a sequence number), not a stream. The screen sends each phone a small state packet when it changes, checked a few times a second and batched into one message (phase, score, rank, closed/open, tint, and the last input seq the sim has read).
 - **The protocol** lives in `packages/net/src/protocol.ts`; the relay and both apps parse every message with it. Connections name their role in the URL (`?role=screen|phone`), and a phone's connection id is its reconnect token.
 - **One screen per room.** The first screen to open a room stores a key with it; a screen without that key is refused, so a phone can't pose as the screen. A reloaded screen (same key) replaces the old one. Refusals arrive as a `refused` message before the close, because a hibernating Durable Object's close code doesn't always reach the client.
-- **The screen's `Host`** (`packages/net/src/host.ts`) owns the round and seats phones: a phone joining mid-round takes over a bot's shop (the last-listed bot first), a new round seats every connected phone and drops one bot per phone, and a phone that drops keeps its shop for the round.
+- **The screen's `Host`** (`packages/net/src/host.ts`) owns the game and seats phones: it opens on the lobby, where each phone that joins gets a shop; `begin` starts the round and `replay` goes back to the lobby, where phones that joined during the round get theirs. A phone that drops keeps its shop.
 - **Taps are latched.** Inputs are events, but the sim reads a direction per tick, so each controller (keyboard or phone) goes through a `Latch`: a press released before the tick reads it still counts once.
 - **Latency tolerance is built into the rules.** Grid moves, steps that finish on their own, push times of ~0.9s and crossings of ~2.5s all absorb 100–300 ms of venue cellular.
 
@@ -56,7 +56,7 @@ The design is in `GAME_DESIGN.md` ("Flow" and "Phone"). Planned build:
 - **Sim (done, `packages/sim/src/lobby.ts`):** `createLobby` starts an empty street in lobby mode (movement rules only: no customers, round end, scoring or shutters). `addShop` drops a shop into a random empty column, widening the street at its right edge once it passes `minPlayers`; `removeShop` takes one off. `beginRound` fills the widest empty gaps with bots up to `minPlayers` and starts the round from the lobby's street, rebasing the clock to zero (walk start times shift with it, so who walked first still holds). `toLobby` sends the bots away for a replay.
 - **Shared shop art:** the shop parts and the sign fitting move out of `packages/screen` into a package the phone also draws with, so the phone's preview is pixel for pixel what the screen shows.
 - **Protocol:** the phone sends its profile (name, shop type) when it opens its shop and on each confirmed edit; the relay checks its length and characters. The screen assigns the hue and can rename or remove a shop. The phone keeps its profile in localStorage with the reconnect token.
-- **Screen:** title and QR (short URL underneath), the presenter list, and a begin key and button. Joins are refused outside the lobby; a reconnecting phone still gets its shop back.
+- **Screen (done, except the list):** title and QR (short URL underneath) over the lobby, `Enter` or a Begin button, and new shops dropping from the sky. A phone that joins during a round waits for the next lobby; a reconnecting phone still gets its shop back. Still to do: the presenter list.
 
 ## Ending
 

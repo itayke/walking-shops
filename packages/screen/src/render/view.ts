@@ -1,4 +1,4 @@
-import { scoreText, type Dir, type GameState, type Shop, type SimEvent } from '@walking-shops/sim';
+import { isPhase2, scoreText, type Dir, type GameState, type Shop, type SimEvent } from '@walking-shops/sim';
 import { floorsNeeded } from './layout.ts';
 import { climbEase } from './legs.ts';
 import { FX_LOOK, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
@@ -39,6 +39,8 @@ export interface ShopAnim {
   flash: number;
   squash: number;
   arc: Arc | null;
+  // A shop that just joined, falling from above the sky into its place
+  drop: { from: number; age: number } | null;
 }
 
 export type CalloutColor = 'danger' | 'ok' | 'muted';
@@ -97,15 +99,24 @@ export class StreetView {
   private phase2 = false;
   // Seconds of READY? left before the round may start
   private readyLeft = 0;
+  // Shops that started dropping this frame, so the next one waits its turn
+  private dropping = 0;
 
-  /** Start over on a new round, with or without the READY? GO! countdown into it. */
+  /** Start over on a new street, with or without the READY? GO! countdown. Shops that join later drop in from the sky. */
   reset(g: GameState, countdown = false): void {
     this.anims.clear();
     this.effects = [];
     this.floors = floorsNeeded(g);
-    this.phase2 = g.t >= g.config.ROUND.paraStart;
-    this.readyLeft = countdown ? FX_LOOK.readyHold : 0;
-    if (countdown) this.add({ kind: 'banner', banner: 'ready', age: 0 });
+    this.phase2 = isPhase2(g);
+    this.readyLeft = 0;
+    for (const s of g.shops) this.anims.set(s.id, this.placed(s, null));
+    if (countdown) this.countdown();
+  }
+
+  /** READY? GO! into a round that starts from the street as it is. */
+  countdown(): void {
+    this.readyLeft = FX_LOOK.readyHold;
+    this.add({ kind: 'banner', banner: 'ready', age: 0 });
   }
 
   /** The countdown is still on: the screen holds the sim until GO!. */
@@ -116,10 +127,15 @@ export class StreetView {
   anim(s: Shop): ShopAnim {
     let a = this.anims.get(s.id);
     if (!a) {
-      a = { x: s.col, y: s.level, level: s.level, climb: null, carried: 0, legs: 0, dir: 1, moving: false, spin: 0, flash: 0, squash: 0, arc: null };
+      a = this.placed(s, { from: this.floors + MOTION_LOOK.dropAbove, age: -this.dropping++ * MOTION_LOOK.dropStagger });
       this.anims.set(s.id, a);
     }
     return a;
+  }
+
+  private placed(s: Shop, drop: ShopAnim['drop']): ShopAnim {
+    const y = drop ? drop.from : s.level;
+    return { x: s.col, y, level: s.level, climb: null, carried: 0, legs: 0, dir: 1, moving: false, spin: 0, flash: 0, squash: 0, arc: null, drop };
   }
 
   /** The middle of a shop's body, in floors, for effects that start on it. A shop with its roof is one floor tall. */
@@ -184,11 +200,14 @@ export class StreetView {
 
   /** Ease every shop toward its grid position, fly toppled ones, age effects. */
   update(g: GameState, dt: number): void {
-    const { MOVEMENT, ROUND } = g.config;
+    const { MOVEMENT } = g.config;
     const stand = dt / SHOP_LOOK.standTime;
     const xK = follow(SHOP_LOOK.followRate, dt);
     const yK = follow(SHOP_LOOK.dropRate, dt);
     const climbStep = dt / (MOVEMENT.cellTime * SHOP_LOOK.climbShare);
+    // New shops line up to drop in the order they joined, not along the street
+    for (const s of g.shops) this.anim(s);
+    this.dropping = 0;
     for (let c = 0; c < g.C; c++) {
       // Riders move with the walker under them, and stand on its legs
       let offSum = 0;
@@ -207,9 +226,20 @@ export class StreetView {
         if (a.moving) a.dir = ahead > 0 ? 1 : -1;
         if (s.pushT > 0 && s.pushCol >= 0) a.dir = s.pushCol > s.col ? 1 : -1;
         // Going up a floor is a climb, timed so the legs can step up with it; anything else drops back to following
-        if (ty !== a.level) a.climb = ty > a.level && !a.arc ? { from: a.y, to: ty, u: 0, dir: a.dir } : null;
+        if (ty !== a.level) a.climb = ty > a.level && !a.arc && !a.drop ? { from: a.y, to: ty, u: 0, dir: a.dir } : null;
         a.level = ty;
-        if (a.arc) {
+        if (a.drop) {
+          // Falls straight down, speeding up, and squashes as it lands
+          a.drop.age += dt;
+          // Waits at the top until its turn
+          const u = Math.max(0, Math.min(1, a.drop.age / MOTION_LOOK.dropTime));
+          a.x = tx;
+          a.y = a.drop.from + (ty - a.drop.from) * u * u;
+          if (u >= 1) {
+            a.drop = null;
+            a.squash = MOTION_LOOK.squashTime;
+          }
+        } else if (a.arc) {
           a.arc.age += dt;
           const u = Math.min(1, a.arc.age / MOTION_LOOK.arcTime);
           const e = easeOut(u);
@@ -244,7 +274,7 @@ export class StreetView {
       if (this.readyLeft <= 0) this.add({ kind: 'banner', banner: 'go', age: 0 });
     }
 
-    const phase2 = g.t >= ROUND.paraStart;
+    const phase2 = isPhase2(g);
     if (phase2 && !this.phase2 && !g.over) this.add({ kind: 'banner', banner: 'phase2', age: 0 });
     this.phase2 = phase2;
 

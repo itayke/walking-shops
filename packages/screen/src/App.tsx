@@ -4,6 +4,7 @@ import { CONFIG, step, TICK, type GameState, type PlayerSpec } from '@walking-sh
 import { useEffect, useRef, useState } from 'react';
 import { createTuningPanel } from './dev/tuningPanel.ts';
 import { Board, Hud, Paused, Results } from './hud/Hud.tsx';
+import { Lobby } from './hud/Lobby.tsx';
 import { createKeyboard } from './input/keyboard.ts';
 import { currentRoom, isRoomTaken, newRoom, PARTY_HOST, type RoomInfo } from './net/room.ts';
 import { shopHue, shopTint } from './render/colors.ts';
@@ -21,12 +22,13 @@ const MAX_PIXEL_RATIO = 1;
 const SEED_RANGE = 2 ** 32;
 const PAUSE_KEY = ' ';
 const BOARD_KEY = 'b';
-// URL parameters for debugging: ?seed=N replays a round, ?at=S fast-forwards the first round to S seconds
+const BEGIN_KEY = 'enter';
+// URL parameters for debugging: ?seed=N replays a round, ?at=S skips the lobby and fast-forwards the round to S seconds
 const params = new URLSearchParams(location.search);
 const SEED_PARAM = params.get('seed');
 const START_AT = Number(params.get('at') ?? 0);
 
-// The keyboard always plays one shop; phones take over bots' shops as they join, and bots play the rest
+// The keyboard always plays one shop; phones open theirs in the lobby, and bots fill the rest when the round begins
 const YOU: PlayerSpec = { id: 'you', label: 'YOU', controller: 'human' };
 
 const seed = () => (SEED_PARAM === null ? Math.floor(Math.random() * SEED_RANGE) : Number(SEED_PARAM));
@@ -56,6 +58,8 @@ export function App() {
   // Phones get their shop's tint as a plain color, the same one the street draws it in
   host.current ??= new Host({ config: CONFIG, local: [YOU], seed, tint: (i) => shopTint(shopHue(i)).base, send: (m) => net.current.link?.send(m) });
   const paused = useRef(false);
+  // Set once the frame loop is running: starts the round from a button or a key
+  const begin = useRef<() => void>(() => {});
   const [board, setBoard] = useState(false);
   // Re-renders the HUD a few times a second; the canvas redraws every frame on its own
   const [, setHudTick] = useState(0);
@@ -64,8 +68,9 @@ export function App() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const view = new StreetView();
-    // A fast-forwarded round is already under way, so it skips the countdown
-    view.reset(host.current.game, START_AT === 0);
+    // A fast-forwarded round is already under way, so it skips the lobby and the countdown
+    if (START_AT > 0) host.current.begin();
+    view.reset(host.current.game);
     fastForward(host.current.game, view, START_AT);
     const connect = () => {
       const n = net.current;
@@ -102,13 +107,27 @@ export function App() {
     resize();
 
     let acc = 0;
-    const restart = () => {
-      view.reset(host.current.restart(), true);
+    const refresh = () => {
       acc = 0;
       paused.current = false;
       setHudTick((t) => t + 1);
     };
-    const disposePanel = createTuningPanel(restart);
+    begin.current = () => {
+      if (!host.current.game.lobby) return;
+      host.current.begin();
+      view.countdown();
+      refresh();
+    };
+    // The street stays as it is: the bots leave and everyone else stays put
+    const lobby = () => {
+      host.current.replay();
+      refresh();
+    };
+    const newStreet = () => {
+      view.reset(host.current.reset());
+      refresh();
+    };
+    const disposePanel = createTuningPanel(lobby, newStreet);
     const keyboard = createKeyboard();
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
@@ -119,6 +138,7 @@ export function App() {
         setHudTick((t) => t + 1);
       }
       if (key === BOARD_KEY) setBoard((b) => !b);
+      if (key === BEGIN_KEY) begin.current();
     };
     window.addEventListener('keydown', onKey);
 
@@ -182,6 +202,7 @@ export function App() {
       <Hud g={g} you={YOU.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats }} />
       <div className="stage">
         <canvas ref={canvasRef} />
+        {g.lobby && <Lobby g={g} room={net.current.room.code} onBegin={() => begin.current()} />}
         {board && <Board g={g} you={YOU.id} />}
         {g.over ? <Results g={g} you={YOU.id} /> : paused.current && <Paused />}
       </div>

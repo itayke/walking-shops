@@ -36,3 +36,8 @@ export function maxHeight(g: GameState): number {
   for (const col of g.cols) h = Math.max(h, col.length);
   return h;
 }
+
+/** Parachutes are falling: the round's second phase. Never in the lobby, whose clock runs on its own. */
+export function isPhase2(g: GameState): boolean {
+  return !g.lobby && g.t >= g.config.ROUND.paraStart;
+}

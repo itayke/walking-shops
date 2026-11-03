@@ -1,5 +1,5 @@
 import type { Seat } from '@walking-shops/net';
-import { scoreText, type GameState, type Shop } from '@walking-shops/sim';
+import { isPhase2, scoreText, type GameState, type Shop } from '@walking-shops/sim';
 import { joinUrl } from '../net/room.ts';
 import { shopHue, shopTint } from '../render/colors.ts';
 
@@ -25,7 +25,7 @@ export interface RoomStatus {
   phones: ReadonlyMap<string, Seat>;
 }
 
-/** Where phones join, how many are connected, and whether the relay is reachable. QR and lobby come with the join flow. */
+/** Where phones join, how many are connected, and whether the relay is reachable. The lobby shows the QR. */
 function Join({ room }: { room: RoomStatus }) {
   const url = joinUrl(room.code);
   let phones = 0;
@@ -46,14 +46,16 @@ function Join({ room }: { room: RoomStatus }) {
 /** Phase, clock, round progress with the phase 2 mark, where to join, and your score. */
 export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomStatus }) {
   const { ROUND } = g.config;
-  const phase2 = g.t >= ROUND.paraStart;
+  const phase2 = isPhase2(g);
+  // The lobby's clock isn't the round's
+  const t = g.lobby ? 0 : g.t;
   const mine = g.shops.find((s) => s.id === you);
   return (
     <header className="hud">
-      <span className={phase2 ? 'pill phase2' : 'pill'}>{g.over ? 'Results' : phase2 ? 'Parachutes' : 'Walk-ins'}</span>
-      <span className="timer">{clock(ROUND.roundTime - g.t)}</span>
+      <span className={phase2 ? 'pill phase2' : 'pill'}>{g.lobby ? 'Lobby' : g.over ? 'Results' : phase2 ? 'Parachutes' : 'Walk-ins'}</span>
+      <span className="timer">{clock(ROUND.roundTime - t)}</span>
       <div className="progress">
-        <i style={{ width: `${Math.min(PERCENT, (PERCENT * g.t) / ROUND.roundTime)}%` }} />
+        <i style={{ width: `${Math.min(PERCENT, (PERCENT * t) / ROUND.roundTime)}%` }} />
         <b style={{ left: `${Math.min(PERCENT, (PERCENT * ROUND.paraStart) / ROUND.roundTime)}%` }} />
       </div>
       <Join room={room} />
@@ -63,7 +65,7 @@ export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomSta
         </span>
       )}
       <span className="hint">
-        <kbd>A</kbd> <kbd>D</kbd> walk · <kbd>Space</kbd> pause · <kbd>B</kbd> board · <kbd>T</kbd> tuning · <kbd>R</kbd> restart
+        <kbd>A</kbd> <kbd>D</kbd> walk · <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>B</kbd> board · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
       </span>
     </header>
   );
@@ -130,7 +132,7 @@ export function Results({ g, you }: { g: GameState; you: string }) {
           </p>
         )}
         <p>
-          Press <kbd>R</kbd> for another round
+          Press <kbd>R</kbd> to open the lobby for another round
         </p>
       </div>
     </div>

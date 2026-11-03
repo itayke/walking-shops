@@ -185,6 +185,11 @@ export const MOTION_LOOK = {
   arcSpin: Math.PI,
   squashTime: 0.25,
   squash: 0.2,
+  // A shop that joins falls from this many floors above the sky, landing with the same squash; shops that join together
+  // (the bots, as a round begins) drop one after another, dropStagger apart
+  dropAbove: 1,
+  dropTime: 0.6,
+  dropStagger: 0.05,
 };
 
 export const PEOPLE_LOOK = {

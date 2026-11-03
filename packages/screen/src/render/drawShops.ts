@@ -82,7 +82,7 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
       // A pusher leans into the tower pulse for pulse, carrying its riders with it
       const pushing = s.pushT > 0 ? strains.get(s.pushCol) : undefined;
       if (pushing && !lean) lean = { x: fx, y: fy, angle: strainAngle(pushing, now) };
-      items.push({ s, index: i, a, layer: a.arc ? LAYER_FLYING : layer, lean, danger, fx, fy, pose, dir });
+      items.push({ s, index: i, a, layer: a.arc || a.drop ? LAYER_FLYING : layer, lean, danger, fx, fy, pose, dir });
     }
   }
   items.sort((p, q) => p.layer - q.layer);
