@@ -5,10 +5,11 @@
 // Fixed logic tick, in seconds. Not tunable: golden replays and the bench assume it
 export const TICK = 0.05;
 
-// Round length and when phase 2 (parachutes) begins
+// Round length and when phase 2 (parachutes) begins. Bots fill the street up to minPlayers shops when a round begins
 export const ROUND = {
   roundTime: 120,
   paraStart: 60,
+  minPlayers: 12,
 };
 
 // Column count is max(players + colsExtra, players × colsPerPlayer), clamped to [colsMin, colsCap].

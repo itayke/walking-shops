@@ -12,9 +12,10 @@ export function step(g: GameState, inputs: Inputs, dt: number = TICK): SimEvent[
   g.events = [];
   if (g.over) return g.events;
   const { ROUND, WALK_INS } = g.config;
+  // The lobby's clock still runs, for who started walking first; the round rebases it to zero
   g.t += dt;
-  if (g.t >= ROUND.roundTime) g.over = true;
-  const phase2 = g.t >= ROUND.paraStart;
+  if (!g.lobby && g.t >= ROUND.roundTime) g.over = true;
+  const phase2 = !g.lobby && g.t >= ROUND.paraStart;
 
   for (const s of g.shops) {
     if (s.stunT > 0) s.stunT = Math.max(0, s.stunT - dt);
@@ -28,11 +29,12 @@ export function step(g: GameState, inputs: Inputs, dt: number = TICK): SimEvent[
       s.input = v === 1 || v === -1 ? v : 0;
     }
   }
-  updateShutters(g, dt);
+  if (!g.lobby) updateShutters(g, dt);
 
   // Movement in a fresh random order each tick, so no shop always moves first
   for (const s of shuffle(g.shops.slice(), g.rng.world)) moveShop(g, s, dt);
 
+  if (g.lobby) return g.events;
   spawnWalkIns(g, dt, !phase2 || WALK_INS.groundInPhase2);
   if (phase2) spawnParachuters(g, dt);
   updateShoppers(g, dt);

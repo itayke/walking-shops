@@ -96,7 +96,7 @@ function botThink(g: GameState, s: Shop): void {
   const { BOTS, ROUND } = g.config;
   const b = s.mind;
   const rng = g.rng.bots;
-  const phase2 = g.t >= ROUND.paraStart;
+  const phase2 = !g.lobby && g.t >= ROUND.paraStart;
   let next = NEVER;
   switch (s.controller) {
     case 'newcomer':

@@ -1,12 +1,20 @@
 import { BOT_MIX, columnCount, type Config } from './config.ts';
 import { makeRng, shuffle } from './rng.ts';
 import { NONE, reindex } from './street.ts';
-import { BOT_TYPES, type BotMind, type Controller, type GameState, type PlayerSpec, type Shop } from './types.ts';
+import { BOT_TYPES, type BotMind, type Controller, type GameState, type PlayerSpec, type Shop, type Stats, type Wave } from './types.ts';
 
 // Mixed into the seed for the bot stream, so it differs from the world stream
 const BOT_STREAM_SALT = 0x9e3779b9;
 
 const BOT_LETTER: Record<Controller, string> = { human: 'P', newcomer: 'N', climber: 'C', aggressor: 'A', random: 'R', sitter: 'S' };
+
+export function freshWave(config: Config): Wave {
+  return { state: 'pause', end: config.WAVES.firstWave, col0: NONE, start: 0, spawned: 0 };
+}
+
+export function freshStats(): Stats {
+  return { closures: 0, paraCaught: 0, paraByTower: 0, spawned: 0, topples: 0, bumps: 0, pushbacks: 0, pushStarts: 0, dodged: 0, abandoned: 0, lost: 0, maxHeight: 0 };
+}
 
 export function freshMind(): BotMind {
   return {
@@ -25,7 +33,7 @@ export function freshMind(): BotMind {
   };
 }
 
-function makeShop(p: PlayerSpec): Shop {
+export function makeShop(p: PlayerSpec): Shop {
   return {
     id: p.id,
     label: p.label,
@@ -80,6 +88,7 @@ export function createGame(config: Config, players: readonly PlayerSpec[], seed:
   const g: GameState = {
     config,
     t: 0,
+    lobby: false,
     over: false,
     N,
     C,
@@ -89,8 +98,8 @@ export function createGame(config: Config, players: readonly PlayerSpec[], seed:
     nextShopper: 0,
     paras: [],
     nextPara: 0,
-    wave: { state: 'pause', end: config.WAVES.firstWave, col0: NONE, start: 0, spawned: 0 },
-    stats: { closures: 0, paraCaught: 0, paraByTower: 0, spawned: 0, topples: 0, bumps: 0, pushbacks: 0, pushStarts: 0, dodged: 0, abandoned: 0, lost: 0, maxHeight: 0 },
+    wave: freshWave(config),
+    stats: freshStats(),
     rng: { world: makeRng(seed), bots: makeRng((seed ^ BOT_STREAM_SALT) >>> 0) },
     events: [],
   };

@@ -1,6 +1,7 @@
 export * from './config.ts';
 export * from './types.ts';
 export { botPlayers, createGame, setController } from './create.ts';
+export { addShop, beginRound, createLobby, removeShop, toLobby } from './lobby.ts';
 export { step } from './step.ts';
 export { checkInvariants } from './invariants.ts';
 export { summarize, type Summary, type TypeSummary } from './summarize.ts';

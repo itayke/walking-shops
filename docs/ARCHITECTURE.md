@@ -53,7 +53,7 @@
 
 The design is in `GAME_DESIGN.md` ("Flow" and "Phone"). Planned build:
 
-- **Sim:** a lobby mode (movement rules only: no customers, clock, scoring or shutters), adding a shop mid-game into a column, a street that widens by adding columns at its edge, and filling with bots up to `minPlayers` when the round begins. The round carries on from the lobby's state.
+- **Sim (done, `packages/sim/src/lobby.ts`):** `createLobby` starts an empty street in lobby mode (movement rules only: no customers, round end, scoring or shutters). `addShop` drops a shop into a random empty column, widening the street at its right edge once it passes `minPlayers`; `removeShop` takes one off. `beginRound` fills the widest empty gaps with bots up to `minPlayers` and starts the round from the lobby's street, rebasing the clock to zero (walk start times shift with it, so who walked first still holds). `toLobby` sends the bots away for a replay.
 - **Shared shop art:** the shop parts and the sign fitting move out of `packages/screen` into a package the phone also draws with, so the phone's preview is pixel for pixel what the screen shows.
 - **Protocol:** the phone sends its profile (name, shop type) when it opens its shop and on each confirmed edit; the relay checks its length and characters. The screen assigns the hue and can rename or remove a shop. The phone keeps its profile in localStorage with the reconnect token.
 - **Screen:** title and QR (short URL underneath), the presenter list, and a begin key and button. Joins are refused outside the lobby; a reconnecting phone still gets its shop back.

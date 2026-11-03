@@ -129,6 +129,8 @@ export type SimEvent =
 export interface GameState {
   config: Config;
   t: number;
+  // Before the round: movement only, no customers, clock, scoring or shutters
+  lobby: boolean;
   over: boolean;
   N: number;
   C: number;
