@@ -118,6 +118,9 @@ body,
   box-sizing: border-box;
   padding: 14px 16px;
   border-radius: 16px;
+  /* Edged like the line between the halves: the sky stops inside the border, so the shade falls on the tint */
+  border: 2px solid var(--shade);
+  background-clip: padding-box;
   color: var(--on-sky);
 }
 

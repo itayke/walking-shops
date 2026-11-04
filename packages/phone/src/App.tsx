@@ -108,13 +108,13 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
   if (!s) return 'Joining…';
   switch (s.phase) {
     case 'setup':
-      return 'Set up your shop';
+      return 'Set up your shop!';
     case 'waiting':
-      return "Round under way: you're in the next one";
+      return "Game running: you're in the next one!";
     case 'lobby':
-      return 'Warm up! The round starts soon';
+      return 'Warm up! The game starts soon';
     case 'results':
-      return 'Round over';
+      return 'Game over';
     default:
       return s.closed ? 'Shutters down: tap to open' : 'Tap to step · hold to walk';
   }
@@ -276,7 +276,7 @@ export function App() {
       {half(1)}
       <header className="status">
         {state?.label ? (
-          <div ref={card} className="card" style={{ background: BACKDROP }}>
+          <div ref={card} className="card" style={{ backgroundColor: BACKDROP }}>
             {scored && (
               <p className="score">
                 <strong>{scoreText(state.income)}</strong>
