@@ -51,7 +51,8 @@ export const WALK_INS = {
 
 // Crosswalk waves. A crosswalk appears, draws waveLines bars one per waveLineInterval (bottom to top), and the wave
 // steps off with the last bar: waveSize shoppers over waveSpawn. After they cross it waits wavePause before the next.
-// firstWave is when the first crosswalk can appear
+// firstWave is when the first crosswalk can appear. Its empty outline shows up to waveOutline before that, out of the
+// pause, as an early hint: the bars, the wave and the bots keep their timing
 export const WAVES = {
   waveWidth: 4,
   waveLines: 4,
@@ -60,6 +61,7 @@ export const WAVES = {
   waveSpawn: 3,
   wavePause: 4,
   firstWave: 1,
+  waveOutline: 2,
 };
 
 // Phase 2 parachuters. paraRate is per player per minute. Each drifts sideways at between windMin × wind and wind

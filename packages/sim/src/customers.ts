@@ -26,13 +26,16 @@ function landShopper(g: GameState, c: number): void {
   g.shoppers.push({ id: g.nextShopper++, x: c, origin: c, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
 }
 
-/** Crosswalk cycle: pause -> telegraph (bars drawn) -> active (shoppers step off) -> crossing -> pause. Plus trickle. */
+/**
+ * Crosswalk cycle: pause -> telegraph (outline, then bars drawn) -> active (shoppers step off) -> crossing -> pause.
+ * Plus trickle. The outline comes waveOutline early, out of the pause; the bars count from when the pause ends.
+ */
 export function spawnWalkIns(g: GameState, dt: number, groundOn: boolean): void {
   const { WAVES, WALK_INS } = g.config;
   const rng = g.rng.world;
   const W = g.wave;
   const width = crosswalkWidth(g);
-  if (W.state === 'pause' && g.t >= W.end && groundOn) {
+  if (W.state === 'pause' && g.t >= W.end - WAVES.waveOutline && groundOn) {
     let c0 = 0;
     for (let k = 0; k < PLACE_TRIES; k++) {
       c0 = Math.floor(rand(rng) * (g.C - width + 1));
@@ -40,8 +43,9 @@ export function spawnWalkIns(g: GameState, dt: number, groundOn: boolean): void 
     }
     W.col0 = c0;
     W.state = 'telegraph';
-    W.start = g.t;
-    W.end = g.t + WAVES.waveLines * WAVES.waveLineInterval;
+    // Later than now, by up to waveOutline: when the pause ends, or now if it ended while walk-ins were off
+    W.start = Math.max(g.t, W.end);
+    W.end = W.start + WAVES.waveLines * WAVES.waveLineInterval;
     W.spawned = 0;
   } else if (W.state === 'telegraph' && g.t >= W.end) {
     W.state = 'active';

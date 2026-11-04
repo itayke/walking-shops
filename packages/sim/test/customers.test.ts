@@ -95,6 +95,25 @@ describe('crosswalk telegraph', () => {
     }
   });
 
+  it('shows the outline waveOutline early, keeping the bars and the wave on time', () => {
+    const outline = 1;
+    const g = street([['A'], [], [], [], [], [], [], []], { WAVES: { firstWave: 2, waveOutline: outline } });
+    const { firstWave, waveLines, waveLineInterval } = g.config.WAVES;
+    run(g, firstWave - outline - TICK);
+    expect(g.wave.state).toBe('pause');
+    run(g, 2 * TICK);
+    expect(g.wave.state).toBe('telegraph');
+    expect(g.wave.start).toBe(firstWave);
+    run(g, firstWave + waveLineInterval - g.t - TICK);
+    expect(telegraphBars(g)).toBe(0);
+    run(g, 2 * TICK);
+    expect(telegraphBars(g)).toBe(1);
+    run(g, firstWave + waveLines * waveLineInterval - g.t - TICK);
+    expect(g.wave.state).toBe('telegraph');
+    run(g, 2 * TICK);
+    expect(g.wave.state).toBe('active');
+  });
+
   it('moves each new crosswalk at least one width from the last', () => {
     const g = street([['A'], ...Array.from({ length: 17 }, () => [])], { WAVES: { firstWave: 0 } });
     const { waveWidth } = g.config.WAVES;

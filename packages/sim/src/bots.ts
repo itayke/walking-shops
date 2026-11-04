@@ -34,7 +34,8 @@ function reactiveTarget(g: GameState, s: Shop): number {
       if (travel <= sh.rise) val[c] += c === sh.origin ? BOTS.aheadValue : BOTS.sideValue;
     }
   }
-  // A crosswalk that has appeared (and been noticed) pulls bots toward it
+  // A crosswalk that has appeared (and been noticed) pulls bots toward it. Bots notice it from its first bar's count,
+  // not its early outline, so they play on the same timing as before the outline came early
   const w = g.wave;
   if ((w.state === 'telegraph' || w.state === 'active') && g.t - w.start >= BOTS.botPerception) {
     const left =

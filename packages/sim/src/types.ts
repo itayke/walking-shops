@@ -92,12 +92,13 @@ export interface Parachuter {
 
 export type WaveState = 'pause' | 'telegraph' | 'active' | 'crossing';
 
-/** The crosswalk cycle: pause, telegraph (bars drawn), active (shoppers step off), crossing (last ones in flight). */
+/** The crosswalk cycle: pause, telegraph (outline, then bars drawn), active (shoppers step off), crossing (last ones in flight). */
 export interface Wave {
   state: WaveState;
   // When the current state ends
   end: number;
   col0: number;
+  // When the bars start counting; in telegraph the outline shows from before it
   start: number;
   spawned: number;
 }

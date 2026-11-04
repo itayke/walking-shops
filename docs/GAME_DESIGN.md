@@ -119,7 +119,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 
 - **Trickle:** a thin stream of walk-ins anywhere, all the time, so every shop earns something and everyone learns "sitting earns, walking gets skipped".
 - **Waves:** a crosswalk `waveWidth` columns wide appears somewhere on the street.
-  - **Telegraph (decided after the prototype):** no numeric countdown. The crosswalk appears empty, then its `waveLines` horizontal bars are drawn bottom to top, one every `waveLineInterval`. The wave steps off as the last bar is drawn (4 bars at 0.5 s: the same 2 s warning the prototype tested).
+  - **Telegraph (decided after the prototype):** no numeric countdown. The crosswalk appears empty, then its `waveLines` horizontal bars are drawn bottom to top, one every `waveLineInterval`. The wave steps off as the last bar is drawn (4 bars at 0.5 s: the same 2 s warning the prototype tested). The empty outline shows `waveOutline` before the first bar's count starts, out of the pause, so players get an early hint of where to go; the bars, the wave and the bots keep the timing above.
   - `waveSize` shoppers then cross over `waveSpawn` seconds.
   - The crosswalk fades, waits `wavePause`, and appears somewhere else (at least one width away).
 - Why waves: they reduce position luck compared to a drifting crowd, and they give a reason to look up.
@@ -165,7 +165,8 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 | waveLineInterval | 0.5 s | Time per telegraph bar |
 | waveSize | 20 | Shoppers per wave |
 | waveSpawn | 3 s | Time over which a wave steps off |
-| wavePause | 4 s | Gap before the next crosswalk |
+| wavePause | 4 s | Gap before the next crosswalk's bars start |
+| waveOutline | 2 s | How early the empty outline shows, out of that gap |
 | paraRate | 12 / player / min | Parachuters in phase 2 |
 | wind | 0.8 columns/s | Parachute drift |
 | groundInPhase2 | true | Walk-ins continue in phase 2 |
