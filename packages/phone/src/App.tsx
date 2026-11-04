@@ -1,5 +1,6 @@
 import { DEV_PORTS, isRoomCode, randomId, type PhoneMsg, type PhoneState } from '@walking-shops/net';
 import { connectPhone, type Link } from '@walking-shops/net/client';
+import { COPY } from '@walking-shops/render/copy.ts';
 import { FX_LOOK } from '@walking-shops/render/look.ts';
 import { scoreText, type Dir } from '@walking-shops/sim';
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
@@ -103,20 +104,21 @@ function useBottom(): [(el: HTMLElement | null) => void, number] {
 
 /** One line on the phone, kept short: the screen carries the game. */
 function status(online: boolean, host: boolean, s: PhoneState | null): string {
-  if (!online) return 'Connecting…';
-  if (!host) return 'Waiting for the big screen';
-  if (!s) return 'Joining…';
+  const c = COPY.phone;
+  if (!online) return c.connecting;
+  if (!host) return c.noScreen;
+  if (!s) return c.joining;
   switch (s.phase) {
     case 'setup':
-      return 'Set up your shop!';
+      return c.setup;
     case 'waiting':
-      return "Game running: you're in the next one!";
+      return c.waiting;
     case 'lobby':
-      return 'Warm up! Game starting soon...';
+      return c.lobby;
     case 'results':
-      return 'Game over';
+      return c.over;
     default:
-      return s.closed ? 'Shutters down: tap to open' : 'Tap to step · hold to walk';
+      return s.closed ? c.closed : c.playing;
   }
 }
 
@@ -231,7 +233,7 @@ export function App() {
   if (!isRoomCode(ROOM)) {
     return (
       <main className="message">
-        <p>Open the link shown on the big screen to join.</p>
+        <p>{COPY.phone.noRoom}</p>
       </main>
     );
   }
@@ -240,8 +242,8 @@ export function App() {
     return (
       <main className="setup-page" style={{ background: state.tint }}>
         <header className="status">
-          <span>{editing ? 'Edit your shop' : status(online, host, state)}</span>
-          {state.phase === 'waiting' && <span>Set up now, and it opens next round</span>}
+          <span>{editing ? COPY.phone.editing : status(online, host, state)}</span>
+          {state.phase === 'waiting' && <span>{COPY.phone.nextRound}</span>}
         </header>
         {fontReady && (
           <Setup
@@ -280,14 +282,12 @@ export function App() {
             {scored && (
               <p className="score">
                 <strong>{scoreText(state.income)}</strong>
-                <span>
-                  #{state.rank} of {state.of}
-                </span>
+                <span>{COPY.phone.place(state.rank, state.of)}</span>
               </p>
             )}
             {state.phase === 'lobby' && (
               <button type="button" className="edit" onClick={startEdit}>
-                Edit shop
+                {COPY.phone.edit}
               </button>
             )}
             <Badge name={state.label} look={state.look} closed={state.closed} />

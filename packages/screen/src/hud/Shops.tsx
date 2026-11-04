@@ -1,5 +1,6 @@
 import { cleanName, NET, type Seat } from '@walking-shops/net';
 import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
+import { COPY } from '@walking-shops/render/copy.ts';
 import { lookOf } from '@walking-shops/render/shopArt.ts';
 import { nameFits } from '@walking-shops/render/signs.ts';
 import { scoreText, type GameState, type Shop } from '@walking-shops/sim';
@@ -52,7 +53,7 @@ function useSlide() {
 }
 
 /** Why a shop's row is tagged: a bot plays it, or its phone dropped. */
-function tagOf(s: Shop, seat: Seat | undefined): string | null {
+function tagOf(s: Shop, seat: Seat | undefined): 'bot' | 'offline' | null {
   if (s.controller !== 'human') return 'bot';
   return seat?.online === false ? 'offline' : null;
 }
@@ -79,10 +80,9 @@ export function Shops({ g, seats, you, onRename, onRemove }: {
     if (seat.shop !== null) seatOf.set(seat.shop, seat);
     else if (seat.online) pending++;
   }
-  const count = g.shops.length;
   return (
     <div className="shops">
-      <p className="shops-title">{lobby ? `${count} ${count === 1 ? 'shop' : 'shops'} open` : 'Live ranking'}</p>
+      <p className="shops-title">{lobby ? COPY.shops.open(g.shops.length) : COPY.shops.ranking}</p>
       <ol ref={list}>
         {rows.map(({ s, index }, place) => {
           const tag = tagOf(s, seatOf.get(s.id));
@@ -106,7 +106,7 @@ export function Shops({ g, seats, you, onRename, onRemove }: {
               ) : (
                 <span className="shops-name">{s.label}</span>
               )}
-              {tag && <span className="shops-tag">{tag}</span>}
+              {tag && <span className="shops-tag">{COPY.shops[tag]}</span>}
               {lobby ? (
                 <button type="button" className="shops-remove" onClick={() => onRemove(s.id)} title="Take off the street" aria-label={`Remove ${s.label}`}>
                   ×
@@ -121,9 +121,7 @@ export function Shops({ g, seats, you, onRename, onRemove }: {
         })}
       </ol>
       {pending > 0 && (
-        <p className="shops-pending">
-          {pending} {pending === 1 ? 'phone' : 'phones'} {lobby ? 'setting up…' : 'waiting for the next game'}
-        </p>
+        <p className="shops-pending">{COPY.shops.pending(pending, lobby)}</p>
       )}
     </div>
   );

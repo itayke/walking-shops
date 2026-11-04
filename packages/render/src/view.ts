@@ -1,4 +1,5 @@
 import { isPhase2, scoreText, type Dir, type GameState, type Shop, type SimEvent } from '@walking-shops/sim';
+import { COPY } from './copy.ts';
 import { floorsNeeded } from './layout.ts';
 import { climbEase } from './legs.ts';
 import { FX_LOOK, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
@@ -56,12 +57,12 @@ export type Effect =
   | { kind: 'buyer'; x: number; y: number; who: number; para: boolean; age: number }
   | { kind: 'banner'; banner: Banner; age: number };
 
-export const CALLOUT_TEXT = { topple: 'TOPPLE!', pushback: 'BLOCKED', closed: 'CLOSED' };
+export const CALLOUT_TEXT = { topple: COPY.street.topple, pushback: COPY.street.blocked, closed: COPY.street.closed };
 // Titles across the street: the countdown into a round, and phase 2
 export const BANNERS = {
-  ready: { text: 'READY?', time: FX_LOOK.readyTime },
-  go: { text: 'GO!', time: FX_LOOK.goTime },
-  phase2: { text: 'PARACHUTES!', time: FX_LOOK.bannerTime },
+  ready: { text: COPY.street.ready, time: FX_LOOK.readyTime },
+  go: { text: COPY.street.go, time: FX_LOOK.goTime },
+  phase2: { text: COPY.street.parachutes, time: FX_LOOK.bannerTime },
 };
 export type Banner = keyof typeof BANNERS;
 

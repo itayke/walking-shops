@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { COPY } from '@walking-shops/render/copy.ts';
 import { encode } from 'uqr';
 import { joinUrl } from '../net/room.ts';
 import { PixelText } from './PixelText.tsx';
@@ -43,15 +44,15 @@ export function Lobby({ room, onBegin }: { room: string; onBegin: () => void }) 
           <Qr text={url} qr={qr} />
           <p className="join-url">{url.replace(/^https?:\/\//, '')}</p>
           <button type="button" className="pill-button" onClick={onBegin}>
-            Begin <kbd>Enter</kbd>
+            {COPY.lobby.begin} <kbd>Enter</kbd>
           </button>
         </div>
       </div>
       <header className="masthead">
         <h1 className="title">
-          <PixelText text="Shop Shuffle" />
+          <PixelText text={COPY.game} />
         </h1>
-        <PixelText className="tagline" text="Get your business moving" />
+        <PixelText className="tagline" text={COPY.lobby.tagline} />
       </header>
       {/* Where the shop list sits, kept as wide as the join card's side so the title stays centered */}
       <div className="lobby-side" />

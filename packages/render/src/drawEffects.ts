@@ -43,11 +43,15 @@ function outlined(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.restore();
 }
 
-/** A banner centered on device (x, y) in title type, set at the size where `sizer` spans `width` device pixels, with a rounded outline. */
-function title(ctx: CanvasRenderingContext2D, text: string, sizer: string, x: number, y: number, width: number, w: Washed): void {
+/**
+ * A banner centered on device (x, y) in title type, with a rounded outline. Every banner is set at one size, the one
+ * where the widest of them spans `width` device pixels, so the countdown and phase 2 read as a set whatever their words.
+ */
+function title(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, w: Washed): void {
   const { bannerFont, bannerGrid } = FX_LOOK;
   ctx.font = font(MEASURE_PX, bannerFont);
-  const px = crispPx((MEASURE_PX * width) / ctx.measureText(sizer).width, Math.floor, bannerGrid);
+  const widest = Math.max(...Object.values(BANNERS).map((b) => ctx.measureText(b.text).width));
+  const px = crispPx((MEASURE_PX * width) / widest, Math.floor, bannerGrid);
   const m = ctx.measureText(text);
   // Centered on its capitals
   const mid = ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 / MEASURE_PX) * px;
@@ -103,7 +107,7 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
         // Washes in and out through the same keyframes
         const w = washOut(BANNER_COLORS[e.banner], washStep(Math.min(u, 1 - u), look.bannerFade));
         const [x, y] = device(L, L.gridW / 2, L.top / 2);
-        title(ctx, BANNERS[e.banner].text, BANNERS.phase2.text, x, y, L.gridW * look.bannerWidth * L.P, w);
+        title(ctx, BANNERS[e.banner].text, x, y, L.gridW * look.bannerWidth * L.P, w);
         break;
       }
       case 'leaver':

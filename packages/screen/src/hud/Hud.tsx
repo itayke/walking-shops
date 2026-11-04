@@ -1,6 +1,7 @@
 import type { Seat } from '@walking-shops/net';
 import { isPhase2, scoreText, type GameState, type Shop } from '@walking-shops/sim';
 import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
+import { COPY } from '@walking-shops/render/copy.ts';
 import { lookOf } from '@walking-shops/render/shopArt.ts';
 import { PixelText } from './PixelText.tsx';
 
@@ -42,10 +43,8 @@ function Join({ room, round }: { room: RoomStatus; round: boolean }) {
   return (
     <span className="join" title={room.online ? 'Connected to the relay' : 'Relay unreachable: keyboard and bots only'}>
       <i className={room.online ? 'dot on' : 'dot'} />
-      <span className="phones">
-        {phones} {phones === 1 ? 'phone' : 'phones'}
-      </span>
-      {room.fallback && round && shops > 0 && <span className="fallback">bots playing</span>}
+      <span className="phones">{COPY.hud.phones(phones)}</span>
+      {room.fallback && round && shops > 0 && <span className="fallback">{COPY.hud.botsPlaying}</span>}
     </span>
   );
 }
@@ -57,9 +56,10 @@ export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomSt
   // The lobby's clock isn't the round's
   const t = g.lobby ? 0 : g.t;
   const mine = g.shops.find((s) => s.id === you);
+  const { phase, keys } = COPY.hud;
   return (
     <header className="hud">
-      <span className={phase2 ? 'phase phase2' : 'phase'}>{g.lobby ? 'Lobby' : g.over ? 'Results' : phase2 ? 'Parachutes' : 'Walk-ins'}</span>
+      <span className={phase2 ? 'phase phase2' : 'phase'}>{g.lobby ? phase.lobby : g.over ? phase.results : phase2 ? phase.parachutes : phase.walkIns}</span>
       <span className="timer">{clock(ROUND.roundTime - t)}</span>
       <div className="progress">
         <i style={{ width: `${Math.min(PERCENT, (PERCENT * t) / ROUND.roundTime)}%` }} />
@@ -74,10 +74,11 @@ export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomSt
       <span className="hint">
         {you && (
           <>
-            <kbd>A</kbd> <kbd>D</kbd> walk ·{' '}
+            <kbd>A</kbd> <kbd>D</kbd> {keys.walk} ·{' '}
           </>
         )}
-        <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>S</kbd> skip · <kbd>N</kbd> restart · <kbd>F</kbd> bots · <kbd>B</kbd> shops · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
+        <kbd>Enter</kbd> {keys.begin} · <kbd>Space</kbd> {keys.pause} · <kbd>S</kbd> {keys.skip} · <kbd>N</kbd> {keys.restart} · <kbd>F</kbd> {keys.bots} ·{' '}
+        <kbd>B</kbd> {keys.shops} · <kbd>T</kbd> {keys.tuning} · <kbd>R</kbd> {keys.lobby}
       </span>
     </header>
   );
@@ -91,7 +92,7 @@ export function Results({ g, you, onReplay }: { g: GameState; you?: string; onRe
   return (
     <div className="overlay dim results">
       <h2 className="banner winner" style={best ? { color: shopTint(shopHue(lookOf(best.s, best.index).hue)).base } : undefined}>
-        <PixelText text={best ? `${best.s.label} wins!` : 'Round over'} />
+        <PixelText text={best ? COPY.results.wins(best.s.label) : COPY.results.noWinner} />
       </h2>
       <div className="card">
         <table>
@@ -109,12 +110,10 @@ export function Results({ g, you, onReplay }: { g: GameState; you?: string; onRe
           </tbody>
         </table>
         {myRank >= RESULTS_SHOWN && (
-          <p>
-            You: #{myRank + 1} with {scoreText(rows[myRank].s.income)}
-          </p>
+          <p>{COPY.results.you(myRank + 1, scoreText(rows[myRank].s.income))}</p>
         )}
         <button type="button" className="pill-button" onClick={onReplay}>
-          Play again <kbd>R</kbd>
+          {COPY.results.again} <kbd>R</kbd>
         </button>
       </div>
     </div>
@@ -125,7 +124,7 @@ export function Paused() {
   return (
     <div className="overlay">
       <h2 className="banner">
-        <PixelText text="Paused" />
+        <PixelText text={COPY.paused} />
       </h2>
     </div>
   );

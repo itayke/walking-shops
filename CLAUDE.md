@@ -11,7 +11,7 @@ A Jackbox-style room game: 10–30 people join from their phones, their business
 
 ## Layout and commands
 
-- `packages/sim` (pure sim, config in `src/config.ts`), `packages/render` (the street renderer and shop art, shared by the screen and the phone; visual-only constants in `src/look.ts`), `packages/screen`, `packages/phone`, `packages/net` (protocol, the screen's `Host`, client, load test), `packages/server` (the relay). See `README.md` for commands and keys.
+- `packages/sim` (pure sim, config in `src/config.ts`), `packages/render` (the street renderer and shop art, shared by the screen and the phone; visual-only constants in `src/look.ts`, every on-screen text in `src/copy.ts`), `packages/screen`, `packages/phone`, `packages/net` (protocol, the screen's `Host`, client, load test), `packages/server` (the relay). See `README.md` for commands and keys.
 - `npm test`, `npm run typecheck`, `npm run bench` (add `:compare` to run the prototype alongside).
 - Config sections are rewritten line by line by the screen's save plugin: one `key: value,` per line, keys unique across sections.
 

@@ -1,4 +1,5 @@
 import { cleanName, NET } from '@walking-shops/net';
+import { COPY } from '@walking-shops/render/copy.ts';
 import { DESIGN_COUNT } from '@walking-shops/render/shopArt.ts';
 import { nameFits } from '@walking-shops/render/signs.ts';
 import type { Look } from '@walking-shops/sim';
@@ -6,7 +7,7 @@ import { useRef, type FormEvent } from 'react';
 import { Preview } from './Preview.tsx';
 
 // Shown on the field and, faded, on the sign until a name is typed; the shop can't open without one
-const PLACEHOLDER = 'Shop name';
+const PLACEHOLDER = COPY.phone.namePlaceholder;
 const REJECT_BUZZ_MS = 30;
 
 const wrap = (design: number) => (design + DESIGN_COUNT) % DESIGN_COUNT;
@@ -66,11 +67,11 @@ export function Setup({ draft, hue, editing, onChange, onSubmit, onCancel }: {
         aria-label="Your shop's name"
       />
       <button type="submit" className="go" disabled={!name}>
-        {editing ? 'Save' : 'Open my shop'}
+        {editing ? COPY.phone.save : COPY.phone.open}
       </button>
       {editing && (
         <button type="button" className="cancel" onClick={onCancel}>
-          Cancel
+          {COPY.phone.cancel}
         </button>
       )}
     </form>

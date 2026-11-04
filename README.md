@@ -9,7 +9,7 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 | Path | What |
 |---|---|
 | `packages/sim` | The game simulation: pure, deterministic TypeScript. All tunables in `src/config.ts` |
-| `packages/render` | The Canvas 2D street renderer and shop art, shared by the screen and the phone's shop preview. Visual-only constants in `src/look.ts` |
+| `packages/render` | The Canvas 2D street renderer and shop art, shared by the screen and the phone's shop preview. Visual-only constants in `src/look.ts`; every text the screen and the phone show in `src/copy.ts` |
 | `packages/screen` | Big-screen app (Vite + React). Hosts the room: runs the game and draws the street; phones open their shops in the lobby, and `?screenShop` adds one played from the keyboard |
 | `packages/phone` | Phone controller (Vite + React): your shop with its money and place on top, over two tap-to-step, hold-to-walk halves in its tint |
 | `packages/net` | Shared networking: message protocol, the screen's `Host` (seats phones in shops), the PartySocket client, the load test and bot phones |
