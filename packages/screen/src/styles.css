@@ -363,9 +363,10 @@ tr.closed td {
   font-size: calc(var(--title-pixel) * var(--title-grid));
   line-height: 1;
   color: var(--accent);
-  /* Drawn hard-edged (PixelText), with a pixel outline */
+  /* Drawn hard-edged (PixelText), with a smooth round outline like the street banners' */
   --pixel-outline: calc(var(--title-pixel) * var(--title-outline));
   --pixel-outline-color: #17202b;
+  --pixel-outline-join: round;
 }
 
 .lobby .title canvas {

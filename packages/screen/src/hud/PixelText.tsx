@@ -5,6 +5,7 @@ const INK_ALPHA = 128;
 const RGBA = 4;
 const ALPHA = 3;
 const OPAQUE = 255;
+const ROUND = 'round';
 
 // Reads a CSS color as bytes, by painting one pixel
 const swatch = new OffscreenCanvas(1, 1).getContext('2d', { willReadFrequently: true })!;
@@ -52,7 +53,8 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, max: number): string[
 
 /**
  * Type drawn hard-edged, like the shop names: every pixel solid or clear. Takes its font, size, spacing, line height,
- * alignment, case and color from its CSS, plus an optional outline (--pixel-outline wide, in --pixel-outline-color).
+ * alignment, case and color from its CSS, plus an optional outline (--pixel-outline wide, in --pixel-outline-color): a
+ * square pixel ring, or a smooth round stroke like the street's banners with --pixel-outline-join: round.
  * Wraps to its parent's width and is trimmed to its ink and outline, so its margins are the visible gaps. Redraws when
  * the font loads or the parent resizes.
  */
@@ -89,15 +91,34 @@ export function PixelText({ text, className }: { text: string; className?: strin
       cv.style.height = `${h / ratio}px`;
       setFont();
       const centered = css.textAlign === 'center';
-      lines.forEach((ln, i) => ctx.fillText(ln, pad + (centered ? Math.round((textW - metrics[i].width) / 2) : 0), pad + top + Math.round(i * lineH)));
-      // Every pixel the smooth text covers enough is ink, then the outline grows around the ink
-      const img = ctx.getImageData(0, 0, w, h);
-      const d = img.data;
+      const at = (i: number): [number, number] => [pad + (centered ? Math.round((textW - metrics[i].width) / 2) : 0), pad + top + Math.round(i * lineH)];
+      lines.forEach((ln, i) => ctx.fillText(ln, ...at(i)));
+      // Every pixel the smooth text covers enough is ink
+      let img = ctx.getImageData(0, 0, w, h);
       const ink = new Uint8Array(w * h);
-      for (let i = 0; i < ink.length; i++) ink[i] = d[i * RGBA + ALPHA] >= INK_ALPHA ? 1 : 0;
-      const ring = pad > 0 ? grow(ink, w, h, pad) : ink;
+      for (let i = 0; i < ink.length; i++) ink[i] = img.data[i * RGBA + ALPHA] >= INK_ALPHA ? 1 : 0;
       const fill = rgba(css.color);
-      const edge = rgba(css.getPropertyValue('--pixel-outline-color') || css.color);
+      const edgeColor = css.getPropertyValue('--pixel-outline-color').trim() || css.color;
+      const edge = rgba(edgeColor);
+      if (pad > 0 && css.getPropertyValue('--pixel-outline-join').trim() === ROUND) {
+        // A smooth stroke with round corners, as the street's banners have, reaching as far out as the square ring; the ink stays hard-edged on top
+        ctx.clearRect(0, 0, w, h);
+        ctx.lineJoin = ROUND;
+        ctx.lineWidth = 2 * pad;
+        ctx.strokeStyle = edgeColor;
+        lines.forEach((ln, i) => ctx.strokeText(ln, ...at(i)));
+        img = ctx.getImageData(0, 0, w, h);
+        for (let i = 0; i < ink.length; i++) {
+          if (!ink[i]) continue;
+          for (let k = 0; k < ALPHA; k++) img.data[i * RGBA + k] = fill[k];
+          img.data[i * RGBA + ALPHA] = OPAQUE;
+        }
+        ctx.putImageData(img, 0, 0);
+        return;
+      }
+      // Otherwise a square pixel ring grows around the ink
+      const d = img.data;
+      const ring = pad > 0 ? grow(ink, w, h, pad) : ink;
       for (let i = 0; i < ink.length; i++) {
         const c = ink[i] ? fill : ring[i] ? edge : null;
         for (let k = 0; k < ALPHA; k++) d[i * RGBA + k] = c ? c[k] : 0;
