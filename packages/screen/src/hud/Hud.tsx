@@ -39,8 +39,8 @@ function Join({ room }: { room: RoomStatus }) {
   );
 }
 
-/** Phase, clock, round progress with the phase 2 mark, connected phones, and your score. */
-export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomStatus }) {
+/** Phase, clock, round progress with the phase 2 mark, connected phones, and the screen shop's score if there is one. */
+export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomStatus }) {
   const { ROUND } = g.config;
   const phase2 = isPhase2(g);
   // The lobby's clock isn't the round's
@@ -61,14 +61,19 @@ export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomSta
         </span>
       )}
       <span className="hint">
-        <kbd>A</kbd> <kbd>D</kbd> walk · <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>B</kbd> board · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
+        {you && (
+          <>
+            <kbd>A</kbd> <kbd>D</kbd> walk ·{' '}
+          </>
+        )}
+        <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>B</kbd> board · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
       </span>
     </header>
   );
 }
 
 /** Every shop's earnings, live. A debugging aid; the stage show uses the results card. */
-export function Board({ g, you }: { g: GameState; you: string }) {
+export function Board({ g, you }: { g: GameState; you?: string }) {
   return (
     <div className="board">
       <table>
@@ -100,7 +105,7 @@ export function Board({ g, you }: { g: GameState; you: string }) {
   );
 }
 
-export function Results({ g, you }: { g: GameState; you: string }) {
+export function Results({ g, you }: { g: GameState; you?: string }) {
   const rows = ranked(g);
   const myRank = rows.findIndex((r) => r.s.id === you);
   const [best] = rows;

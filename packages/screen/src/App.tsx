@@ -1,4 +1,4 @@
-import { Host, NET, randomId, type ScreenMsg } from '@walking-shops/net';
+import { cleanName, Host, NET, randomId, type ScreenMsg } from '@walking-shops/net';
 import { connectScreen, type Link } from '@walking-shops/net/client';
 import { CONFIG, step, TICK, type GameState, type PlayerSpec } from '@walking-shops/sim';
 import { useEffect, useRef, useState } from 'react';
@@ -29,8 +29,14 @@ const params = new URLSearchParams(location.search);
 const SEED_PARAM = params.get('seed');
 const START_AT = Number(params.get('at') ?? 0);
 
-// The keyboard always plays one shop; phones open theirs in the lobby, and bots fill the rest when the round begins
-const YOU: PlayerSpec = { id: 'you', label: 'YOU', controller: 'human' };
+// Phones open their shops in the lobby, and bots fill the rest when the round begins. ?screenShop=NAME also seats a
+// shop played from the screen's keyboard under that name (?screenShop alone gives it the default name)
+const SCREEN_SHOP_PARAM = params.get('screenShop');
+const SCREEN_SHOP_NAME = 'YOU';
+const SCREEN_SHOP: PlayerSpec | null =
+  SCREEN_SHOP_PARAM === null
+    ? null
+    : { id: 'screen', label: cleanName(SCREEN_SHOP_PARAM).slice(0, NET.nameMax) || SCREEN_SHOP_NAME, controller: 'human' };
 
 const seed = () => (SEED_PARAM === null ? Math.floor(Math.random() * SEED_RANGE) : Number(SEED_PARAM));
 
@@ -59,7 +65,7 @@ export function App() {
   // Phones get their shop's tint as a plain color, the same one the street draws it in
   host.current ??= new Host({
     config: CONFIG,
-    local: [YOU],
+    local: SCREEN_SHOP ? [SCREEN_SHOP] : [],
     seed,
     looks: { designs: DESIGN_COUNT, hues: HUES.length },
     tint: (look) => shopTint(shopHue(look.hue)).base,
@@ -169,7 +175,10 @@ export function App() {
         } else if (!g.over) {
           acc += dt;
           for (let n = 0; acc >= TICK && n < MAX_TICKS_PER_FRAME; n++) {
-            view.onEvents(g, step(g, { ...host.current.inputs(), [YOU.id]: keyboard.dir() }, TICK));
+            const inputs = host.current.inputs();
+            const dir = keyboard.dir();
+            if (SCREEN_SHOP) inputs[SCREEN_SHOP.id] = dir;
+            view.onEvents(g, step(g, inputs, TICK));
             acc -= TICK;
           }
           acc = Math.min(acc, TICK);
@@ -207,12 +216,12 @@ export function App() {
   const g = host.current.game;
   return (
     <div className="screen">
-      <Hud g={g} you={YOU.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats }} />
+      <Hud g={g} you={SCREEN_SHOP?.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats }} />
       <div className="stage">
         <canvas ref={canvasRef} />
         {g.lobby && <Lobby g={g} room={net.current.room.code} onBegin={() => begin.current()} />}
-        {board && <Board g={g} you={YOU.id} />}
-        {g.over ? <Results g={g} you={YOU.id} /> : paused.current && <Paused />}
+        {board && <Board g={g} you={SCREEN_SHOP?.id} />}
+        {g.over ? <Results g={g} you={SCREEN_SHOP?.id} /> : paused.current && <Paused />}
       </div>
     </div>
   );

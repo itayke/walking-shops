@@ -10,7 +10,7 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 |---|---|
 | `packages/sim` | The game simulation: pure, deterministic TypeScript. All tunables in `src/config.ts` |
 | `packages/render` | The Canvas 2D street renderer and shop art, shared by the screen and the phone's shop preview. Visual-only constants in `src/look.ts` |
-| `packages/screen` | Big-screen app (Vite + React). Hosts the room: runs the game and draws the street; you play one shop from the keyboard, phones open theirs in the lobby |
+| `packages/screen` | Big-screen app (Vite + React). Hosts the room: runs the game and draws the street; phones open their shops in the lobby, and `?screenShop` adds one played from the keyboard |
 | `packages/phone` | Phone controller (Vite + React): two tap-to-step, hold-to-walk halves in your shop's tint |
 | `packages/net` | Shared networking: message protocol, the screen's `Host` (seats phones in shops), the PartySocket client, the load test |
 | `packages/server` | The relay: a PartyServer Durable Object on Cloudflare, one per room. Checks and forwards; the screen is the authority |
@@ -41,7 +41,7 @@ Run `npm run dev` (or `dev:server`, `dev:screen` and `dev:phone` separately), th
 
 The screen keeps its room across reloads (`?room=CODE` picks one). Over plain http on the LAN, phones can't keep the screen awake (Wake Lock needs https); the deployed version can.
 
-Without the relay, the screen still plays offline: keyboard and bots.
+Without the relay, the screen still plays offline: bots, plus a keyboard shop with `?screenShop`.
 
 ## Deploying
 
@@ -51,14 +51,14 @@ Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:
 
 | Key | Does |
 |---|---|
-| `A` / `D` or `←` / `→` | Tap to step your shop (the one signed YOU) one column, hold to keep walking or to push |
+| `A` / `D` or `←` / `→` | Tap to step the screen shop (with `?screenShop`) one column, hold to keep walking or to push |
 | `Space` | Pause |
 | `B` | Scoreboard |
 | `Enter` | Begin the round (in the lobby) |
 | `T` | Tuning panel (its New street button lays the street out again) |
 | `R` | Back to the lobby: the bots leave, everyone else stays put |
 
-URL parameters for debugging: `?seed=N` replays the same round, `?at=S` skips the lobby and fast-forwards the first round to S seconds (for example `http://localhost:7320/?seed=7&at=70`).
+URL parameters: `?screenShop=NAME` seats a shop played from the screen's keyboard under that name (`?screenShop` alone names it YOU; without it there is none), `?seed=N` replays the same round, `?at=S` skips the lobby and fast-forwards the first round to S seconds (for example `http://localhost:7320/?seed=7&at=70`).
 
 ## Tuning
 
