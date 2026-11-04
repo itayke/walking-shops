@@ -24,18 +24,28 @@ export interface RoomStatus {
   // Connected to the relay
   online: boolean;
   phones: ReadonlyMap<string, Seat>;
+  // Bots are playing the phones' shops
+  fallback: boolean;
 }
 
-/** How many phones are connected, and whether the relay is reachable. The lobby shows where to join. */
-function Join({ room }: { room: RoomStatus }) {
+/**
+ * How many phones are connected, whether the relay is reachable, and whether bots have the phones' shops. The lobby
+ * shows where to join.
+ */
+function Join({ room, round }: { room: RoomStatus; round: boolean }) {
   let phones = 0;
-  for (const s of room.phones.values()) if (s.online) phones++;
+  let shops = 0;
+  for (const s of room.phones.values()) {
+    if (s.online) phones++;
+    if (s.shop !== null) shops++;
+  }
   return (
     <span className="join" title={room.online ? 'Connected to the relay' : 'Relay unreachable: keyboard and bots only'}>
       <i className={room.online ? 'dot on' : 'dot'} />
       <span className="phones">
         {phones} {phones === 1 ? 'phone' : 'phones'}
       </span>
+      {room.fallback && round && shops > 0 && <span className="fallback">bots playing</span>}
     </span>
   );
 }
@@ -55,7 +65,7 @@ export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomSt
         <i style={{ width: `${Math.min(PERCENT, (PERCENT * t) / ROUND.roundTime)}%` }} />
         <b style={{ left: `${Math.min(PERCENT, (PERCENT * ROUND.paraStart) / ROUND.roundTime)}%` }} />
       </div>
-      <Join room={room} />
+      <Join room={room} round={!g.lobby && !g.over} />
       {mine && (
         <span className="you">
           {mine.label} <strong>{scoreText(mine.income)}</strong>
@@ -67,7 +77,7 @@ export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomSt
             <kbd>A</kbd> <kbd>D</kbd> walk ·{' '}
           </>
         )}
-        <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>B</kbd> shops · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
+        <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>S</kbd> skip · <kbd>N</kbd> restart · <kbd>F</kbd> bots · <kbd>B</kbd> shops · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
       </span>
     </header>
   );

@@ -25,6 +25,10 @@ const SEED_RANGE = 2 ** 32;
 const PAUSE_KEY = ' ';
 const SHOPS_KEY = 'b';
 const BEGIN_KEY = 'enter';
+// The presenter's controls mid-round: skip to the next phase, restart the round, bots take the phones' shops
+const SKIP_KEY = 's';
+const RESTART_KEY = 'n';
+const FALLBACK_KEY = 'f';
 // URL parameters for debugging: ?seed=N replays a round, ?at=S skips the lobby and fast-forwards the round to S seconds
 const params = new URLSearchParams(location.search);
 const SEED_PARAM = params.get('seed');
@@ -142,6 +146,21 @@ export function App() {
       refresh();
     };
     replay.current = lobby;
+    const restart = () => {
+      if (host.current.game.lobby) return;
+      host.current.restart();
+      view.countdown();
+      refresh();
+    };
+    const skip = () => {
+      const g = host.current.game;
+      if (g.lobby || g.over || view.holding) return;
+      host.current.skip();
+      setHudTick((t) => t + 1);
+    };
+    // Bots take the phones' shops while the presenter asks, or once the relay has been out of reach a while
+    let manualFallback = false;
+    let offlineSince: number | null = null;
     const newStreet = () => {
       view.reset(host.current.reset());
       refresh();
@@ -161,6 +180,12 @@ export function App() {
         setShops((v) => ({ ...v, [phase]: !v[phase] }));
       }
       if (key === BEGIN_KEY) begin.current();
+      if (key === SKIP_KEY) skip();
+      if (key === RESTART_KEY) restart();
+      if (key === FALLBACK_KEY) {
+        manualFallback = !manualFallback;
+        setHudTick((t) => t + 1);
+      }
     };
     window.addEventListener('keydown', onKey);
 
@@ -175,6 +200,9 @@ export function App() {
       const dt = Math.min(MAX_FRAME_SECONDS, (now - last) / MS_PER_SECOND);
       last = now;
       const g = host.current.game;
+      if (net.current.online) offlineSince = null;
+      else offlineSince ??= now;
+      host.current.setFallback(manualFallback || (offlineSince !== null && now - offlineSince >= NET.fallbackAfter * MS_PER_SECOND));
       if (!paused.current) {
         if (view.holding) {
           // Taps during the countdown are dropped, so play starts on what's held at GO!
@@ -224,7 +252,7 @@ export function App() {
   const g = host.current.game;
   return (
     <div className="screen">
-      <Hud g={g} you={SCREEN_SHOP?.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats }} />
+      <Hud g={g} you={SCREEN_SHOP?.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats, fallback: host.current.fallback }} />
       <div className="stage">
         <canvas ref={canvasRef} />
         {g.lobby && <Lobby room={net.current.room.code} onBegin={() => begin.current()} />}

@@ -11,6 +11,8 @@ export const NET = {
   // Longest shop name the relay passes on, in characters; the sign is what really limits a name
   nameMax: 40,
   roomCodeLength: 4,
+  // Seconds the screen can be cut off from the relay mid-round before bots take over the phones' shops
+  fallbackAfter: 5,
 };
 
 // Local dev ports (Vite defaults are taken on this host). The relay's port is also set in packages/server/wrangler.jsonc

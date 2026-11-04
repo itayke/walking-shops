@@ -53,6 +53,15 @@ export function beginRound(g: GameState, bots: readonly PlayerSpec[]): void {
   for (const s of g.shops) resetRound(s);
 }
 
+/**
+ * The presenter skips ahead: the round clock jumps forward to `t`. Whatever the clock times (the waves, phase 2, the
+ * round's end) catches up on the next tick; shops, shoppers and scores stay as they are.
+ */
+export function skipTo(g: GameState, t: number): void {
+  if (g.lobby || g.over || t <= g.t) return;
+  g.t = t;
+}
+
 /** Back to the lobby after a round: the bots leave, everyone else keeps their place and starts from zero. */
 export function toLobby(g: GameState): void {
   for (const s of g.shops.filter((x) => x.controller !== 'human')) removeShop(g, s.id);

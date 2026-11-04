@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addShop, beginRound, botPlayers, checkInvariants, columnCount, createLobby, makeConfig, removeShop, toLobby, type ConfigOverrides, type GameState, type PlayerSpec } from '../src/index.ts';
+import { addShop, beginRound, botPlayers, checkInvariants, columnCount, createLobby, makeConfig, isPhase2, removeShop, skipTo, toLobby, type ConfigOverrides, type GameState, type PlayerSpec } from '../src/index.ts';
 import { column, ofType, run, shop } from './helpers.ts';
 
 const human = (id: string): PlayerSpec => ({ id, label: id, controller: 'human' });
@@ -139,6 +139,33 @@ describe('beginning a round', () => {
     expect(shop(g, 'A').income).toBe(0);
     // Levels can drop where a bot was underneath
     expect(['A', 'B'].map((id) => shop(g, id).col)).toEqual(places.map(([c]) => c));
+  });
+
+  it('skips ahead: phase 2 starts, then the round ends, with shops and scores kept and every shop indexed', () => {
+    const g = lobby(['A', 'B']);
+    beginRound(g, botPlayers(g.config.BOT_MIX));
+    run(g, 5);
+    const { paraStart, roundTime } = g.config.ROUND;
+    shop(g, 'A').income = 3;
+    skipTo(g, paraStart);
+    run(g, 1);
+    expect(isPhase2(g)).toBe(true);
+    expect(shop(g, 'A').income).toBeGreaterThanOrEqual(3);
+    skipTo(g, roundTime);
+    run(g, 1);
+    expect(g.over).toBe(true);
+  });
+
+  it("doesn't skip in the lobby or back in time", () => {
+    const g = lobby(['A']);
+    skipTo(g, 30);
+    expect(g.lobby).toBe(true);
+    expect(g.t).toBeLessThan(30);
+    beginRound(g, []);
+    run(g, 2);
+    const t = g.t;
+    skipTo(g, 1);
+    expect(g.t).toBe(t);
   });
 
   it('is deterministic for a seed', () => {

@@ -56,6 +56,9 @@ Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:
 | `Space` | Pause |
 | `B` | Show or hide the shop list: open in the lobby, the live ranking (hidden at first) in the round |
 | `Enter` | Begin the round (in the lobby) |
+| `S` | Skip ahead: from the walk-ins to the parachutes, from the parachutes to the results |
+| `N` | Restart: a fresh round straight away, shops where they stand, bots filled in again |
+| `F` | Bots play the phones' shops for the round, or hand them back (also on its own when the relay is out of reach) |
 | `T` | Show or hide the tuning panel, hidden at first (its New street button lays the street out again) |
 | `R` | Back to the lobby (or Play again on the results): the bots leave, everyone else stays put |
 

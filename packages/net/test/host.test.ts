@@ -1,4 +1,4 @@
-import { makeConfig, step, TICK, type PlayerSpec } from '@walking-shops/sim';
+import { isPhase2, makeConfig, step, TICK, type PlayerSpec } from '@walking-shops/sim';
 import { describe, expect, it } from 'vitest';
 import { cleanName, Host, Latch, NET, parsePhoneMsg, parseToScreen, type ScreenMsg } from '../src/index.ts';
 
@@ -236,6 +236,54 @@ describe('host', () => {
     h.receive({ t: 'roster', phones: [OTHER] });
     expect(h.seats.get(PHONE)!.online).toBe(false);
     expect(h.seats.get(OTHER)!.online).toBe(true);
+  });
+
+  it('skips from the walk-ins to the parachutes, then to the results', () => {
+    const { h } = host();
+    h.begin();
+    step(h.game, h.inputs(), TICK);
+    h.skip();
+    step(h.game, h.inputs(), TICK);
+    expect(isPhase2(h.game)).toBe(true);
+    expect(h.game.over).toBe(false);
+    h.skip();
+    step(h.game, h.inputs(), TICK);
+    expect(h.game.over).toBe(true);
+  });
+
+  it('restarts the round straight away with the same shops, phones that waited included, and bots filled in', () => {
+    const { h } = host();
+    open(h, PHONE);
+    h.begin();
+    open(h, OTHER);
+    for (let i = 0; i < 100; i++) step(h.game, h.inputs(), TICK);
+    h.restart();
+    expect(h.game.lobby).toBe(false);
+    expect(h.game.t).toBe(0);
+    expect(shopOf(h, PHONE)).toBeDefined();
+    expect(shopOf(h, OTHER)).toBeDefined();
+    expect(h.game.N).toBe(h.game.config.ROUND.minPlayers);
+  });
+
+  it("hands the phones' shops to bots for the round and back, and keeps them through the next lobby", () => {
+    const { h } = host();
+    open(h, PHONE);
+    open(h, OTHER);
+    h.begin();
+    h.setFallback(true);
+    expect([shopOf(h, PHONE)!.controller, shopOf(h, OTHER)!.controller]).not.toContain('human');
+    expect(h.game.shops.find((s) => s.id === 'you')!.controller).toBe('human');
+    for (let i = 0; i < 100; i++) step(h.game, h.inputs(), TICK);
+    h.setFallback(false);
+    expect(shopOf(h, PHONE)!.controller).toBe('human');
+    h.setFallback(true);
+    h.replay();
+    // Back in the lobby the phones play again, and their shops weren't cleared out with the bots
+    expect(shopOf(h, PHONE)!.controller).toBe('human');
+    expect(shopOf(h, OTHER)).toBeDefined();
+    // Still on: the next round hands them to bots again
+    h.begin();
+    expect(shopOf(h, PHONE)!.controller).not.toBe('human');
   });
 
   it('plays a round driven by phone input', () => {

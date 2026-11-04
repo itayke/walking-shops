@@ -20,8 +20,10 @@ export const PALETTE = {
   zebra: '#eeeae0',
   ink: '#1c1a26',
   glass: '#8ccfe5',
-  glassHi: '#e6f7fc',
   glassLo: '#5b98b0',
+  // Lamp-lit glass: a warm interior
+  lamp: '#ffd98a',
+  lampLo: '#e3a94f',
   cream: '#f5ebd5',
   creamLo: '#d6c6a2',
   wood: '#94603f',

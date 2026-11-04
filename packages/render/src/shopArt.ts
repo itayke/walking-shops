@@ -12,21 +12,27 @@ interface Design {
   wall: 'plain' | 'siding' | 'brick' | 'checker' | 'pilasters' | 'dots' | 'planks';
   // Where the door goes: right of the window, left of it, between two windows, or none (a serving hatch)
   front: 'right' | 'left' | 'center' | 'counter';
-  window: 'crates' | 'cup' | 'loaves' | 'books' | 'flowers' | 'pole' | 'burger' | 'dresses' | 'cones' | 'records';
+  window: 'crates' | 'bar' | 'loaves' | 'books' | 'flowers' | 'pole' | 'burger' | 'dresses' | 'cones' | 'records';
+  // What shows behind the glass and the frame round it (clear glass in a cream frame unless set), mullions
+  // splitting it into panes, and a rounded top
+  glass?: Swatch;
+  frame?: Swatch;
+  panes?: number;
+  arch?: boolean;
 }
 
 // The pool of shop designs: a few parts each, colored by the shop's tint. New designs go on the end, so a shop keeps its look
 const DESIGNS: readonly Design[] = [
-  { awning: 'stripes', aw: ['lo', 'cream'], wall: 'plain', front: 'left', window: 'crates' },
-  { awning: 'fringe', aw: ['lo', 'cream'], wall: 'siding', front: 'right', window: 'cup' },
-  { awning: 'cornice', aw: ['lo', 'cream'], wall: 'brick', front: 'right', window: 'loaves' },
-  { awning: 'stripes', aw: ['hi', 'lo'], wall: 'plain', front: 'left', window: 'books' },
-  { awning: 'stripes', aw: ['hi', 'cream'], wall: 'siding', front: 'right', window: 'flowers' },
-  { awning: 'fringe', aw: ['hi', 'white'], wall: 'brick', front: 'right', window: 'pole' },
+  { awning: 'stripes', aw: ['lo', 'cream'], wall: 'plain', front: 'left', window: 'crates', glass: 'woodLo', frame: 'wood' },
+  { awning: 'fringe', aw: ['lo', 'cream'], wall: 'siding', front: 'right', window: 'bar', glass: 'lamp', frame: 'wood' },
+  { awning: 'cornice', aw: ['lo', 'cream'], wall: 'brick', front: 'right', window: 'loaves', glass: 'lamp', frame: 'wood' },
+  { awning: 'stripes', aw: ['hi', 'lo'], wall: 'plain', front: 'left', window: 'books', glass: 'woodLo' },
+  { awning: 'stripes', aw: ['hi', 'cream'], wall: 'siding', front: 'right', window: 'flowers', glass: 'leafLo' },
+  { awning: 'fringe', aw: ['hi', 'white'], wall: 'brick', front: 'right', window: 'pole', panes: 3 },
   { awning: 'flap', aw: ['wood', 'woodLo'], wall: 'checker', front: 'counter', window: 'burger' },
-  { awning: 'scallop', aw: ['white', 'lo'], wall: 'pilasters', front: 'left', window: 'dresses' },
-  { awning: 'drip', aw: ['hi', 'white'], wall: 'dots', front: 'center', window: 'cones' },
-  { awning: 'marquee', aw: ['yellow', 'woodLo'], wall: 'planks', front: 'right', window: 'records' },
+  { awning: 'scallop', aw: ['white', 'lo'], wall: 'pilasters', front: 'left', window: 'dresses', arch: true },
+  { awning: 'drip', aw: ['hi', 'white'], wall: 'dots', front: 'center', window: 'cones', arch: true },
+  { awning: 'marquee', aw: ['yellow', 'woodLo'], wall: 'planks', front: 'right', window: 'records', glass: 'lo' },
 ];
 
 /** How many shop types there are to pick from. */
@@ -53,22 +59,23 @@ const STEAM_FRAMES = 2;
 // The glint goes round each record in this many steps; every this many marquee bulbs, one is lit
 const RECORD_FRAMES = 4;
 const BULB_FRAMES = 3;
-// Window goods: rows each kind needs before it stacks a second layer
-const CRATE_STACK = 6;
-const STEAM_ROWS = 5;
-const STEAM_HIGH = 6;
-const LOAF_STACK = 6;
+// Window goods: each fruit's width, loaves' width and spacing, a gap between books every this many spines
+const FRUIT_W = 2;
 const LOAF_W = 3;
 const LOAF_STEP = 4;
 const SHELF_BREAK = 6;
-const TALL_SHELF = 8;
-const FRUIT_W = 2;
-// Window glare: a short streak in the top corner, on glass wider than this
-const GLARE_MIN = 4;
+// Goods stand in tiers this many rows tall (crates, loaves and books fill the window in them)
+const TIER_ROWS = 2;
+// The coffee bar: its window's rows above the counter, cups (width, and in from each end), stools (width, spacing)
+const BAR_AT = 3;
+const CUP_W = 2;
+const CUP_IN = 3;
+const STOOL_W = 3;
+const STOOL_STEP = 5;
 // Scallops are this wide (with the notch between them); icing runs down this far, pixel by pixel along the awning
 const LOBE_W = 4;
 const DRIPS = [2, 0, 1, 3, 0, 2, 1, 0, 3, 1, 0, 2, 0, 1];
-// The marquee lid's props stand this far in from each end
+// The hatch lid's props stand this far in from each end
 const PROP_IN = 4;
 
 /** Art-pixel sizes of a shop on the grid: body W×H with the roof ledge on top, so body plus roof is one floor. */
@@ -118,7 +125,7 @@ function animFrames(design: number, t: number): Frames {
   const step = (rate: number, frames: number) => Math.floor(t * rate) % frames;
   let window = 0;
   if (D.window === 'pole') window = step(L.poleRate, POLE_PERIOD);
-  if (D.window === 'cup') window = step(L.steamRate, STEAM_FRAMES);
+  if (D.window === 'bar') window = step(L.steamRate, STEAM_FRAMES);
   if (D.window === 'records') window = step(L.recordRate, RECORD_FRAMES);
   return { window, awning: D.awning === 'marquee' ? step(L.bulbRate, BULB_FRAMES) : 0 };
 }
@@ -232,15 +239,15 @@ function drawFront(px: Pix, D: Design, bx: number, by: number, T: Tint, frame: n
   const dh = bottom - top;
   if (D.front === 'left') {
     drawDoor(px, left, top, dw, dh);
-    drawWindow(px, D, left + dw + m, right, top, dh - 1, frame, 0);
+    drawWindow(px, D, T, left + dw + m, right, top, dh - 1, frame, 0);
     return;
   }
   if (D.front === 'center') {
     // A narrower gap beside the door, so each window keeps room for its goods
     const dx = bx + Math.floor((W - dw) / 2);
     drawDoor(px, dx, top, dw, dh);
-    drawWindow(px, D, left, dx - 1, top, dh - 1, frame, 0);
-    drawWindow(px, D, dx + dw + 1, right, top, dh - 1, frame, 1);
+    drawWindow(px, D, T, left, dx - 1, top, dh - 1, frame, 0);
+    drawWindow(px, D, T, dx + dw + 1, right, top, dh - 1, frame, 1);
     return;
   }
   const dx = right - dw;
@@ -259,7 +266,7 @@ function drawFront(px: Pix, D: Design, bx: number, by: number, T: Tint, frame: n
     px.r(p0, bottom - 1, pw, 1, P.ink);
     wr = p0 - 1;
   }
-  drawWindow(px, D, left, wr, top, dh - 1, frame, 0);
+  drawWindow(px, D, T, left, wr, top, dh - 1, frame, 0);
 }
 
 function drawDoor(px: Pix, dx: number, top: number, dw: number, dh: number): void {
@@ -272,23 +279,56 @@ function drawDoor(px: Pix, dx: number, top: number, dw: number, dh: number): voi
 }
 
 /** A window from wx up to wr, wh rows tall; `slot` tells apart two windows on one front. */
-function drawWindow(px: Pix, D: Design, wx: number, wr: number, top: number, wh: number, frame: number, slot: number): void {
+function drawWindow(px: Pix, D: Design, T: Tint, wx: number, wr: number, top: number, wh: number, frame: number, slot: number): void {
   const P = PALETTE;
   const ww = wr - wx;
   if (ww < 3 || wh < 3) return;
-  px.r(wx, top, ww, wh, P.creamLo);
+  const edge = swatch(D.frame ?? 'creamLo', T);
+  const glass = D.glass ?? 'glass';
+  if (D.window === 'bar') {
+    drawBar(px, wx, ww, top, wh, edge, swatch(glass, T), frame);
+    return;
+  }
+  px.r(wx, top, ww, wh, edge);
   const gx = wx + 1;
   const gy = top + 1;
   const gw = ww - 2;
   const gh = wh - 2;
-  px.r(gx, gy, gw, gh, P.glass);
-  px.r(gx, gy + gh - 1, gw, 1, P.glassLo);
-  if (gw > GLARE_MIN) {
-    px.r(gx + gw - 3, gy, 2, 1, P.glassHi);
-    px.r(gx + gw - 4, gy + 1, 1, 1, P.glassHi);
+  px.r(gx, gy, gw, gh, swatch(glass, T));
+  // Glass you can see into darkens toward the floor
+  if (glass === 'glass') px.r(gx, gy + gh - 1, gw, 1, P.glassLo);
+  if (glass === 'lamp') px.r(gx, gy + gh - 1, gw, 1, P.lampLo);
+  if (D.arch) {
+    // A rounded top: the wall shows at the frame's corners, the frame at the glass's
+    px.r(wx, top, 1, 1, T.base);
+    px.r(wx + ww - 1, top, 1, 1, T.base);
+    px.r(gx, gy, 1, 1, edge);
+    px.r(gx + gw - 1, gy, 1, 1, edge);
   }
+  const panes = D.panes ?? 1;
+  for (let i = 1; i < panes; i++) px.r(gx + Math.round((gw * i) / panes), gy, 1, gh, edge);
   drawGoods(px, D.window, gx, gy, gw, gh, frame, slot);
-  px.r(wx - 1, top + wh, ww + 2, 1, D.window === 'flowers' ? P.leafLo : P.cream);
+  // A flower shop's sill is its flower box
+  px.r(wx - 1, top + wh, ww + 2, 1, D.window === 'flowers' ? P.woodLo : P.cream);
+}
+
+/** A coffee bar facing the street: a short lit window over a counter with cups (one steaming), and stools in front. */
+function drawBar(px: Pix, wx: number, ww: number, top: number, wh: number, edge: string, glass: string, frame: number): void {
+  const P = PALETTE;
+  px.r(wx, top, ww, BAR_AT, edge);
+  px.r(wx + 1, top + 1, ww - 2, BAR_AT - 1, glass);
+  const bar = top + BAR_AT;
+  px.r(wx - 1, bar, ww + 2, 1, P.creamLo);
+  const cups = [wx + CUP_IN, wx + ww - CUP_IN - CUP_W];
+  for (const x of cups) px.r(x, bar - 1, CUP_W, 1, P.wood);
+  px.r(cups[0] + frame, bar - 2, 1, 1, P.white);
+  // Ink legs, so the stools read against any wall color
+  const legs = wh - BAR_AT - 1;
+  for (let x = 1; x + STOOL_W <= ww; x += STOOL_STEP) {
+    px.r(wx + x, bar + 1, STOOL_W, 1, P.wood);
+    px.r(wx + x, bar + 2, 1, legs, P.ink);
+    px.r(wx + x + STOOL_W - 1, bar + 2, 1, legs, P.ink);
+  }
 }
 
 /** No door: a serving hatch from x0 to x1, its counter on row `counter`, the goods sitting on it. */
@@ -305,42 +345,41 @@ function drawGoods(px: Pix, kind: Design['window'], gx: number, gy: number, gw: 
   const P = PALETTE;
   const yb = gy + gh - 1;
   if (kind === 'crates') {
+    // Tiers of crates heaped with fruit, filling the stall
     const fruit = [P.red, P.yellow, P.leaf];
-    px.r(gx, yb, gw, 1, P.woodLo);
-    for (let x = 0; x < gw; x++) px.r(gx + x, yb - 1, 1, 1, fruit[Math.floor(x / FRUIT_W) % fruit.length]);
-    if (gh >= CRATE_STACK) for (let x = 1; x < gw - 1; x += 2) px.r(gx + x, yb - 2, 1, 1, fruit[(Math.floor(x / FRUIT_W) + 1) % fruit.length]);
-  } else if (kind === 'cup') {
-    const cx = gx + Math.floor(gw / 2) - 1;
-    px.r(cx, yb - 1, 3, 2, P.white);
-    px.r(cx + 3, yb - 1, 1, 1, P.white);
-    if (gh >= STEAM_ROWS) {
-      px.r(cx + 1 + frame, yb - 3, 1, 1, P.white);
-      if (gh >= STEAM_HIGH) px.r(cx + 2 - frame, yb - 4, 1, 1, P.white);
+    for (let tier = 0; (tier + 1) * TIER_ROWS <= gh; tier++) {
+      const y = gy + tier * TIER_ROWS;
+      for (let x = 0; x < gw; x++) px.r(gx + x, y, 1, 1, fruit[(Math.floor(x / FRUIT_W) + tier) % fruit.length]);
+      px.r(gx, y + 1, gw, 1, P.wood);
+      for (let x = FRUIT_W; x < gw; x += 2 * FRUIT_W) px.r(gx + x, y + 1, 1, 1, P.woodLo);
     }
   } else if (kind === 'loaves') {
-    for (let x = 1; x + LOAF_W <= gw; x += LOAF_STEP) {
-      px.r(gx + x, yb, LOAF_W, 1, P.wood);
-      px.r(gx + x, yb - 1, LOAF_W, 1, P.creamLo);
-    }
-    if (gh >= LOAF_STACK) {
-      for (let x = 3; x + LOAF_W <= gw; x += LOAF_STEP) {
-        px.r(gx + x, yb - 2, LOAF_W, 1, P.wood);
-        px.r(gx + x, yb - 3, LOAF_W, 1, P.creamLo);
+    // Shelves of loaves, each shelf's loaves set half a loaf along from the one above
+    for (let tier = 0; (tier + 1) * TIER_ROWS <= gh; tier++) {
+      const y = gy + tier * TIER_ROWS;
+      for (let x = (tier * LOAF_STEP) / 2; x + LOAF_W <= gw; x += LOAF_STEP) {
+        px.r(gx + x, y, LOAF_W, 1, P.creamLo);
+        px.r(gx + x, y + 1, LOAF_W, 1, P.wood);
       }
     }
   } else if (kind === 'books') {
+    // Shelves packed with spines of uneven heights, top to bottom
     const spines = [P.red, P.blue, P.yellow, P.leaf, P.cream];
-    for (let x = 0; x < gw; x++) {
-      if ((x + 1) % SHELF_BREAK === 0) continue;
-      // Spine heights vary in a fixed pattern, taller on a tall window
-      const h = 1 + ((x * 7) % 3 === 0 ? 1 : 0) + (gh >= TALL_SHELF ? 1 : 0);
-      px.r(gx + x, yb - h + 1, 1, h, spines[(x * 3) % spines.length]);
+    for (let tier = 0; (tier + 1) * TIER_ROWS <= gh; tier++) {
+      const base = gy + (tier + 1) * TIER_ROWS - 1;
+      for (let x = 0; x < gw; x++) {
+        if ((x + 1 + tier * 3) % SHELF_BREAK === 0) continue;
+        const h = (x * 7 + tier) % 3 === 0 ? 1 : TIER_ROWS;
+        px.r(gx + x, base - h + 1, 1, h, spines[(x * 3 + tier) % spines.length]);
+      }
     }
   } else if (kind === 'flowers') {
+    // Plants hang from the top, flowers fill the bottom
     const petals = [P.red, P.pink, P.yellow];
     for (let x = 0; x < gw; x++) {
       px.r(gx + x, yb, 1, 1, P.leaf);
       px.r(gx + x, yb - 1, 1, 1, x % 2 === 0 ? petals[(x >> 1) % petals.length] : P.leafLo);
+      if (x % 3 === 1) px.r(gx + x, gy, 1, 1 + (x % 2), P.leaf);
     }
   } else if (kind === 'burger') {
     // A burger at one end of the counter, a soda with a straw at the other, a bell between
@@ -384,12 +423,16 @@ function drawGoods(px: Pix, kind: Design['window'], gx: number, gy: number, gw: 
   }
 }
 
+/** A swatch's color: one of the shop's shades, or from the palette. */
+function swatch(k: Swatch, T: Tint): string {
+  return k in T ? T[k as keyof Tint] : PALETTE[k as PaletteColor];
+}
+
 function drawAwning(px: Pix, D: Design, bx: number, ay: number, T: Tint, frame: number): void {
   const { W, awnH: h } = SHOP;
   const P = PALETTE;
-  const swatch = (k: Swatch) => (k in T ? T[k as keyof Tint] : P[k as PaletteColor]);
-  const A = swatch(D.aw[0]);
-  const B = swatch(D.aw[1]);
+  const A = swatch(D.aw[0], T);
+  const B = swatch(D.aw[1], T);
   const ax = bx - 1;
   const aw = W + 2;
   if (D.awning === 'stripes') {

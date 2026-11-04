@@ -1,4 +1,20 @@
-import { addShop, beginRound, botPlayers, createLobby, isPhase2, removeShop, toLobby, type Config, type Dir, type GameState, type Look, type PlayerSpec } from '@walking-shops/sim';
+import {
+  addShop,
+  beginRound,
+  botPlayers,
+  createLobby,
+  isPhase2,
+  removeShop,
+  setController,
+  skipTo,
+  toLobby,
+  type Config,
+  type Controller,
+  type Dir,
+  type GameState,
+  type Look,
+  type PlayerSpec,
+} from '@walking-shops/sim';
 import { Latch } from './latch.ts';
 import { NET } from './config.ts';
 import { cleanName, type Phase, type PhoneState, type ScreenMsg, type ToScreen } from './protocol.ts';
@@ -49,6 +65,8 @@ export interface HostOptions {
 export class Host {
   game: GameState;
   readonly seats = new Map<string, Seat>();
+  // Bots play the phones' shops while the round is on (the network-down fallback)
+  fallback = false;
   private readonly opts: HostOptions;
   private joins = 0;
 
@@ -72,11 +90,48 @@ export class Host {
     for (const p of botPlayers(this.opts.config.BOT_MIX).slice(0, need)) bots.push({ ...p, look: this.newLook(bots) });
     beginRound(g, bots);
     for (const s of this.seats.values()) s.latch.clear();
+    this.handOver();
+  }
+
+  /** The presenter skips ahead: from the walk-ins to the parachutes, from the parachutes to the results. */
+  skip(): void {
+    const g = this.game;
+    const { roundTime, paraStart } = this.opts.config.ROUND;
+    skipTo(g, isPhase2(g) ? roundTime : paraStart);
+  }
+
+  /** The presenter restarts: a fresh round straight away, shops where they stand, bots filled in again. */
+  restart(): void {
+    if (this.game.lobby) return;
+    this.replay();
+    this.begin();
+  }
+
+  /** Bots take over every phone's shop for the round, or hand them back to their phones. */
+  setFallback(on: boolean): void {
+    if (this.fallback === on) return;
+    this.fallback = on;
+    this.handOver();
+  }
+
+  /** Who plays each phone's shop: a bot while the fallback is on and a round is under way, its phone otherwise. */
+  private handOver(bots = this.fallback && !this.game.lobby): void {
+    const g = this.game;
+    // One of each type in the bot mix in turn, so the phones' shops play like the bots around them
+    const types: Controller[] = [...new Set(botPlayers(this.opts.config.BOT_MIX).map((p) => p.controller))];
+    if (types.length === 0) bots = false;
+    let i = 0;
+    for (const seat of this.seats.values()) {
+      if (seat.shop === null || !g.shops.some((s) => s.id === seat.shop)) continue;
+      setController(g, seat.shop, bots ? types[i++ % types.length] : 'human');
+    }
   }
 
   /** Back to the lobby after (or during) a round: the bots leave, and phones that waited get their shops. */
   replay(): void {
     if (this.game.lobby) return;
+    // Phones' shops are back in their hands first, or the lobby would clear them out with the bots
+    this.handOver(false);
     toLobby(this.game);
     for (const s of this.seats.values()) {
       s.latch.clear();

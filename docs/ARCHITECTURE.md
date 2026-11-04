@@ -39,7 +39,7 @@
 - **Reconnect:** each phone stores a token in localStorage. On reconnect, it reclaims its shop and resends what it holds. Sequence numbers start from the clock, so they stay ahead after a reload. A phone briefly holding two sockets (reconnected before the old one closed) gets its state on both, and only counts as gone when the last one closes.
 - **Wake Lock** on phones during play (tolerate rejection; it needs https, so not on the LAN dev server).
 - **Dropped phones:** idle shutters close their shop automatically. No special handling needed in the game rules.
-- **Network dies:** the screen fills the town with bots and the presenter plays with the keyboard. The pitch survives.
+- **Network dies:** once the screen has been cut off from the relay for `NET.fallbackAfter` seconds mid-round, bots take over the phones' shops (the HUD says BOTS PLAYING) and hand them back when the relay returns; `F` does the same by hand. The presenter can still play with the keyboard (`?screenShop`). The pitch survives.
 - **Cold starts:** warm the server before going on stage.
 
 ## Testing
