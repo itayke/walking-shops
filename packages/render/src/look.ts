@@ -259,6 +259,10 @@ export const FX_LOOK = {
   displayFont: "'Press Start 2P', 'Arial Black', Impact, sans-serif",
   // Font pixels per em of the display font: set at whole device pixels per font pixel, it stays crisp
   displayGrid: 8,
+  // A shop name too big for its sign in the display font even at one device pixel per font pixel (a small, low-density
+  // screen) is set in this narrower 5-pixel type instead, on its own grid
+  signSmallFont: "'Micro 5', 'Arial Narrow', sans-serif",
+  signSmallGrid: 11,
   // Banners (READY? GO! and the phase banner) are 16-bit title type, the screen's --font-title, on its own pixel grid,
   // outlined by this share of their size
   bannerFont: "'Jersey 15', 'Arial Black', Impact, sans-serif",

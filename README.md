@@ -69,4 +69,4 @@ When a change affects balance, run `npm run bench` before and after and compare 
 
 ## Credits
 
-The display font is [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38, licensed under the [SIL Open Font License 1.1](https://openfontlicense.org); it ships unmodified in `packages/*/public/fonts`, with its license beside it. The title, tagline and banner font, [Jersey 15](https://fonts.google.com/specimen/Jersey+15), loads from Google Fonts.
+The display font is [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38, licensed under the [SIL Open Font License 1.1](https://openfontlicense.org); it ships unmodified in `packages/*/public/fonts`, with its license beside it. The title, tagline and banner font, [Jersey 15](https://fonts.google.com/specimen/Jersey+15), and [Micro 5](https://fonts.google.com/specimen/Micro+5), for shop names on signs too small for the display font, load from Google Fonts.
