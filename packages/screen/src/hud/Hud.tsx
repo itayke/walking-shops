@@ -6,7 +6,7 @@ import { PixelText } from './PixelText.tsx';
 
 const SECONDS_PER_MINUTE = 60;
 const PERCENT = 100;
-// Rows on the results card; the board shows everyone
+// Rows on the results card; the shop list shows everyone
 const RESULTS_SHOWN = 10;
 
 function clock(seconds: number): string {
@@ -15,7 +15,7 @@ function clock(seconds: number): string {
 }
 
 /** Shops by income, best first, each with its index (for its color). */
-function ranked(g: GameState): { s: Shop; index: number }[] {
+export function ranked(g: GameState): { s: Shop; index: number }[] {
   return g.shops.map((s, index) => ({ s, index })).sort((a, b) => b.s.income - a.s.income);
 }
 
@@ -67,42 +67,9 @@ export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomSt
             <kbd>A</kbd> <kbd>D</kbd> walk ·{' '}
           </>
         )}
-        <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>B</kbd> board · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
+        <kbd>Enter</kbd> begin · <kbd>Space</kbd> pause · <kbd>B</kbd> shops · <kbd>T</kbd> tuning · <kbd>R</kbd> lobby
       </span>
     </header>
-  );
-}
-
-/** Every shop's earnings, live. A debugging aid; the stage show uses the results card. */
-export function Board({ g, you }: { g: GameState; you?: string }) {
-  return (
-    <div className="board">
-      <table>
-        <thead>
-          <tr>
-            <th>Shop</th>
-            <th>Player</th>
-            <th className="num">Walk-ins</th>
-            <th className="num">Chutes</th>
-            <th className="num">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ranked(g).map(({ s, index }) => (
-            <tr key={s.id} className={s.id === you ? 'me' : s.closed ? 'closed' : undefined}>
-              <td>
-                <span className="swatch" style={{ background: shopTint(shopHue(lookOf(s, index).hue)).base }} />
-                {s.label}
-              </td>
-              <td>{s.controller}</td>
-              <td className="num">{scoreText(s.incGround)}</td>
-              <td className="num">{scoreText(s.incPara)}</td>
-              <td className="num">{scoreText(s.income)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }
 

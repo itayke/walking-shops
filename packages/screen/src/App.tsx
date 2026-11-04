@@ -3,8 +3,9 @@ import { connectScreen, type Link } from '@walking-shops/net/client';
 import { CONFIG, step, TICK, type GameState, type PlayerSpec } from '@walking-shops/sim';
 import { useEffect, useRef, useState } from 'react';
 import { createTuningPanel } from './dev/tuningPanel.ts';
-import { Board, Hud, Paused, Results } from './hud/Hud.tsx';
+import { Hud, Paused, Results } from './hud/Hud.tsx';
 import { Lobby } from './hud/Lobby.tsx';
+import { Shops } from './hud/Shops.tsx';
 import { createKeyboard } from './input/keyboard.ts';
 import { currentRoom, isRoomTaken, newRoom, PARTY_HOST, type RoomInfo } from './net/room.ts';
 import { HUES, shopHue, shopTint } from '@walking-shops/render/colors.ts';
@@ -22,7 +23,7 @@ const HUD_REFRESH_MS = 100;
 const MAX_PIXEL_RATIO = 1;
 const SEED_RANGE = 2 ** 32;
 const PAUSE_KEY = ' ';
-const BOARD_KEY = 'b';
+const SHOPS_KEY = 'b';
 const BEGIN_KEY = 'enter';
 // URL parameters for debugging: ?seed=N replays a round, ?at=S skips the lobby and fast-forwards the round to S seconds
 const params = new URLSearchParams(location.search);
@@ -75,7 +76,9 @@ export function App() {
   // Set once the frame loop is running: starts the round from a button or a key
   const begin = useRef<() => void>(() => {});
   const replay = useRef<() => void>(() => {});
-  const [board, setBoard] = useState(false);
+  // The shop list, shown or hidden on its own in the lobby and in the round: open in the lobby, for the presenter to
+  // see who's in, and hidden while the street plays unless called up
+  const [shops, setShops] = useState({ lobby: true, round: false });
   // Re-renders the HUD a few times a second; the canvas redraws every frame on its own
   const [, setHudTick] = useState(0);
 
@@ -153,7 +156,10 @@ export function App() {
         paused.current = !paused.current;
         setHudTick((t) => t + 1);
       }
-      if (key === BOARD_KEY) setBoard((b) => !b);
+      if (key === SHOPS_KEY) {
+        const phase = host.current.game.lobby ? 'lobby' : 'round';
+        setShops((v) => ({ ...v, [phase]: !v[phase] }));
+      }
       if (key === BEGIN_KEY) begin.current();
     };
     window.addEventListener('keydown', onKey);
@@ -221,12 +227,12 @@ export function App() {
       <Hud g={g} you={SCREEN_SHOP?.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats }} />
       <div className="stage">
         <canvas ref={canvasRef} />
-        {g.lobby && (
-          <Lobby
+        {g.lobby && <Lobby room={net.current.room.code} onBegin={() => begin.current()} />}
+        {!g.over && shops[g.lobby ? 'lobby' : 'round'] && (
+          <Shops
             g={g}
-            room={net.current.room.code}
             seats={host.current.seats}
-            onBegin={() => begin.current()}
+            you={SCREEN_SHOP?.id}
             onRename={(id, name) => host.current.rename(id, name) && setHudTick((t) => t + 1)}
             onRemove={(id) => {
               host.current.remove(id);
@@ -234,7 +240,6 @@ export function App() {
             }}
           />
         )}
-        {board && <Board g={g} you={SCREEN_SHOP?.id} />}
         {g.over ? <Results g={g} you={SCREEN_SHOP?.id} onReplay={() => replay.current()} /> : paused.current && <Paused />}
       </div>
     </div>

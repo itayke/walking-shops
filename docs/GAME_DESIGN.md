@@ -46,7 +46,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ### Presenter list
 
-- On the right, the screen lists the shops that have joined, in the order they opened, and how many phones are still setting up. Clicking a name renames the shop (a name that doesn't fit the sign isn't taken); the × that shows on hover takes it off the street. That stands in for a profanity filter.
+- On the right, the screen lists the shops that have joined, in the order they opened, and how many phones are still setting up. Clicking a name renames the shop (a name that doesn't fit the sign isn't taken); the × that shows on hover takes it off the street. That stands in for a profanity filter. Once the round begins, the same list becomes the live ranking by money (bots tagged, closed shops dimmed), hidden unless the presenter calls it up with `B`.
 - A removed shop's phone goes back to the setup form, with what the player last typed still filled in, and can open it again.
 - A phone that disconnects in the lobby keeps its shop, marked offline in the list, until the presenter removes it.
 - The list only shows in the lobby, so names are settled before the round.

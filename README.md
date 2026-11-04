@@ -53,7 +53,7 @@ Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:
 |---|---|
 | `A` / `D` or `←` / `→` | Tap to step the screen shop (with `?screenShop`) one column, hold to keep walking or to push |
 | `Space` | Pause |
-| `B` | Scoreboard |
+| `B` | Show or hide the shop list: open in the lobby, the live ranking (hidden at first) in the round |
 | `Enter` | Begin the round (in the lobby) |
 | `T` | Show or hide the tuning panel, hidden at first (its New street button lays the street out again) |
 | `R` | Back to the lobby (or Play again on the results): the bots leave, everyone else stays put |
