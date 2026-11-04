@@ -222,7 +222,7 @@ kbd {
   pointer-events: auto;
 }
 
-/* Like the street's banners (READY?, GO!): title type, hard-edged, in yellow with an ink outline like the lobby title's */
+/* Like the street's banners (READY?, GO!): title type, hard-edged, in yellow with a round ink outline like the lobby title's */
 .results .winner {
   /* Screen pixels per font pixel, whole so it stays crisp */
   --winner-pixel: round(down, clamp(2px, 8vw / var(--title-grid), 5px), 1px);
@@ -236,6 +236,7 @@ kbd {
   color: #f5c746;
   --pixel-outline: calc(var(--winner-pixel) * var(--winner-outline));
   --pixel-outline-color: #1c1a26;
+  --pixel-outline-join: round;
 }
 
 .results .winner canvas {
