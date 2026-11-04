@@ -1,11 +1,18 @@
 /* The phone is a blind controller: two big halves in the shop's tint, one line of status on top */
+/* EAS VHS by Lastnames (fontstruct.com), CC BY 3.0, with its advances snapped to whole font pixels */
+@font-face {
+  font-family: 'EAS VHS';
+  src: url('/fonts/eas-vhs.ttf') format('truetype');
+  font-display: swap;
+}
+
 :root {
   --pad: #3d4a5c;
   --ink: #ffffff;
   --shade: rgb(0 0 0 / 0.28);
   --held: rgb(255 255 255 / 0.22);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Jersey 10', 'Arial Black', Impact, sans-serif;
+  --font-display: 'EAS VHS', 'Arial Black', Impact, sans-serif;
   --field: rgb(255 255 255 / 0.92);
   --field-ink: #17202b;
   color-scheme: dark;

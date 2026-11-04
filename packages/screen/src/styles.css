@@ -1,4 +1,11 @@
 /* Theme tokens for the HUD and overlays. The street canvas has its own daylight palette (render/colors.ts). */
+/* EAS VHS by Lastnames (fontstruct.com), CC BY 3.0, with its advances snapped to whole font pixels */
+@font-face {
+  font-family: 'EAS VHS';
+  src: url('/fonts/eas-vhs.ttf') format('truetype');
+  font-display: swap;
+}
+
 :root {
   --bg: #e7ebf0;
   --panel: #f7f9fb;
@@ -11,10 +18,10 @@
   --danger: #d2462a;
   --ok: #24935f;
   --hud-height: 48px;
-  --font-display: 'Jersey 10', 'Arial Black', Impact, sans-serif;
+  --font-display: 'EAS VHS', 'Arial Black', Impact, sans-serif;
   --font-title: 'Jersey 15', 'Arial Black', Impact, sans-serif;
   /* Font pixels per em of each display font: a size with whole screen pixels per font pixel stays crisp */
-  --display-grid: calc(56 / 3);
+  --display-grid: 17;
   --title-grid: 27;
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -313,16 +320,18 @@ tr.closed td {
   min-width: 0;
   text-align: center;
   /* Screen pixels per font pixel of the title, whole so it stays crisp */
-  --title-pixel: round(down, clamp(2px, 9vw / var(--title-grid), 6px), 1px);
+  --title-pixel: round(down, clamp(3px, 9vw / var(--title-grid), 6px), 1px);
   /* The tagline's font pixels against the title's: at this ratio the two lines set about the same width */
-  --tagline-scale: 0.8;
-  /* The title's outline, and the room between it and the tagline, in title pixels */
+  --tagline-scale: 0.6;
+  --tagline-pixel: round(var(--title-pixel) * var(--tagline-scale), 1px);
+  /* The title's outline, how far it sits down from the top, and the room between it and the tagline, in title pixels */
   --title-outline: 1.6;
-  --tagline-gap: 8;
+  --title-drop: 3;
+  --tagline-gap: 5;
 }
 
 .lobby .title {
-  margin: 0;
+  margin: calc(var(--title-pixel) * var(--title-drop)) 0 0;
   text-align: center;
   font-family: var(--font-title);
   font-weight: 400;
@@ -346,7 +355,7 @@ tr.closed td {
   margin: calc(var(--title-pixel) * var(--tagline-gap)) auto 0;
   image-rendering: pixelated;
   font-family: var(--font-display);
-  font-size: calc(round(var(--title-pixel) * var(--tagline-scale), 1px) * var(--display-grid));
+  font-size: calc(var(--tagline-pixel) * var(--display-grid));
   line-height: 1;
   /* Fixed: it sits on the daylight sky in either theme */
   color: #2b3a55;

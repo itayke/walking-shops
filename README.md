@@ -65,3 +65,7 @@ URL parameters for debugging: `?seed=N` replays the same round, `?at=S` skips th
 On the screen app, `T` opens the tuning panel and `R` restarts the round. Edits apply to the running round on the next tick, except the `(on restart)` sections. In dev, **Save to config.ts** writes the values back into `packages/sim/src/config.ts` and reloads.
 
 When a change affects balance, run `npm run bench` before and after and compare income by bot type. The golden replay test (`packages/sim/test/golden.test.ts`) fails on any change to a default or a rule; if the change is intended, review the new table and update it with `npx vitest run -u`.
+
+## Credits
+
+The display font is [EAS VHS](https://fontstruct.com/fontstructions/show/2878521/eas-vhs) by Lastnames, licensed [CC BY 3.0](http://creativecommons.org/licenses/by/3.0/). The copy in `packages/*/public/fonts` has its glyph advances rounded to whole font pixels.
