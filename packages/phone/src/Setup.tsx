@@ -1,18 +1,13 @@
 import { cleanName, NET } from '@walking-shops/net';
-import { PALETTE } from '@walking-shops/render/colors.ts';
 import { DESIGN_COUNT } from '@walking-shops/render/shopArt.ts';
 import { nameFits } from '@walking-shops/render/signs.ts';
 import type { Look } from '@walking-shops/sim';
-import { useRef, useState, type FormEvent, type PointerEvent } from 'react';
+import { useRef, type FormEvent } from 'react';
 import { Preview } from './Preview.tsx';
 
 // Shown on the field and, faded, on the sign until a name is typed; the shop can't open without one
 const PLACEHOLDER = 'Shop name';
-// A drag across the preview this far (CSS pixels) turns to the next shop type
-const SWIPE_PX = 40;
 const REJECT_BUZZ_MS = 30;
-// The street's sky behind the preview, so the shop stands out from a page in its own color
-const BACKDROP = PALETTE.sky[1];
 
 const wrap = (design: number) => (design + DESIGN_COUNT) % DESIGN_COUNT;
 
@@ -33,9 +28,6 @@ export function Setup({ draft, hue, editing, onChange, onSubmit, onCancel }: {
   onSubmit: (d: Draft) => void;
   onCancel: () => void;
 }) {
-  // The way the last turn went, so the preview spins the right way
-  const [dir, setDir] = useState(1);
-  const swipe = useRef<number | null>(null);
   // Set when a letter didn't fit: the sign takes nothing more until something is deleted, so a narrower letter typed
   // after it can't slip in
   const full = useRef(false);
@@ -53,17 +45,7 @@ export function Setup({ draft, hue, editing, onChange, onSubmit, onCancel }: {
     }
     onChange({ ...draft, name: raw });
   };
-  const turn = (by: number) => {
-    setDir(by);
-    onChange({ ...draft, design: wrap(draft.design + by) });
-  };
-  const down = (e: PointerEvent) => (swipe.current = e.clientX);
-  const up = (e: PointerEvent) => {
-    if (swipe.current === null) return;
-    const dx = e.clientX - swipe.current;
-    swipe.current = null;
-    if (Math.abs(dx) >= SWIPE_PX) turn(dx < 0 ? 1 : -1);
-  };
+  const turn = (by: number) => onChange({ ...draft, design: wrap(draft.design + by) });
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (name) onSubmit({ name, design: draft.design });
@@ -71,15 +53,7 @@ export function Setup({ draft, hue, editing, onChange, onSubmit, onCancel }: {
 
   return (
     <form className="setup" onSubmit={submit}>
-      <div className="stand" style={{ background: BACKDROP }} onPointerDown={down} onPointerUp={up} onPointerCancel={() => (swipe.current = null)}>
-        <button type="button" className="turn" onClick={() => turn(-1)} aria-label="Previous shop type">
-          ◀
-        </button>
-        <Preview name={name || PLACEHOLDER} look={look} dir={dir} placeholder={!name} />
-        <button type="button" className="turn" onClick={() => turn(1)} aria-label="Next shop type">
-          ▶
-        </button>
-      </div>
+      <Preview name={name || PLACEHOLDER} look={look} placeholder={!name} onTurn={turn} />
       <input
         className="name"
         value={draft.name}

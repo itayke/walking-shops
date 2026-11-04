@@ -123,23 +123,33 @@ body,
 }
 
 .stand {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 12px 8px;
   border-radius: 16px;
+  overflow: hidden;
   touch-action: pan-y;
 }
 
+/* The whole stand, so a shop sliding out is cut off at its edge; the shop is fitted to the slot between the arrows */
 .preview {
-  flex: 1;
-  min-width: 0;
-  height: 30dvh;
-  object-fit: contain;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   image-rendering: pixelated;
 }
 
+.slot {
+  flex: 1;
+  min-width: 0;
+  height: 30dvh;
+}
+
 .turn {
+  position: relative;
   font-size: 28px;
   color: var(--ink);
   background: var(--shade);
