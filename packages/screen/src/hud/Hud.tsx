@@ -80,7 +80,7 @@ export function Results({ g, you, onReplay }: { g: GameState; you?: string; onRe
   const [best] = rows;
   return (
     <div className="overlay dim results">
-      <h2 className="winner" style={best ? { color: shopTint(shopHue(lookOf(best.s, best.index).hue)).base } : undefined}>
+      <h2 className="banner winner" style={best ? { color: shopTint(shopHue(lookOf(best.s, best.index).hue)).base } : undefined}>
         <PixelText text={best ? `${best.s.label} wins!` : 'Round over'} />
       </h2>
       <div className="card">
@@ -114,7 +114,9 @@ export function Results({ g, you, onReplay }: { g: GameState; you?: string; onRe
 export function Paused() {
   return (
     <div className="overlay">
-      <h2>Paused</h2>
+      <h2 className="banner">
+        <PixelText text="Paused" />
+      </h2>
     </div>
   );
 }

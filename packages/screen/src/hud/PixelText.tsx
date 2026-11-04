@@ -65,6 +65,8 @@ export function PixelText({ text, className }: { text: string; className?: strin
     const parent = cv.parentElement!;
     const ctx = cv.getContext('2d')!;
     const draw = () => {
+      // The font can finish loading after the text has left the page, where it has no styles to measure by
+      if (!cv.isConnected) return;
       const css = getComputedStyle(cv);
       const ratio = devicePixelRatio || 1;
       const shown = css.textTransform === 'uppercase' ? text.toUpperCase() : text;

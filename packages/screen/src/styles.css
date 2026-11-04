@@ -203,13 +203,31 @@ kbd {
   background: color-mix(in srgb, var(--bg) 60%, transparent);
 }
 
-.overlay h2 {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  font-weight: 400;
-  font-size: round(down, clamp(32px, 4vw, 64px), var(--display-1x));
-  -webkit-font-smoothing: none;
+/* Like the street's banners (READY?, GO!): title type, hard-edged (PixelText), in yellow with a round ink outline like
+   the lobby title's. Paused, and the results' winner */
+.overlay .banner {
+  /* Screen pixels per font pixel, whole so it stays crisp */
+  --banner-pixel: round(down, clamp(2px, 8vw / var(--title-grid), 5px), 1px);
+  --banner-outline: 1.6;
+  /* Full width rather than shrunk to its text, which wraps to it */
+  width: 90%;
   margin: 0;
+  text-align: center;
+  font-family: var(--font-title);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: calc(var(--banner-pixel) * var(--title-grid));
+  line-height: 1;
+  color: #f5c746;
+  --pixel-outline: calc(var(--banner-pixel) * var(--banner-outline));
+  --pixel-outline-color: #1c1a26;
+  --pixel-outline-join: round;
+}
+
+.overlay .banner canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
 }
 
 /* The results: the winner in banner type high over the street, the ranking centered under it and taking clicks for Play again */
@@ -218,6 +236,16 @@ kbd {
 }
 
 .results .card {
+  pointer-events: auto;
+}
+
+/* The winner's banner sits near the top, clear of the ranking, in the winner's color */
+.results .winner {
+  position: absolute;
+  top: 10vh;
+}
+
+.card {
   pointer-events: auto;
 }
 
