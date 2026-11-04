@@ -1,6 +1,5 @@
 import type { Seat } from '@walking-shops/net';
 import { isPhase2, scoreText, type GameState, type Shop } from '@walking-shops/sim';
-import { joinUrl } from '../net/room.ts';
 import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
 import { lookOf } from '@walking-shops/render/shopArt.ts';
 
@@ -26,17 +25,13 @@ export interface RoomStatus {
   phones: ReadonlyMap<string, Seat>;
 }
 
-/** Where phones join, how many are connected, and whether the relay is reachable. The lobby shows the QR. */
+/** How many phones are connected, and whether the relay is reachable. The lobby shows where to join. */
 function Join({ room }: { room: RoomStatus }) {
-  const url = joinUrl(room.code);
   let phones = 0;
   for (const s of room.phones.values()) if (s.online) phones++;
   return (
     <span className="join" title={room.online ? 'Connected to the relay' : 'Relay unreachable: keyboard and bots only'}>
       <i className={room.online ? 'dot on' : 'dot'} />
-      <a href={url} target="_blank" rel="noreferrer">
-        {url.replace(/^https?:\/\//, '')}
-      </a>
       <span className="phones">
         {phones} {phones === 1 ? 'phone' : 'phones'}
       </span>
@@ -44,7 +39,7 @@ function Join({ room }: { room: RoomStatus }) {
   );
 }
 
-/** Phase, clock, round progress with the phase 2 mark, where to join, and your score. */
+/** Phase, clock, round progress with the phase 2 mark, connected phones, and your score. */
 export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomStatus }) {
   const { ROUND } = g.config;
   const phase2 = isPhase2(g);
@@ -53,7 +48,7 @@ export function Hud({ g, you, room }: { g: GameState; you: string; room: RoomSta
   const mine = g.shops.find((s) => s.id === you);
   return (
     <header className="hud">
-      <span className={phase2 ? 'pill phase2' : 'pill'}>{g.lobby ? 'Lobby' : g.over ? 'Results' : phase2 ? 'Parachutes' : 'Walk-ins'}</span>
+      <span className={phase2 ? 'phase phase2' : 'phase'}>{g.lobby ? 'Lobby' : g.over ? 'Results' : phase2 ? 'Parachutes' : 'Walk-ins'}</span>
       <span className="timer">{clock(ROUND.roundTime - t)}</span>
       <div className="progress">
         <i style={{ width: `${Math.min(PERCENT, (PERCENT * t) / ROUND.roundTime)}%` }} />

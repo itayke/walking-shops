@@ -27,7 +27,6 @@
   --display-1x: calc(var(--display-grid) * 1px);
   --display-small: calc(var(--display-1x) * 2);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -60,6 +59,8 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
+  /* Figures of one width, so the clock and scores don't jitter and columns line up */
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
 }
 
@@ -94,26 +95,20 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-.pill {
-  font-family: var(--font-display);
+/* The phase, in the chute's color once parachutes start */
+.phase {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-size: var(--display-small);
-  line-height: 1;
-  -webkit-font-smoothing: none;
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--panel);
   white-space: nowrap;
 }
 
-.pill.phase2 {
-  background: var(--chute);
-  color: #fff;
+.phase.phase2 {
+  color: var(--chute);
 }
 
 .timer {
-  font-family: var(--font-data);
   font-size: 20px;
   font-weight: 600;
   min-width: 5ch;
@@ -143,7 +138,6 @@ body {
 }
 
 .you {
-  font-family: var(--font-data);
   font-size: 16px;
   white-space: nowrap;
 }
@@ -156,15 +150,8 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-data);
   font-size: 14px;
   white-space: nowrap;
-}
-
-.join a {
-  color: var(--ink);
-  font-weight: 600;
-  text-decoration: none;
 }
 
 .join .phones {
@@ -189,7 +176,6 @@ body {
 }
 
 kbd {
-  font-family: var(--font-data);
   font-size: 12px;
   border: 1px solid var(--line);
   border-bottom-width: 2px;
@@ -272,7 +258,6 @@ th {
 }
 
 td {
-  font-family: var(--font-data);
   padding: 3px 8px;
   white-space: nowrap;
 }
@@ -386,7 +371,8 @@ tr.closed td {
 }
 
 .join-card .join-url {
-  font-family: var(--font-data);
+  /* An IP address: a slashed zero keeps it apart from O */
+  font-variant-numeric: tabular-nums slashed-zero;
   font-size: 14px;
   color: var(--ink);
 }
