@@ -256,7 +256,9 @@ export const FX_LOOK = {
   bannerWidth: 0.35,
   bannerFade: 0.2,
   // Effect text, titles and shop names are smooth display type, the HUD's --font-display; titles are outlined by this share of their size
-  displayFont: "'EAS VHS', 'Arial Black', Impact, sans-serif",
+  displayFont: "'Press Start 2P', 'Arial Black', Impact, sans-serif",
+  // Font pixels per em of the display font: set at whole device pixels per font pixel, it stays crisp
+  displayGrid: 8,
   titleOutline: 0.18,
   // Oldest effects are dropped past this many, so a burst of events can't pile up
   maxEffects: 300,

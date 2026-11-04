@@ -44,6 +44,15 @@ function font(px: number): string {
 }
 
 /**
+ * A display font size in device pixels, at whole device pixels per font pixel (at least one) so it stays crisp: rounded
+ * down by default, so text that fits still fits.
+ */
+export function crispPx(px: number, snap: (n: number) => number = Math.floor): number {
+  const grid = FX_LOOK.displayGrid;
+  return Math.max(1, snap(px / grid)) * grid;
+}
+
+/**
  * Greedy word wrap into at most `maxLines` lines that each pass `fits`, breaking a word too long for a line. A name
  * that runs out of lines ends in a dot.
  */
@@ -125,17 +134,18 @@ function nameBitmap(set: SignSet, scale: number): OffscreenCanvas {
   const w = Math.ceil((name.w + 2 * BITMAP_PAD) * scale);
   const h = Math.ceil((name.h + 2 * BITMAP_PAD) * scale);
   const { cv, ctx } = scratch(null, w, h);
-  const px = set.size * scale;
+  const px = crispPx(set.size * scale);
   const cap = set.cap * px;
   const gap = cap * SHOP_LOOK.signLineGap;
   const tall = set.lines.length * cap + (set.lines.length - 1) * gap;
   let base = h / 2 - tall / 2 + cap;
   ctx.font = font(px);
-  ctx.textAlign = 'center';
+  ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = PALETTE.ink;
+  // Each line starts on a whole device pixel, so its font pixels land on device pixels
   for (const ln of set.lines) {
-    ctx.fillText(ln, w / 2, base);
+    ctx.fillText(ln, Math.round((w - ctx.measureText(ln).width) / 2), Math.round(base));
     base += cap + gap;
   }
   const img = ctx.getImageData(0, 0, w, h);

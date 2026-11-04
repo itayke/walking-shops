@@ -3,6 +3,7 @@ import { lane, PARA_TALL, PERSON_ROWS, sidewalkFeet } from './drawPeople.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { FX_LOOK, GRID, TAU } from './look.ts';
 import { Pix } from './pix.ts';
+import { crispPx } from './signs.ts';
 import { BANNERS, lifetime, type Banner, type CalloutColor, type StreetView } from './view.ts';
 
 const CALLOUT_COLORS: Record<CalloutColor, string> = { danger: PALETTE.danger, ok: PALETTE.ok, muted: PALETTE.grey };
@@ -27,7 +28,7 @@ function font(px: number): string {
   return `${px}px ${FX_LOOK.displayFont}`;
 }
 
-/** Display text centered on device x with its baseline at device y, outlined by a stroke of `line` device pixels. */
+/** Display text centered on device x with its baseline at device y (whole pixels, so the font's pixels land on the device's), outlined by a stroke of `line` device pixels. */
 function outlined(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, px: number, line: number, join: CanvasLineJoin, w: Washed): void {
   ctx.save();
   ctx.font = font(px);
@@ -45,20 +46,20 @@ function outlined(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 /** A title centered on device (x, y), set at the size where `sizer` spans `width` device pixels, with a rounded outline. */
 function title(ctx: CanvasRenderingContext2D, text: string, sizer: string, x: number, y: number, width: number, w: Washed): void {
   ctx.font = font(MEASURE_PX);
-  const px = (MEASURE_PX * width) / ctx.measureText(sizer).width;
+  const px = crispPx((MEASURE_PX * width) / ctx.measureText(sizer).width);
   const m = ctx.measureText(text);
   // Centered on its capitals
   const mid = ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 / MEASURE_PX) * px;
-  outlined(ctx, text, x, y + mid, px, px * FX_LOOK.titleOutline, 'round', w);
+  outlined(ctx, text, Math.round(x), Math.round(y + mid), px, px * FX_LOOK.titleOutline, 'round', w);
 }
 
 /** Small text standing on art (x, y): capitals `cap` art pixels tall in a square ring `ring` art pixels thick. */
 function small(ctx: CanvasRenderingContext2D, L: Layout, text: string, x: number, y: number, cap: number, ring: number, w: Washed): void {
   ctx.font = font(MEASURE_PX);
-  const px = (MEASURE_PX * cap * L.P) / ctx.measureText(text).actualBoundingBoxAscent;
+  const px = crispPx((MEASURE_PX * cap * L.P) / ctx.measureText(text).actualBoundingBoxAscent, Math.round);
   const [dx, dy] = device(L, x, y);
   // The stroke is centered on the glyph edge, so it is twice the ring
-  outlined(ctx, text, dx, dy, px, 2 * ring * L.P, 'miter', w);
+  outlined(ctx, text, Math.round(dx), Math.round(dy), px, 2 * ring * L.P, 'miter', w);
 }
 
 /** Callouts, coins and the phase banner in display type, bump bursts in art pixels. Leavers and buyers are drawn with the people. */

@@ -1,8 +1,8 @@
 /* The phone is a blind controller: two big halves in the shop's tint, one line of status on top */
-/* EAS VHS by Lastnames (fontstruct.com), CC BY 3.0, with its advances snapped to whole font pixels and p and q descending a pixel deeper */
+/* Press Start 2P by CodeMan38, SIL Open Font License 1.1 (fonts/PressStart2P-OFL.txt), shipped unmodified */
 @font-face {
-  font-family: 'EAS VHS';
-  src: url('/fonts/eas-vhs.ttf') format('truetype');
+  font-family: 'Press Start 2P';
+  src: url('/fonts/press-start-2p.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -12,7 +12,11 @@
   --shade: rgb(0 0 0 / 0.28);
   --held: rgb(255 255 255 / 0.22);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'EAS VHS', 'Arial Black', Impact, sans-serif;
+  --font-display: 'Press Start 2P', 'Arial Black', Impact, sans-serif;
+  /* Font pixels per em of the display font: a size with whole screen pixels per font pixel stays crisp */
+  --display-grid: 8;
+  --display-pixel: 3px;
+  --display-size: calc(var(--display-grid) * var(--display-pixel));
   --field: rgb(255 255 255 / 0.92);
   --field-ink: #17202b;
   color-scheme: dark;
@@ -77,9 +81,8 @@ body,
 }
 
 .status strong {
-  font: 400 32px var(--font-display);
+  font: 400 var(--display-size) var(--font-display);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .status span {
@@ -167,7 +170,7 @@ body,
 }
 
 .name {
-  font: 400 26px var(--font-display);
+  font: 400 var(--display-size) var(--font-display);
   text-transform: uppercase;
   text-align: center;
   padding: 10px 12px;
@@ -183,7 +186,7 @@ body,
 
 .go,
 .cancel {
-  font: 400 24px var(--font-display);
+  font: 400 var(--display-size) var(--font-display);
   text-transform: uppercase;
   padding: 12px;
   border-radius: 999px;

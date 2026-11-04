@@ -68,4 +68,4 @@ When a change affects balance, run `npm run bench` before and after and compare 
 
 ## Credits
 
-The display font is [EAS VHS](https://fontstruct.com/fontstructions/show/2878521/eas-vhs) by Lastnames, licensed [CC BY 3.0](http://creativecommons.org/licenses/by/3.0/). The copy in `packages/*/public/fonts` has its glyph advances rounded to whole font pixels, and p and q descend a pixel deeper.
+The display font is [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38, licensed under the [SIL Open Font License 1.1](https://openfontlicense.org); it ships unmodified in `packages/*/public/fonts`, with its license beside it. The title and tagline font, [Jersey 15](https://fonts.google.com/specimen/Jersey+15), loads from Google Fonts.

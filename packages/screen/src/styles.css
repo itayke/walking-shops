@@ -1,8 +1,8 @@
 /* Theme tokens for the HUD and overlays. The street canvas has its own daylight palette (render/colors.ts). */
-/* EAS VHS by Lastnames (fontstruct.com), CC BY 3.0, with its advances snapped to whole font pixels and p and q descending a pixel deeper */
+/* Press Start 2P by CodeMan38, SIL Open Font License 1.1 (fonts/PressStart2P-OFL.txt), shipped unmodified */
 @font-face {
-  font-family: 'EAS VHS';
-  src: url('/fonts/eas-vhs.ttf') format('truetype');
+  font-family: 'Press Start 2P';
+  src: url('/fonts/press-start-2p.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -18,13 +18,14 @@
   --danger: #d2462a;
   --ok: #24935f;
   --hud-height: 48px;
-  --font-display: 'EAS VHS', 'Arial Black', Impact, sans-serif;
+  --font-display: 'Press Start 2P', 'Arial Black', Impact, sans-serif;
   --font-title: 'Jersey 15', 'Arial Black', Impact, sans-serif;
   /* Font pixels per em of each display font: a size with whole screen pixels per font pixel stays crisp */
-  --display-grid: 17;
-  /* The display font at one screen pixel per font pixel, for small HUD text */
-  --display-1x: calc(var(--display-grid) * 1px);
+  --display-grid: 8;
   --title-grid: 27;
+  /* The display font at one screen pixel per font pixel, and at the size small HUD text is set */
+  --display-1x: calc(var(--display-grid) * 1px);
+  --display-small: calc(var(--display-1x) * 2);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
@@ -96,7 +97,8 @@ body {
 .pill {
   font-family: var(--font-display);
   text-transform: uppercase;
-  font-size: var(--display-1x);
+  font-size: var(--display-small);
+  line-height: 1;
   -webkit-font-smoothing: none;
   padding: 3px 12px;
   border-radius: 999px;
@@ -219,7 +221,7 @@ kbd {
   font-family: var(--font-display);
   text-transform: uppercase;
   font-weight: 400;
-  font-size: round(down, clamp(28px, 4vw, 56px), var(--display-1x));
+  font-size: round(down, clamp(32px, 4vw, 64px), var(--display-1x));
   -webkit-font-smoothing: none;
   margin: 0;
 }
@@ -325,9 +327,10 @@ tr.closed td {
   text-align: center;
   /* Screen pixels per font pixel of the title, whole so it stays crisp */
   --title-pixel: round(down, clamp(3px, 9vw / var(--title-grid), 6px), 1px);
-  /* The tagline's font pixels against the title's: at this ratio the two lines set about the same width */
-  --tagline-scale: 0.6;
-  --tagline-pixel: round(var(--title-pixel) * var(--tagline-scale), 1px);
+  /* The tagline's font pixels against the title's, rounded down so it sets no wider than the title, never below a floor */
+  --tagline-scale: 0.5;
+  --tagline-min: 2px;
+  --tagline-pixel: max(var(--tagline-min), round(down, var(--title-pixel) * var(--tagline-scale), 1px));
   /* The title's outline, how far it sits down from the top, and the room between it and the tagline, in title pixels */
   --title-outline: 1.6;
   --title-drop: 3;
@@ -358,8 +361,8 @@ tr.closed td {
   display: block;
   margin: calc(var(--title-pixel) * var(--tagline-gap)) auto 0;
   image-rendering: pixelated;
-  font-family: var(--font-display);
-  font-size: calc(var(--tagline-pixel) * var(--display-grid));
+  font-family: var(--font-title);
+  font-size: calc(var(--tagline-pixel) * var(--title-grid));
   line-height: 1;
   /* Fixed: it sits on the daylight sky in either theme */
   color: #2b3a55;
@@ -390,7 +393,7 @@ tr.closed td {
 
 .join-card .join-count {
   font-family: var(--font-display);
-  font-size: var(--display-1x);
+  font-size: var(--display-small);
   -webkit-font-smoothing: none;
   color: var(--ink);
 }
@@ -405,7 +408,7 @@ tr.closed td {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font: 400 var(--display-1x) var(--font-display);
+  font: 400 var(--display-small) var(--font-display);
   -webkit-font-smoothing: none;
   text-transform: uppercase;
   padding: 6px 18px;
