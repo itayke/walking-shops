@@ -317,6 +317,11 @@ tr.closed td {
 
 /* The lobby: the title and tagline over the sky, and where to join, while shops brawl on the street below */
 .lobby {
+  /* The QR at about this size, rounded down to whole screen pixels per module so every module stays crisp */
+  --qr-target: clamp(180px, 34vh, 420px);
+  --qr-size: calc(var(--qr-modules) * max(1px, round(down, var(--qr-target) / var(--qr-modules), 1px)));
+  --join-pad: 16px;
+  --join-border: 1px;
   position: absolute;
   inset: 0;
   display: flex;
@@ -330,12 +335,14 @@ tr.closed td {
 /* The join card on the left and room for the shop list on the right, in columns of equal width so the title between
    them is centered on the screen */
 .lobby-side {
-  flex: 1 1 0;
+  flex: 0 0 calc(var(--qr-size) + 2 * (var(--join-pad) + var(--join-border)));
   display: flex;
 }
 
+/* Whatever the sides leave, never its own content's width: the title redraws to its column, so a column sized by the
+   title would only ever shrink */
 .lobby .masthead {
-  flex: 0 1 auto;
+  flex: 1 1 0;
   /* Free to shrink below the tagline's current width, so it can wrap */
   min-width: 0;
   text-align: center;
@@ -388,9 +395,9 @@ tr.closed td {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  padding: var(--join-pad);
   background: color-mix(in srgb, var(--panel) 92%, transparent);
-  border: 1px solid var(--line);
+  border: var(--join-border) solid var(--line);
   border-radius: 12px;
   pointer-events: auto;
 }
@@ -408,9 +415,7 @@ tr.closed td {
 }
 
 .qr {
-  /* About this big, rounded down to whole screen pixels per module so every module stays crisp */
-  --qr-target: clamp(180px, 34vh, 420px);
-  width: calc(var(--qr-modules) * max(1px, round(down, var(--qr-target) / var(--qr-modules), 1px)));
+  width: var(--qr-size);
   height: auto;
   display: block;
 }
