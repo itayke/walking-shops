@@ -9,7 +9,7 @@ export const COPY = {
   // Drawn across the street, as written
   street: {
     ready: 'READY?',
-    go: 'GO!',
+    walkIns: 'WALK-INS!',
     parachutes: 'PARACHUTES!',
     topple: 'TOPPLE!',
     blocked: 'BLOCKED',

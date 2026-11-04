@@ -215,7 +215,7 @@ kbd {
   background: color-mix(in srgb, var(--bg) 60%, transparent);
 }
 
-/* Like the street's banners (READY?, GO!): title type, hard-edged (PixelText), in yellow with a round ink outline like
+/* Like the street's banners (READY?, WALK-INS!): title type, hard-edged (PixelText), in yellow with a round ink outline like
    the lobby title's. Paused, and the results' winner */
 .overlay .banner {
   /* Screen pixels per font pixel, whole so it stays crisp */
@@ -261,7 +261,7 @@ kbd {
   pointer-events: auto;
 }
 
-/* Like the street's banners (READY?, GO!): title type, hard-edged, with a round ink outline like the lobby title's; in the winner's color, yellow without one */
+/* Like the street's banners (READY?, WALK-INS!): title type, hard-edged, with a round ink outline like the lobby title's; in the winner's color, yellow without one */
 .results .winner {
   /* Screen pixels per font pixel, whole so it stays crisp */
   --winner-pixel: round(down, clamp(2px, 8vw / var(--title-grid), 5px), 1px);

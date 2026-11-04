@@ -249,14 +249,16 @@ export const FX_LOOK = {
   // A burst's rays start this far out and grow to full length
   burstStart: 0.4,
   bannerTime: 2.5,
-  // A round opens with the street held for readyHold, READY? showing over the start of it, then GO! as play starts
-  readyHold: 1.5,
-  readyTime: 1.5,
-  goTime: 1.5,
-  // Every banner is set at the size that makes the phase banner span this share of the street, and washes in and out
-  // over this share of its life at each end
+  // A round opens with the street held for readyHold, READY? showing over the start of it, then WALK-INS! as play
+  // starts, naming the phase as PARACHUTES! names the second
+  readyHold: 2.5,
+  readyTime: 2.5,
+  walkInsTime: 2,
+  // Every banner is set at the size that makes the widest of them span this share of the street, and washes in, then
+  // out, over these shares of its life
   bannerWidth: 0.35,
-  bannerFade: 0.2,
+  bannerFadeIn: 0.1,
+  bannerFadeOut: 0.1,
   // Small text (effect callouts, coins, shop names) is 8-bit display type, the screen's --font-display
   displayFont: "'Press Start 2P', 'Arial Black', Impact, sans-serif",
   // Font pixels per em of the display font: set at whole device pixels per font pixel, it stays crisp
@@ -265,7 +267,7 @@ export const FX_LOOK = {
   // screen) is set in this narrower 5-pixel type instead, on its own grid
   signSmallFont: "'Micro 5', 'Arial Narrow', sans-serif",
   signSmallGrid: 11,
-  // Banners (READY? GO! and the phase banner) are 16-bit title type, the screen's --font-title, on its own pixel grid,
+  // Banners (READY? WALK-INS! and PARACHUTES!) are 16-bit title type, the screen's --font-title, on its own pixel grid,
   // outlined by this share of their size
   bannerFont: "'Jersey 15', 'Arial Black', Impact, sans-serif",
   bannerGrid: 27,

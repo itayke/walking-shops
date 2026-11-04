@@ -205,7 +205,7 @@ export function App() {
       host.current.setFallback(manualFallback || (offlineSince !== null && now - offlineSince >= NET.fallbackAfter * MS_PER_SECOND));
       if (!paused.current) {
         if (view.holding) {
-          // Taps during the countdown are dropped, so play starts on what's held at GO!
+          // Taps during the countdown are dropped, so play starts on what's held at WALK-INS!
           host.current.inputs();
           keyboard.dir();
         } else if (!g.over) {

@@ -8,7 +8,7 @@ import { BANNERS, lifetime, type Banner, type CalloutColor, type StreetView } fr
 
 const CALLOUT_COLORS: Record<CalloutColor, string> = { danger: PALETTE.danger, ok: PALETTE.ok, muted: PALETTE.grey };
 // The countdown goes amber to green, like a starting light
-const BANNER_COLORS: Record<Banner, string> = { ready: PALETTE.yellow, go: PALETTE.ok, phase2: PALETTE.blue };
+const BANNER_COLORS: Record<Banner, string> = { ready: PALETTE.yellow, walkIns: PALETTE.ok, phase2: PALETTE.blue };
 
 /** The wash keyframe to draw, 0 at full strength: steps through every keyframe over the last `span` before `left` runs out. */
 function washStep(left: number, span: number): number {
@@ -105,7 +105,7 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
       case 'banner': {
         const u = e.age / lifetime(e);
         // Washes in and out through the same keyframes
-        const w = washOut(BANNER_COLORS[e.banner], washStep(Math.min(u, 1 - u), look.bannerFade));
+        const w = washOut(BANNER_COLORS[e.banner], Math.max(washStep(u, look.bannerFadeIn), washStep(1 - u, look.bannerFadeOut)));
         const [x, y] = device(L, L.gridW / 2, L.top / 2);
         title(ctx, BANNERS[e.banner].text, x, y, L.gridW * look.bannerWidth * L.P, w);
         break;

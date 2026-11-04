@@ -61,7 +61,7 @@ export const CALLOUT_TEXT = { topple: COPY.street.topple, pushback: COPY.street.
 // Titles across the street: the countdown into a round, and phase 2
 export const BANNERS = {
   ready: { text: COPY.street.ready, time: FX_LOOK.readyTime },
-  go: { text: COPY.street.go, time: FX_LOOK.goTime },
+  walkIns: { text: COPY.street.walkIns, time: FX_LOOK.walkInsTime },
   phase2: { text: COPY.street.parachutes, time: FX_LOOK.bannerTime },
 };
 export type Banner = keyof typeof BANNERS;
@@ -103,7 +103,7 @@ export class StreetView {
   // Shops that started dropping this frame, so the next one waits its turn
   private dropping = 0;
 
-  /** Start over on a new street, with or without the READY? GO! countdown. Shops that join later drop in from the sky. */
+  /** Start over on a new street, with or without the READY? WALK-INS! countdown. Shops that join later drop in from the sky. */
   reset(g: GameState, countdown = false): void {
     this.anims.clear();
     this.effects = [];
@@ -114,13 +114,13 @@ export class StreetView {
     if (countdown) this.countdown();
   }
 
-  /** READY? GO! into a round that starts from the street as it is. */
+  /** READY? WALK-INS! into a round that starts from the street as it is. */
   countdown(): void {
     this.readyLeft = FX_LOOK.readyHold;
     this.add({ kind: 'banner', banner: 'ready', age: 0 });
   }
 
-  /** The countdown is still on: the screen holds the sim until GO!. */
+  /** The countdown is still on: the screen holds the sim until WALK-INS!. */
   get holding(): boolean {
     return this.readyLeft > 0;
   }
@@ -277,7 +277,7 @@ export class StreetView {
 
     if (this.readyLeft > 0) {
       this.readyLeft -= dt;
-      if (this.readyLeft <= 0) this.add({ kind: 'banner', banner: 'go', age: 0 });
+      if (this.readyLeft <= 0) this.add({ kind: 'banner', banner: 'walkIns', age: 0 });
     }
 
     const phase2 = isPhase2(g);

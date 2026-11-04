@@ -110,7 +110,7 @@ describe('view', () => {
     expect(banners(view, 'phase2')).toBe(1);
   });
 
-  it('counts a round in with READY? then GO!, holding until GO!', () => {
+  it('counts a round in with READY? then WALK-INS!, holding until WALK-INS!', () => {
     const g = street([['A']]);
     const view = new StreetView();
     view.reset(g, true);
@@ -118,10 +118,10 @@ describe('view', () => {
     expect(banners(view, 'ready')).toBe(1);
     view.update(g, FX_LOOK.readyHold / 2);
     expect(view.holding).toBe(true);
-    expect(banners(view, 'go')).toBe(0);
+    expect(banners(view, 'walkIns')).toBe(0);
     view.update(g, FX_LOOK.readyHold / 2);
     expect(view.holding).toBe(false);
-    expect(banners(view, 'go')).toBe(1);
+    expect(banners(view, 'walkIns')).toBe(1);
     view.reset(g);
     expect(view.holding).toBe(false);
     expect(view.effects).toHaveLength(0);
