@@ -11,11 +11,11 @@
   --danger: #d2462a;
   --ok: #24935f;
   --hud-height: 48px;
-  --font-display: 'Jersey 15', 'Arial Black', Impact, sans-serif;
-  --font-display-chunky: 'Jersey 10', 'Arial Black', Impact, sans-serif;
+  --font-display: 'Jersey 10', 'Arial Black', Impact, sans-serif;
+  --font-title: 'Jersey 15', 'Arial Black', Impact, sans-serif;
   /* Font pixels per em of each display font: a size with whole screen pixels per font pixel stays crisp */
-  --display-grid: 27;
-  --display-chunky-grid: calc(56 / 3);
+  --display-grid: calc(56 / 3);
+  --title-grid: 27;
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
@@ -288,6 +288,13 @@ tr.closed td {
   border: 1px solid var(--ink);
 }
 
+/* Registered, so PixelText reads it as a computed length rather than the expression that sets it */
+@property --pixel-outline {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
 /* The lobby: the title and tagline over the sky, and where to join, while shops brawl on the street below */
 .lobby {
   position: absolute;
@@ -306,32 +313,40 @@ tr.closed td {
   min-width: 0;
   text-align: center;
   /* Screen pixels per font pixel of the title, whole so it stays crisp */
-  --title-pixel: round(down, clamp(2px, 9vw / var(--display-grid), 6px), 1px);
+  --title-pixel: round(down, clamp(2px, 9vw / var(--title-grid), 6px), 1px);
   /* The tagline's font pixels against the title's: at this ratio the two lines set about the same width */
   --tagline-scale: 0.8;
-  /* Room above the tagline, in title pixels, on top of the space under the title's letters */
-  --tagline-gap: 3.6;
+  /* The title's outline, and the room between it and the tagline, in title pixels */
+  --title-outline: 1.6;
+  --tagline-gap: 8;
 }
 
 .lobby .title {
   margin: 0;
   text-align: center;
-  font-family: var(--font-display);
+  font-family: var(--font-title);
   font-weight: 400;
   text-transform: uppercase;
-  font-size: calc(var(--title-pixel) * var(--display-grid));
+  font-size: calc(var(--title-pixel) * var(--title-grid));
   line-height: 1;
   color: var(--accent);
-  -webkit-text-stroke: 0.12em #17202b;
-  paint-order: stroke fill;
+  /* Drawn hard-edged (PixelText), with a pixel outline */
+  --pixel-outline: calc(var(--title-pixel) * var(--title-outline));
+  --pixel-outline-color: #17202b;
+}
+
+.lobby .title canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
 }
 
 .lobby .tagline {
   display: block;
   margin: calc(var(--title-pixel) * var(--tagline-gap)) auto 0;
   image-rendering: pixelated;
-  font-family: var(--font-display-chunky);
-  font-size: calc(round(var(--title-pixel) * var(--tagline-scale), 1px) * var(--display-chunky-grid));
+  font-family: var(--font-display);
+  font-size: calc(round(var(--title-pixel) * var(--tagline-scale), 1px) * var(--display-grid));
   line-height: 1;
   /* Fixed: it sits on the daylight sky in either theme */
   color: #2b3a55;

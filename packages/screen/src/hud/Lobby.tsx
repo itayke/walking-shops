@@ -28,7 +28,9 @@ export function Lobby({ g, room, onBegin }: { g: GameState; room: string; onBegi
   return (
     <div className="lobby">
       <header className="masthead">
-        <h1 className="title">Shop Shuffle</h1>
+        <h1 className="title">
+          <PixelText text="Shop Shuffle" />
+        </h1>
         <PixelText className="tagline" text="Get your business moving" />
       </header>
       <div className="join-card">
