@@ -101,10 +101,12 @@ export const SHOP_LOOK = {
   minDoor: 3,
   doorGlassShare: 0.25,
   knobAt: 0.55,
-  // The barber pole turns, the café cup steams
+  // The barber pole turns, the café cup steams, a glint goes round the records, the marquee bulbs chase
   poleShare: 0.07,
   poleRate: 6,
   steamRate: 3,
+  recordRate: 4,
+  bulbRate: 6,
   // Hues snap to steps along the golden angle, so neighbors in the list never look alike
   hueSpread: 137.508,
   hueOffset: 20,
