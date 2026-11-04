@@ -1,4 +1,4 @@
-/* The phone is a blind controller: two big halves in the shop's tint, one line of status on top */
+/* The phone is a blind controller: two big halves in the shop's tint, under the player's shop, its money and place */
 /* Press Start 2P by CodeMan38, SIL Open Font License 1.1 (fonts/PressStart2P-OFL.txt), shipped unmodified */
 @font-face {
   font-family: 'Press Start 2P';
@@ -19,6 +19,10 @@
   --display-size: calc(var(--display-grid) * var(--display-pixel));
   --field: rgb(255 255 255 / 0.92);
   --field-ink: #17202b;
+  /* The street's coin callouts and ink, and the text on the shop's patch of sky */
+  --coin: #f5c746;
+  --coin-edge: #1c1a26;
+  --on-sky: #1f3a5f;
   color-scheme: dark;
 }
 
@@ -43,6 +47,7 @@ body,
   height: 100%;
   background: var(--pad);
   transition: background 0.3s;
+  touch-action: none;
 }
 
 .half {
@@ -50,6 +55,8 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
+  /* The arrows sit in the middle of the space between the card and the bottom of the screen */
+  padding: var(--card-bottom, 0) 0 env(safe-area-inset-bottom);
   touch-action: none;
 }
 
@@ -62,7 +69,8 @@ body,
 }
 
 .arrow {
-  font-size: 18vmin;
+  width: 18vmin;
+  height: 18vmin;
   opacity: 0.35;
   pointer-events: none;
 }
@@ -89,6 +97,63 @@ body,
   font-size: 16px;
 }
 
+.badge {
+  width: 100%;
+  /* Sky above and below the shop, on top of the card's gap */
+  margin-block: 15px;
+  image-rendering: pixelated;
+}
+
+/* The controller's own shop: its money and place over it, its status under it, all on the street's sky */
+.pad .status {
+  background: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 16px;
+  color: var(--on-sky);
+}
+
+.card > span {
+  font-weight: 600;
+}
+
+.score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  margin: 0;
+}
+
+/* A one-font-pixel outline in eight directions keeps the money crisp on any sky */
+.status .score strong {
+  --o: var(--display-pixel);
+  color: var(--coin);
+  text-transform: none;
+  text-shadow:
+    calc(-1 * var(--o)) 0 var(--coin-edge),
+    var(--o) 0 var(--coin-edge),
+    0 calc(-1 * var(--o)) var(--coin-edge),
+    0 var(--o) var(--coin-edge),
+    calc(-1 * var(--o)) calc(-1 * var(--o)) var(--coin-edge),
+    var(--o) calc(-1 * var(--o)) var(--coin-edge),
+    calc(-1 * var(--o)) var(--o) var(--coin-edge),
+    var(--o) var(--o) var(--coin-edge);
+}
+
+.status .score span {
+  font-size: 20px;
+  font-weight: 700;
+}
+
 .message {
   display: flex;
   height: 100%;
@@ -101,11 +166,10 @@ body,
 
 .status .edit {
   pointer-events: auto;
-  margin-top: 4px;
   font: 600 14px var(--font-body);
-  color: var(--ink);
-  background: var(--shade);
-  border: 1px solid rgb(255 255 255 / 0.5);
+  color: var(--on-sky);
+  background: transparent;
+  border: 1.5px solid currentColor;
   border-radius: 999px;
   padding: 6px 14px;
 }
@@ -160,13 +224,19 @@ body,
 
 .turn {
   position: relative;
-  font-size: 28px;
+  display: grid;
+  place-items: center;
   color: var(--ink);
   background: var(--shade);
   border: 0;
   border-radius: 12px;
   width: 48px;
   height: 64px;
+}
+
+.turn svg {
+  width: 24px;
+  height: 24px;
 }
 
 .name {

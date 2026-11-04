@@ -2,8 +2,11 @@ import { DEV_PORTS, isRoomCode, randomId, type PhoneMsg, type PhoneState } from 
 import { connectPhone, type Link } from '@walking-shops/net/client';
 import { FX_LOOK } from '@walking-shops/render/look.ts';
 import { scoreText, type Dir } from '@walking-shops/sim';
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import { Arrow } from './Arrow.tsx';
+import { Badge } from './Badge.tsx';
 import { Setup, type Draft } from './Setup.tsx';
+import { BACKDROP } from './shop.ts';
 
 // The reconnect token: the same token reclaims the same shop after a dropped connection or a reload
 const TOKEN_KEY = 'walking-shops.token';
@@ -16,6 +19,10 @@ const PARTY_HOST: string = import.meta.env.VITE_PARTY_HOST || `${location.hostna
 // Short buzzes where supported (not iOS): a press, and the shutters coming down
 const PRESS_BUZZ_MS = 12;
 const CLOSED_BUZZ = [80, 60, 80];
+// A finger past the middle by this share of the width takes the other direction, so one resting on it doesn't flicker
+const CROSS_MARGIN = 0.04;
+// Phases with a street to be ranked on: the money made so far and the place it puts the shop
+const SCORED: PhoneState['phase'][] = ['walk-ins', 'parachutes', 'results'];
 
 function token(): string {
   try {
@@ -80,6 +87,20 @@ function useWakeLock(): () => void {
   return request;
 }
 
+/** Where an element's bottom edge is, kept current as it changes size: the controller's card, for the arrows to clear. */
+function useBottom(): [(el: HTMLElement | null) => void, number] {
+  const [bottom, setBottom] = useState(0);
+  const watch = useRef<ResizeObserver | null>(null);
+  const ref = useCallback((el: HTMLElement | null) => {
+    watch.current?.disconnect();
+    watch.current = null;
+    if (!el) return setBottom(0);
+    watch.current = new ResizeObserver(() => setBottom(el.getBoundingClientRect().bottom));
+    watch.current.observe(el);
+  }, []);
+  return [ref, bottom];
+}
+
 /** One line on the phone, kept short: the screen carries the game. */
 function status(online: boolean, host: boolean, s: PhoneState | null): string {
   if (!online) return 'Connecting…';
@@ -93,13 +114,23 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
     case 'lobby':
       return 'Warm up! The round starts soon';
     case 'results':
-      return `#${s.rank} of ${s.of} · ${scoreText(s.income)}`;
+      return 'Round over';
     default:
       return s.closed ? 'Shutters down: tap to open' : 'Tap to step · hold to walk';
   }
 }
 
-/** The controller: the whole phone is two halves. Tap left or right to step, hold to keep walking. */
+/** The direction a finger at clientX asks for: its own side of the middle, kept until it crosses well past it. */
+function sideOf(x: number, width: number, was: Dir): Dir {
+  const off = x / width - 1 / 2;
+  if (was !== 0 && Math.abs(off) < CROSS_MARGIN) return was;
+  return off < 0 ? -1 : 1;
+}
+
+/**
+ * The controller: the whole phone is two halves under the player's shop. Tap left or right to step, hold to keep
+ * walking, and slide a held finger across to turn without letting go.
+ */
 export function App() {
   const link = useRef<Link<PhoneMsg> | null>(null);
   // Fingers down, oldest first: the newest decides the direction
@@ -116,6 +147,7 @@ export function App() {
   const [draft, setDraft] = useState<Draft | null>(storedDraft);
   const fontReady = useFontReady();
   const wake = useWakeLock();
+  const [card, cardBottom] = useBottom();
 
   const send = () => link.current?.send({ t: 'input', seq: ++seq.current, dir: dir.current });
 
@@ -151,13 +183,24 @@ export function App() {
     setHeld(next);
     send();
   };
-  const down = (d: Dir) => (e: PointerEvent) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    fingers.current.delete(e.pointerId);
-    fingers.current.set(e.pointerId, d);
+  // The newest finger to press or turn decides, so sliding one across takes over from one resting
+  const press = (id: number, d: Dir) => {
+    fingers.current.delete(id);
+    fingers.current.set(id, d);
     buzz(PRESS_BUZZ_MS);
-    wake();
     update();
+  };
+  const down = (e: PointerEvent) => {
+    if ((e.target as Element).closest('button')) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    wake();
+    press(e.pointerId, sideOf(e.clientX, e.currentTarget.clientWidth, 0));
+  };
+  const move = (e: PointerEvent) => {
+    const was = fingers.current.get(e.pointerId);
+    if (was === undefined) return;
+    const d = sideOf(e.clientX, e.currentTarget.clientWidth, was);
+    if (d !== was) press(e.pointerId, d);
   };
   const up = (e: PointerEvent) => {
     fingers.current.delete(e.pointerId);
@@ -214,21 +257,44 @@ export function App() {
     );
   }
   const half = (d: Dir) => (
-    <div className={held === d ? 'half held' : 'half'} onPointerDown={down(d)} onPointerUp={up} onPointerCancel={up}>
-      <span className="arrow">{d < 0 ? '◀' : '▶'}</span>
+    <div className={held === d ? 'half held' : 'half'}>
+      <Arrow dir={d < 0 ? -1 : 1} className="arrow" />
     </div>
   );
+  const scored = state && state.rank > 0 && SCORED.includes(state.phase);
   return (
-    <main className="pad" style={state ? { background: state.tint } : undefined} onContextMenu={(e) => e.preventDefault()}>
+    <main
+      className="pad"
+      style={{ background: state?.tint, '--card-bottom': `${cardBottom}px` } as CSSProperties}
+      onPointerDown={down}
+      onPointerMove={move}
+      onPointerUp={up}
+      onPointerCancel={up}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {half(-1)}
       {half(1)}
       <header className="status">
-        <strong>{state?.label ?? ''}</strong>
-        <span>{status(online, host, state)}</span>
-        {state?.phase === 'lobby' && (
-          <button type="button" className="edit" onClick={startEdit}>
-            Edit shop
-          </button>
+        {state?.label ? (
+          <div ref={card} className="card" style={{ background: BACKDROP }}>
+            {scored && (
+              <p className="score">
+                <strong>{scoreText(state.income)}</strong>
+                <span>
+                  #{state.rank} of {state.of}
+                </span>
+              </p>
+            )}
+            {state.phase === 'lobby' && (
+              <button type="button" className="edit" onClick={startEdit}>
+                Edit shop
+              </button>
+            )}
+            <Badge name={state.label} look={state.look} closed={state.closed} />
+            <span>{status(online, host, state)}</span>
+          </div>
+        ) : (
+          <span>{status(online, host, state)}</span>
         )}
       </header>
     </main>

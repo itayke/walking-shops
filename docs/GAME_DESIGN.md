@@ -28,7 +28,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 2. **Begin:** the presenter starts the round. The title and QR clear, bots drop into the widest empty gaps until there are `minPlayers` shops, then READY? GO! across the street: the street holds still until GO!, and the round clock starts with it. Shops start where the brawl left them.
 3. **Phase 1, walk-ins (≈40–60s):** the tutorial in disguise. Low stakes.
 4. **Phase 2, parachutes (≈60s):** the real game.
-5. **Results (≈20s):** leaderboard on screen; each phone shows "Your shop: N customers". A replay goes back to the lobby: the bots leave, the QR comes back, new players join, and everyone else keeps their shop.
+5. **Results (≈20s):** leaderboard on screen; each phone shows its shop's money and final place. A replay goes back to the lobby: the bots leave, the QR comes back, new players join, and everyone else keeps their shop.
 6. **Town hub:** shops walk back and settle into Main Street. Untame's own buildings (Workshop = client work, Arcade = original games) are stops for the rest of the talk.
 7. **Close:** every phone shows a contact card: site, LinkedIn, Save contact (vCard), a shareable image of their shop, and a permanent URL that works tomorrow.
 
@@ -53,8 +53,8 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ### Controls
 
-- The whole phone is two halves: **tap left / tap right to step one column; hold to keep walking.** Release and you sit at the next column. Pushing a tower takes a hold.
-- No other UI during play. The phone shows your shop's tint, big, so you can play without looking at it.
+- The whole phone is two halves: **tap left / tap right to step one column; hold to keep walking.** Release and you sit at the next column. Pushing a tower takes a hold. A held finger can slide across the middle to turn without letting go.
+- On top, your shop as the street draws it (shutters down when it's closed), the money it has made, and its place (#3 of 12). Nothing else during play: the phone is in your shop's tint, big, so you can play without looking at it.
 - All feedback is on the big screen: your shop lurches when you press, and pressing brings it to the front of a cluster.
 
 ## 5. The street

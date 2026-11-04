@@ -1,12 +1,10 @@
-import { PALETTE, shopHue, shopTint } from '@walking-shops/render/colors.ts';
-import { SHOP, shopSprite } from '@walking-shops/render/shopArt.ts';
-import { drawSignName } from '@walking-shops/render/signs.ts';
+import { SHOP } from '@walking-shops/render/shopArt.ts';
 import type { Look } from '@walking-shops/sim';
 import { useEffect, useRef, type PointerEvent } from 'react';
+import { Arrow } from './Arrow.tsx';
+import { BACKDROP, drawShop, fitScale } from './shop.ts';
 
 const MS_PER_SECOND = 1000;
-// The street's sky behind the shop, so it stands out from a page in its own color
-const BACKDROP = PALETTE.sky[1];
 // Dragged this far, as a share of its width, the shop lets go of the finger and slides out on its own
 const SWIPE_COMMIT = 0.5;
 // Seconds for a shop to slide out from the middle, for the next one to slide in, and to ease back when let go early
@@ -72,7 +70,9 @@ export function Preview({ name, look, placeholder, onTurn }: { name: string; loo
   };
 
   useEffect(() => {
+    // Held from the start: a last frame can run after unmount, once React has let go of the refs
     const canvas = ref.current!;
+    const slotEl = slot.current!;
     const s = m.current;
     // The type in the middle of the turn's way: drawn until the old shop is out
     let drawn = props.current.look.design;
@@ -89,14 +89,14 @@ export function Preview({ name, look, placeholder, onTurn }: { name: string; loo
       }
 
       const r = canvas.getBoundingClientRect();
-      const box = slot.current!.getBoundingClientRect();
+      const box = slotEl.getBoundingClientRect();
       const cw = Math.round(r.width * devicePixelRatio);
       const ch = Math.round(r.height * devicePixelRatio);
       if (canvas.width !== cw || canvas.height !== ch) {
         canvas.width = cw;
         canvas.height = ch;
       }
-      const P = Math.max(1, Math.floor(Math.min(box.width / SHOP.spriteW, box.height / SHOP.spriteH) * devicePixelRatio));
+      const P = fitScale(box.width, box.height);
       const w = SHOP.spriteW * P;
       const h = SHOP.spriteH * P;
       s.shopW = w;
@@ -126,10 +126,7 @@ export function Preview({ name, look, placeholder, onTurn }: { name: string; loo
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, cw, ch);
       const left = Math.round(cx - w / 2 + s.x);
-      ctx.drawImage(shopSprite({ design: drawn, tint: shopTint(shopHue(look.hue)), shutter: 0, danger: false, t }), left, top, w, h);
-      ctx.globalAlpha = placeholder ? PLACEHOLDER_ALPHA : 1;
-      drawSignName(ctx, name, left, top, P);
-      ctx.globalAlpha = 1;
+      drawShop(ctx, { name, look: { ...look, design: drawn }, t, signAlpha: placeholder ? PLACEHOLDER_ALPHA : 1 }, left, top, P);
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -140,11 +137,11 @@ export function Preview({ name, look, placeholder, onTurn }: { name: string; loo
     <div className="stand" style={{ background: BACKDROP }} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
       <canvas ref={ref} className="preview" aria-label={name} />
       <button type="button" className="turn" onClick={() => turn(-1)} aria-label="Previous shop type">
-        ◀
+        <Arrow dir={-1} />
       </button>
       <div ref={slot} className="slot" />
       <button type="button" className="turn" onClick={() => turn(1)} aria-label="Next shop type">
-        ▶
+        <Arrow dir={1} />
       </button>
     </div>
   );
