@@ -133,7 +133,8 @@ export class Host {
         break;
       }
       case 'joined':
-        this.join(msg.phone);
+        // A new connection, often a reload, has none of the phone's state: send it again
+        this.join(msg.phone).sent = '';
         break;
       case 'left':
         this.leave(msg.phone);

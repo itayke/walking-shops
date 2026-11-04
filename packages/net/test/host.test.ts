@@ -169,6 +169,16 @@ describe('host', () => {
     expect(h.seats.size).toBe(1);
   });
 
+  it('sends a reloaded phone its state again, though nothing changed', () => {
+    const { h, sent } = host();
+    open(h, PHONE);
+    h.flush();
+    // A reload: the new socket can open before the old one closes, so there may be no leave in between
+    h.receive({ t: 'joined', phone: PHONE });
+    h.flush();
+    expect(sent.map((m) => m.states.map(([p]) => p))).toEqual([[PHONE], [PHONE]]);
+  });
+
   it('keeps a shop on the street for a phone that drops in the lobby', () => {
     const { h } = host();
     open(h, PHONE);

@@ -36,9 +36,9 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ### Joining
 
-- **One field: the shop's name.** Its placeholder is a funny suggestion, and opening the shop with the field blank uses it.
+- **One field: the shop's name.** Until one is typed, the field and the sign show a plain "Shop name" placeholder and the shop can't open, so every player names their own shop and knows which one is theirs.
 - **Live preview:** the phone draws the shop exactly as the big screen will, with the same sign fitting and font, so the name wraps and shrinks on the sign as you type. A letter that would push the name under the sign's smallest size isn't accepted, so nothing is ever cut off on the big screen.
-- **Shop type:** one shop on screen; arrows or a swipe cycle through the types, starting at a random one.
+- **Shop type:** one shop on screen; arrows or a swipe cycle through the types, starting at a random one. The shop turns like a box on a turntable, the next type coming round from the side the swipe points to.
 - **Color is assigned,** never picked: hues are handed out so that a repeated hue always goes to a different shop type, which keeps every shop findable.
 - **Editing:** until the round begins, a player can go back to the form. The shop stays on the street with its current name and type, and an edit applies only when confirmed. If the round begins mid-edit, the edit is dropped and the phone becomes the controller.
 - A player who hasn't opened their shop by the time the round begins waits for the replay. They can set it up meanwhile, and it drops in when the lobby reopens.

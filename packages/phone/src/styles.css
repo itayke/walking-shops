@@ -178,6 +178,10 @@ body,
   color: #fff;
 }
 
+.go:disabled {
+  opacity: 0.35;
+}
+
 .cancel {
   background: transparent;
   color: var(--ink);
