@@ -212,6 +212,38 @@ kbd {
   margin: 0;
 }
 
+/* The results: the winner in banner type over the ranking, which takes clicks for Play again */
+.results {
+  flex-direction: column;
+  gap: 16px;
+}
+
+.results .card {
+  pointer-events: auto;
+}
+
+/* Like the street's banners (READY?, GO!): title type, hard-edged, in yellow with an ink outline like the lobby title's */
+.results .winner {
+  /* Screen pixels per font pixel, whole so it stays crisp */
+  --winner-pixel: round(down, clamp(2px, 8vw / var(--title-grid), 5px), 1px);
+  --winner-outline: 1.6;
+  /* Full width rather than shrunk to its text, which wraps to it */
+  width: 90%;
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: calc(var(--winner-pixel) * var(--title-grid));
+  line-height: 1;
+  color: #f5c746;
+  --pixel-outline: calc(var(--winner-pixel) * var(--winner-outline));
+  --pixel-outline-color: #1c1a26;
+}
+
+.results .winner canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+}
+
 .card {
   background: color-mix(in srgb, var(--panel) 92%, transparent);
   border: 1px solid var(--line);
@@ -385,7 +417,8 @@ tr.closed td {
   display: block;
 }
 
-.join-card button {
+/* Begin in the lobby, Play again on the results */
+.pill-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -403,7 +436,7 @@ tr.closed td {
 }
 
 /* Trimmed to its capitals, so the key's label sits in the middle of its box rather than over the descender space */
-.join-card button kbd {
+.pill-button kbd {
   font: 600 12px/1 var(--font-body);
   letter-spacing: 0.04em;
   padding: 4px 6px;

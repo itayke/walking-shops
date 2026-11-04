@@ -44,11 +44,10 @@ function font(px: number): string {
 }
 
 /**
- * A display font size in device pixels, at whole device pixels per font pixel (at least one) so it stays crisp: rounded
- * down by default, so text that fits still fits.
+ * A font size in device pixels, at whole device pixels per font pixel (at least one) so it stays crisp: rounded down by
+ * default, so text that fits still fits. `grid` is the font's pixels per em, the display font's unless given.
  */
-export function crispPx(px: number, snap: (n: number) => number = Math.floor): number {
-  const grid = FX_LOOK.displayGrid;
+export function crispPx(px: number, snap: (n: number) => number = Math.floor, grid: number = FX_LOOK.displayGrid): number {
   return Math.max(1, snap(px / grid)) * grid;
 }
 

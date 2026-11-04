@@ -74,6 +74,7 @@ export function App() {
   const paused = useRef(false);
   // Set once the frame loop is running: starts the round from a button or a key
   const begin = useRef<() => void>(() => {});
+  const replay = useRef<() => void>(() => {});
   const [board, setBoard] = useState(false);
   // Re-renders the HUD a few times a second; the canvas redraws every frame on its own
   const [, setHudTick] = useState(0);
@@ -137,6 +138,7 @@ export function App() {
       host.current.replay();
       refresh();
     };
+    replay.current = lobby;
     const newStreet = () => {
       view.reset(host.current.reset());
       refresh();
@@ -233,7 +235,7 @@ export function App() {
           />
         )}
         {board && <Board g={g} you={SCREEN_SHOP?.id} />}
-        {g.over ? <Results g={g} you={SCREEN_SHOP?.id} /> : paused.current && <Paused />}
+        {g.over ? <Results g={g} you={SCREEN_SHOP?.id} onReplay={() => replay.current()} /> : paused.current && <Paused />}
       </div>
     </div>
   );

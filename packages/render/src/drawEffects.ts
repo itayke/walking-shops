@@ -24,14 +24,14 @@ function fadeOut(u: number): number {
 // Text is measured at this size, then scaled to fit
 const MEASURE_PX = 100;
 
-function font(px: number): string {
-  return `${px}px ${FX_LOOK.displayFont}`;
+function font(px: number, family: string = FX_LOOK.displayFont): string {
+  return `${px}px ${family}`;
 }
 
-/** Display text centered on device x with its baseline at device y (whole pixels, so the font's pixels land on the device's), outlined by a stroke of `line` device pixels. */
-function outlined(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, px: number, line: number, join: CanvasLineJoin, w: Washed): void {
+/** Text centered on device x with its baseline at device y (whole pixels, so the font's pixels land on the device's), outlined by a stroke of `line` device pixels. */
+function outlined(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, px: number, line: number, join: CanvasLineJoin, w: Washed, family?: string): void {
   ctx.save();
-  ctx.font = font(px);
+  ctx.font = font(px, family);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.lineJoin = join;
@@ -43,14 +43,15 @@ function outlined(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.restore();
 }
 
-/** A title centered on device (x, y), set at the size where `sizer` spans `width` device pixels, with a rounded outline. */
+/** A banner centered on device (x, y) in title type, set at the size where `sizer` spans `width` device pixels, with a rounded outline. */
 function title(ctx: CanvasRenderingContext2D, text: string, sizer: string, x: number, y: number, width: number, w: Washed): void {
-  ctx.font = font(MEASURE_PX);
-  const px = crispPx((MEASURE_PX * width) / ctx.measureText(sizer).width);
+  const { bannerFont, bannerGrid } = FX_LOOK;
+  ctx.font = font(MEASURE_PX, bannerFont);
+  const px = crispPx((MEASURE_PX * width) / ctx.measureText(sizer).width, Math.floor, bannerGrid);
   const m = ctx.measureText(text);
   // Centered on its capitals
   const mid = ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 / MEASURE_PX) * px;
-  outlined(ctx, text, Math.round(x), Math.round(y + mid), px, px * FX_LOOK.titleOutline, 'round', w);
+  outlined(ctx, text, Math.round(x), Math.round(y + mid), px, px * FX_LOOK.titleOutline, 'round', w, bannerFont);
 }
 
 /** Small text standing on art (x, y): capitals `cap` art pixels tall in a square ring `ring` art pixels thick. */

@@ -56,7 +56,7 @@ Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:
 | `B` | Scoreboard |
 | `Enter` | Begin the round (in the lobby) |
 | `T` | Tuning panel (its New street button lays the street out again) |
-| `R` | Back to the lobby: the bots leave, everyone else stays put |
+| `R` | Back to the lobby (or Play again on the results): the bots leave, everyone else stays put |
 
 URL parameters: `?screenShop=NAME` seats a shop played from the screen's keyboard under that name (`?screenShop` alone names it YOU; without it there is none), `?seed=N` replays the same round, `?at=S` skips the lobby and fast-forwards the first round to S seconds (for example `http://localhost:7320/?seed=7&at=70`).
 
@@ -68,4 +68,4 @@ When a change affects balance, run `npm run bench` before and after and compare 
 
 ## Credits
 
-The display font is [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38, licensed under the [SIL Open Font License 1.1](https://openfontlicense.org); it ships unmodified in `packages/*/public/fonts`, with its license beside it. The title and tagline font, [Jersey 15](https://fonts.google.com/specimen/Jersey+15), loads from Google Fonts.
+The display font is [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38, licensed under the [SIL Open Font License 1.1](https://openfontlicense.org); it ships unmodified in `packages/*/public/fonts`, with its license beside it. The title, tagline and banner font, [Jersey 15](https://fonts.google.com/specimen/Jersey+15), loads from Google Fonts.

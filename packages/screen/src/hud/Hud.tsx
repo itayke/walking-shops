@@ -2,6 +2,7 @@ import type { Seat } from '@walking-shops/net';
 import { isPhase2, scoreText, type GameState, type Shop } from '@walking-shops/sim';
 import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
 import { lookOf } from '@walking-shops/render/shopArt.ts';
+import { PixelText } from './PixelText.tsx';
 
 const SECONDS_PER_MINUTE = 60;
 const PERCENT = 100;
@@ -105,14 +106,17 @@ export function Board({ g, you }: { g: GameState; you?: string }) {
   );
 }
 
-export function Results({ g, you }: { g: GameState; you?: string }) {
+/** The winner in banner type over the top of the ranking, and a way back to the lobby for another round. */
+export function Results({ g, you, onReplay }: { g: GameState; you?: string; onReplay: () => void }) {
   const rows = ranked(g);
   const myRank = rows.findIndex((r) => r.s.id === you);
   const [best] = rows;
   return (
-    <div className="overlay dim">
+    <div className="overlay dim results">
+      <h2 className="winner">
+        <PixelText text={best ? `${best.s.label} wins` : 'Round over'} />
+      </h2>
       <div className="card">
-        <h2>{best ? `${best.s.label} wins` : 'Round over'}</h2>
         <table>
           <tbody>
             {rows.slice(0, RESULTS_SHOWN).map(({ s, index }, i) => (
@@ -132,9 +136,9 @@ export function Results({ g, you }: { g: GameState; you?: string }) {
             You: #{myRank + 1} with {scoreText(rows[myRank].s.income)}
           </p>
         )}
-        <p>
-          Press <kbd>R</kbd> to open the lobby for another round
-        </p>
+        <button type="button" className="pill-button" onClick={onReplay}>
+          Play again <kbd>R</kbd>
+        </button>
       </div>
     </div>
   );

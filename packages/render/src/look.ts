@@ -255,10 +255,14 @@ export const FX_LOOK = {
   // over this share of its life at each end
   bannerWidth: 0.35,
   bannerFade: 0.2,
-  // Effect text, titles and shop names are smooth display type, the screen's --font-display; titles are outlined by this share of their size
+  // Small text (effect callouts, coins, shop names) is 8-bit display type, the screen's --font-display
   displayFont: "'Press Start 2P', 'Arial Black', Impact, sans-serif",
   // Font pixels per em of the display font: set at whole device pixels per font pixel, it stays crisp
   displayGrid: 8,
+  // Banners (READY? GO! and the phase banner) are 16-bit title type, the screen's --font-title, on its own pixel grid,
+  // outlined by this share of their size
+  bannerFont: "'Jersey 15', 'Arial Black', Impact, sans-serif",
+  bannerGrid: 27,
   titleOutline: 0.18,
   // Oldest effects are dropped past this many, so a burst of events can't pile up
   maxEffects: 300,

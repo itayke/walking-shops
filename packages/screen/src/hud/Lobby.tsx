@@ -134,7 +134,7 @@ export function Lobby({ g, room, seats, onBegin, onRename, onRemove }: {
       <div className="join-card">
         <Qr text={url} />
         <p className="join-url">{url.replace(/^https?:\/\//, '')}</p>
-        <button type="button" onClick={onBegin}>
+        <button type="button" className="pill-button" onClick={onBegin}>
           Begin <kbd>Enter</kbd>
         </button>
       </div>
