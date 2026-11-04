@@ -14,6 +14,7 @@
     "dev:phone": "npm run dev -w @walking-shops/phone",
     "dev:server": "npm run dev -w @walking-shops/server",
     "loadtest": "npm run loadtest -w @walking-shops/net --",
+    "bots": "npm run bots -w @walking-shops/net --",
     "deploy:server": "npm run deploy -w @walking-shops/server",
     "dev": "concurrently -k -n server,screen,phone -c magenta,cyan,yellow \"npm:dev:server\" \"npm:dev:screen\" \"npm:dev:phone\""
   },

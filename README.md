@@ -12,7 +12,7 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 | `packages/render` | The Canvas 2D street renderer and shop art, shared by the screen and the phone's shop preview. Visual-only constants in `src/look.ts` |
 | `packages/screen` | Big-screen app (Vite + React). Hosts the room: runs the game and draws the street; phones open their shops in the lobby, and `?screenShop` adds one played from the keyboard |
 | `packages/phone` | Phone controller (Vite + React): your shop with its money and place on top, over two tap-to-step, hold-to-walk halves in its tint |
-| `packages/net` | Shared networking: message protocol, the screen's `Host` (seats phones in shops), the PartySocket client, the load test |
+| `packages/net` | Shared networking: message protocol, the screen's `Host` (seats phones in shops), the PartySocket client, the load test and bot phones |
 | `packages/server` | The relay: a PartyServer Durable Object on Cloudflare, one per room. Checks and forwards; the screen is the authority |
 | `reference/` | The JavaScript prototype the sim was ported from, and the pixel-art look mockup. Behavior and look to match, not code to ship |
 
@@ -32,6 +32,7 @@ npm run dev:server             # the relay, on port 7322 (also on the LAN)
 npm run dev:screen             # http://localhost:7320
 npm run dev:phone              # http://localhost:7321 (also on the LAN, for a real phone)
 npm run loadtest               # a headless screen and 50 fake phones through the relay; -- --phones N --seconds S
+npm run bots -- --room ABCD    # bot phones join the room your screen hosts and play at random; --phones N --flaky --host H
 npm run build
 ```
 

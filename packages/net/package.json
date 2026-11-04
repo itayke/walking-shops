@@ -8,7 +8,8 @@
   },
   "scripts": {
     "typecheck": "tsc -p . && tsc -p tsconfig.tools.json",
-    "loadtest": "node tools/loadtest.ts"
+    "loadtest": "node tools/loadtest.ts",
+    "bots": "node tools/bots.ts"
   },
   "dependencies": {
     "@walking-shops/sim": "*",

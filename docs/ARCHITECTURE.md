@@ -47,6 +47,7 @@
 - **Simulation:** unit tests on the rules (each row of the movement table), invariants after every tick (every shop indexed exactly once), and golden replays (same seed + inputs produce the same result).
 - **Balance:** a headless bench that runs hundreds of bot rounds and reports income by strategy (see `reference/bench.js`).
 - **Load:** `npm run loadtest` runs the real `Host` headless as the screen plus scripted fake phones (50 by default) through a relay, and reports seating and input-to-ack latency. Point it at a deployed room with `-- --host`.
+- **Rehearsal:** `npm run bots -- --room CODE` joins the room a real screen is hosting with bot phones (20 by default), so a few real phones play in a full room. They trickle in, type short names, play at random, sometimes look away long enough to close, and a few edit their shop in the lobby; `--flaky` drops and reconnects them now and then. Their ids come from the room and their number, so a rerun reclaims the same shops.
 - **Rehearsal:** a small in-person session with real phones on cellular data.
 
 ## Join flow details
