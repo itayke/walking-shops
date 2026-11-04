@@ -212,22 +212,23 @@ kbd {
   margin: 0;
 }
 
-/* The results: the winner in banner type over the ranking, which takes clicks for Play again */
+/* The results: the winner in banner type high over the street, the ranking centered under it and taking clicks for Play again */
 .results {
   flex-direction: column;
-  gap: 16px;
 }
 
 .results .card {
   pointer-events: auto;
 }
 
-/* Like the street's banners (READY?, GO!): title type, hard-edged, in yellow with a round ink outline like the lobby title's */
+/* Like the street's banners (READY?, GO!): title type, hard-edged, with a round ink outline like the lobby title's; in the winner's color, yellow without one */
 .results .winner {
   /* Screen pixels per font pixel, whole so it stays crisp */
   --winner-pixel: round(down, clamp(2px, 8vw / var(--title-grid), 5px), 1px);
   --winner-outline: 1.6;
-  /* Full width rather than shrunk to its text, which wraps to it */
+  /* Near the top, clear of the ranking; full width rather than shrunk to its text, which wraps to it */
+  position: absolute;
+  top: 10vh;
   width: 90%;
   text-align: center;
   font-family: var(--font-title);

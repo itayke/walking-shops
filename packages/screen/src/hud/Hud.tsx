@@ -113,8 +113,8 @@ export function Results({ g, you, onReplay }: { g: GameState; you?: string; onRe
   const [best] = rows;
   return (
     <div className="overlay dim results">
-      <h2 className="winner">
-        <PixelText text={best ? `${best.s.label} wins` : 'Round over'} />
+      <h2 className="winner" style={best ? { color: shopTint(shopHue(lookOf(best.s, best.index).hue)).base } : undefined}>
+        <PixelText text={best ? `${best.s.label} wins!` : 'Round over'} />
       </h2>
       <div className="card">
         <table>

@@ -112,7 +112,7 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
     case 'waiting':
       return "Game running: you're in the next one!";
     case 'lobby':
-      return 'Warm up! The game starts soon';
+      return 'Warm up! Game starting soon...';
     case 'results':
       return 'Game over';
     default:
