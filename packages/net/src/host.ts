@@ -1,6 +1,7 @@
-import { addShop, beginRound, botPlayers, createLobby, isPhase2, toLobby, type Config, type Dir, type GameState, type Look, type PlayerSpec } from '@walking-shops/sim';
+import { addShop, beginRound, botPlayers, createLobby, isPhase2, removeShop, toLobby, type Config, type Dir, type GameState, type Look, type PlayerSpec } from '@walking-shops/sim';
 import { Latch } from './latch.ts';
-import type { Phase, PhoneState, ScreenMsg, ToScreen } from './protocol.ts';
+import { NET } from './config.ts';
+import { cleanName, type Phase, type PhoneState, type ScreenMsg, type ToScreen } from './protocol.ts';
 
 // Phone shops get ids P1, P2, … in join order; their names are the players' own
 const PHONE_ID = 'P';
@@ -94,6 +95,34 @@ export class Host {
       if (s.online) this.open(s);
     }
     return g;
+  }
+
+  /** The presenter renames a shop in the lobby; a phone's shop keeps the new name. False if the name is blank or too long. */
+  rename(id: string, raw: string): boolean {
+    const name = cleanName(raw);
+    const shop = this.game.shops.find((s) => s.id === id);
+    if (!this.game.lobby || !shop || !name || name.length > NET.nameMax) return false;
+    shop.label = name;
+    const seat = this.seatOf(id);
+    if (seat) seat.name = name;
+    return true;
+  }
+
+  /** The presenter takes a shop off the street in the lobby. Its phone, if any, goes back to setting up. */
+  remove(id: string): void {
+    if (!this.game.lobby) return;
+    removeShop(this.game, id);
+    const seat = this.seatOf(id);
+    if (!seat) return;
+    seat.shop = null;
+    seat.name = null;
+    seat.latch.clear();
+  }
+
+  /** The seat whose shop this is, if a phone's. */
+  seatOf(id: string): Seat | undefined {
+    for (const s of this.seats.values()) if (s.shop === id) return s;
+    return undefined;
   }
 
   /** Put a phone's shop on the street, if it has a name and the lobby is open. */

@@ -377,13 +377,6 @@ tr.closed td {
   color: var(--ink);
 }
 
-.join-card .join-count {
-  font-family: var(--font-display);
-  font-size: var(--display-small);
-  -webkit-font-smoothing: none;
-  color: var(--ink);
-}
-
 .qr {
   /* About this big, rounded down to whole screen pixels per module so every module stays crisp */
   --qr-target: clamp(180px, 34vh, 420px);
@@ -396,10 +389,12 @@ tr.closed td {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font: 400 var(--display-small) var(--font-display);
-  -webkit-font-smoothing: none;
+  /* A fixed height, so a bigger label doesn't grow the pill */
+  height: 36px;
+  font: 700 20px/1 var(--font-body);
   text-transform: uppercase;
-  padding: 6px 18px;
+  letter-spacing: 0.04em;
+  padding: 0 18px;
   border: 0;
   border-radius: 999px;
   background: var(--ok);
@@ -407,7 +402,127 @@ tr.closed td {
   cursor: pointer;
 }
 
+/* Trimmed to its capitals, so the key's label sits in the middle of its box rather than over the descender space */
 .join-card button kbd {
-  line-height: 1.4;
-  -webkit-font-smoothing: auto;
+  font: 600 12px/1 var(--font-body);
+  letter-spacing: 0.04em;
+  padding: 4px 6px;
+  text-box: trim-both cap alphabetic;
+}
+
+/* The presenter's list of shops on the street, beside the join card: rename on click, remove with × */
+.roster {
+  width: clamp(200px, 16vw, 300px);
+  max-height: 70vh;
+  overflow: auto;
+  padding: 10px 8px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  pointer-events: auto;
+}
+
+.roster ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.roster li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 4px;
+  border-radius: 6px;
+}
+
+.roster li:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.roster li.offline .roster-name {
+  opacity: 0.45;
+}
+
+.roster .swatch {
+  flex: none;
+}
+
+.roster-name,
+.rename {
+  flex: 1;
+  min-width: 0;
+  font: 500 14px var(--font-body);
+  color: var(--ink);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-name {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  cursor: text;
+}
+
+.rename {
+  padding: 3px 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  outline: none;
+}
+
+.rename.invalid {
+  border-color: var(--danger);
+}
+
+.roster-tag {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* Shown on hover only, so the list reads as names from the room */
+.roster-remove {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.roster li:hover .roster-remove,
+.roster-remove:focus-visible {
+  opacity: 1;
+}
+
+.roster-remove:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* The list's heading, ruled off from the names */
+.roster-count {
+  margin: 0 0 6px;
+  padding: 2px 4px 8px;
+  border-bottom: 1px solid var(--line);
+  font: 700 18px var(--font-body);
+  color: var(--ink);
+}
+
+.roster-pending {
+  margin: 4px;
+  font-size: 13px;
+  color: var(--muted);
 }

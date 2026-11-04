@@ -37,7 +37,7 @@ npm run build
 
 ## Playing with phones (local)
 
-Run `npm run dev` (or `dev:server`, `dev:screen` and `dev:phone` separately), then open the screen at http://localhost:7320. It opens on the lobby: the title and a QR code for the join URL (this machine's LAN address and a room code) over the street. Phones on the same Wi-Fi scan it, and each one's shop drops onto the street, ready to walk. `Enter` (or the Begin button) starts the round, with bots filling the street up to `minPlayers`; a phone that joins after that waits for the next lobby, which `R` opens. The HUD shows how many phones are connected; a green dot means the relay is reachable. A phone keeps its shop across a dropped connection or a reload.
+Run `npm run dev` (or `dev:server`, `dev:screen` and `dev:phone` separately), then open the screen at http://localhost:7320. It opens on the lobby: the title and a QR code for the join URL (this machine's LAN address and a room code) over the street. Phones on the same Wi-Fi scan it, and each one's shop drops onto the street, ready to walk. The list beside the QR shows every shop: click a name to rename it, hover for × to take it off the street. `Enter` (or the Begin button) starts the round, with bots filling the street up to `minPlayers`; a phone that joins after that waits for the next lobby, which `R` opens. The HUD shows how many phones are connected; a green dot means the relay is reachable. A phone keeps its shop across a dropped connection or a reload.
 
 The screen keeps its room across reloads (`?room=CODE` picks one). Over plain http on the LAN, phones can't keep the screen awake (Wake Lock needs https); the deployed version can.
 

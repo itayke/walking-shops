@@ -208,6 +208,11 @@ export class StreetView {
     // New shops line up to drop in the order they joined, not along the street
     for (const s of g.shops) this.anim(s);
     this.dropping = 0;
+    // A shop taken off the street drops in afresh if it comes back
+    if (this.anims.size > g.shops.length) {
+      const on = new Set(g.shops.map((s) => s.id));
+      for (const id of this.anims.keys()) if (!on.has(id)) this.anims.delete(id);
+    }
     for (let c = 0; c < g.C; c++) {
       // Riders move with the walker under them, and stand on its legs
       let offSum = 0;

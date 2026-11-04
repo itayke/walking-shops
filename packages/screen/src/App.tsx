@@ -219,7 +219,19 @@ export function App() {
       <Hud g={g} you={SCREEN_SHOP?.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats }} />
       <div className="stage">
         <canvas ref={canvasRef} />
-        {g.lobby && <Lobby g={g} room={net.current.room.code} onBegin={() => begin.current()} />}
+        {g.lobby && (
+          <Lobby
+            g={g}
+            room={net.current.room.code}
+            seats={host.current.seats}
+            onBegin={() => begin.current()}
+            onRename={(id, name) => host.current.rename(id, name) && setHudTick((t) => t + 1)}
+            onRemove={(id) => {
+              host.current.remove(id);
+              setHudTick((t) => t + 1);
+            }}
+          />
+        )}
         {board && <Board g={g} you={SCREEN_SHOP?.id} />}
         {g.over ? <Results g={g} you={SCREEN_SHOP?.id} /> : paused.current && <Paused />}
       </div>

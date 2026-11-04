@@ -179,6 +179,38 @@ describe('host', () => {
     expect(sent.map((m) => m.states.map(([p]) => p))).toEqual([[PHONE], [PHONE]]);
   });
 
+  it('lets the presenter rename a shop in the lobby, and the phone shows the new name', () => {
+    const { h } = host();
+    open(h, PHONE, 'Rude Name');
+    const id = h.seats.get(PHONE)!.shop!;
+    expect(h.rename(id, '  Nice\tName ')).toBe(true);
+    expect(shopOf(h, PHONE)?.label).toBe('Nice Name');
+    expect(h.phoneState(h.seats.get(PHONE)!).label).toBe('Nice Name');
+    for (const bad of ['  ', 'x'.repeat(NET.nameMax + 1)]) expect(h.rename(id, bad)).toBe(false);
+    h.begin();
+    expect(h.rename(id, 'Later')).toBe(false);
+    expect(shopOf(h, PHONE)?.label).toBe('Nice Name');
+  });
+
+  it('lets the presenter take a shop off the street in the lobby, sending its phone back to setting up', () => {
+    const { h } = host();
+    open(h, PHONE);
+    open(h, OTHER);
+    const id = h.seats.get(PHONE)!.shop!;
+    h.remove(id);
+    expect(h.game.shops.map((s) => s.id)).not.toContain(id);
+    expect(h.game.N).toBe(h.game.shops.length);
+    expect(h.phoneState(h.seats.get(PHONE)!).phase).toBe('setup');
+    expect(h.inputs()).not.toHaveProperty(id);
+    // It can open again, and drops back in
+    h.receive({ t: 'profile', phone: PHONE, name: 'Back', design: 0 });
+    expect(shopOf(h, PHONE)?.label).toBe('Back');
+    h.begin();
+    const other = h.seats.get(OTHER)!.shop!;
+    h.remove(other);
+    expect(h.game.shops.some((s) => s.id === other)).toBe(true);
+  });
+
   it('keeps a shop on the street for a phone that drops in the lobby', () => {
     const { h } = host();
     open(h, PHONE);
