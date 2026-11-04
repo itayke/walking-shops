@@ -1,5 +1,5 @@
 /* Theme tokens for the HUD and overlays. The street canvas has its own daylight palette (render/colors.ts). */
-/* EAS VHS by Lastnames (fontstruct.com), CC BY 3.0, with its advances snapped to whole font pixels */
+/* EAS VHS by Lastnames (fontstruct.com), CC BY 3.0, with its advances snapped to whole font pixels and p and q descending a pixel deeper */
 @font-face {
   font-family: 'EAS VHS';
   src: url('/fonts/eas-vhs.ttf') format('truetype');
