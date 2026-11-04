@@ -399,7 +399,9 @@ tr.closed td {
 }
 
 .qr {
-  width: clamp(140px, 22vh, 280px);
+  /* About this big, rounded down to whole screen pixels per module so every module stays crisp */
+  --qr-target: clamp(180px, 34vh, 420px);
+  width: calc(var(--qr-modules) * max(1px, round(down, var(--qr-target) / var(--qr-modules), 1px)));
   height: auto;
   display: block;
 }

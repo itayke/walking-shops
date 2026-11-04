@@ -1,4 +1,5 @@
 import type { GameState } from '@walking-shops/sim';
+import type { CSSProperties } from 'react';
 import { encode } from 'uqr';
 import { joinUrl } from '../net/room.ts';
 import { PixelText } from './PixelText.tsx';
@@ -7,14 +8,21 @@ import { PixelText } from './PixelText.tsx';
 const QR_QUIET = 2;
 const QR_CORNER = 1;
 
-/** The join link as square modules, one SVG path, drawn hard-edged at any size. */
+/** The join link as square modules, one SVG path, drawn hard-edged; its module count goes to CSS, which sizes it in whole pixels per module. */
 function Qr({ text }: { text: string }) {
   const { data, size } = encode(text);
   const span = size + 2 * QR_QUIET;
   let d = '';
   data.forEach((row, y) => row.forEach((dark, x) => dark && (d += `M${x + QR_QUIET} ${y + QR_QUIET}h1v1h-1z`)));
   return (
-    <svg className="qr" viewBox={`0 0 ${span} ${span}`} shapeRendering="crispEdges" role="img" aria-label={text}>
+    <svg
+      className="qr"
+      viewBox={`0 0 ${span} ${span}`}
+      style={{ '--qr-modules': span } as CSSProperties}
+      shapeRendering="crispEdges"
+      role="img"
+      aria-label={text}
+    >
       <rect width={span} height={span} rx={QR_CORNER} fill="#fff" />
       <path d={d} fill="#000" />
     </svg>
@@ -36,7 +44,6 @@ export function Lobby({ g, room, onBegin }: { g: GameState; room: string; onBegi
       <div className="join-card">
         <Qr text={url} />
         <p className="join-url">{url.replace(/^https?:\/\//, '')}</p>
-        <p>Scan to open your shop</p>
         <p className="join-count">
           {shops} {shops === 1 ? 'shop' : 'shops'} open
         </p>
