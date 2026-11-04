@@ -17,6 +17,8 @@ const INTEGER_STEP = 1;
  */
 export function createTuningPanel(lobby: () => void, newStreet: () => void): () => void {
   const pane = new Pane({ title: `Tuning (${TOGGLE_KEY.toUpperCase()})`, expanded: false });
+  // Out of the audience's sight until called up; it comes back as it was left, folded or open
+  pane.hidden = true;
   pane.addButton({ title: `Back to the lobby (${LOBBY_KEY.toUpperCase()})` }).on('click', lobby);
   pane.addButton({ title: 'New street' }).on('click', newStreet);
 
@@ -41,7 +43,7 @@ export function createTuningPanel(lobby: () => void, newStreet: () => void): () 
     // Typing in a field isn't a shortcut
     if (e.target instanceof HTMLInputElement) return;
     const key = e.key.toLowerCase();
-    if (key === TOGGLE_KEY) pane.expanded = !pane.expanded;
+    if (key === TOGGLE_KEY) pane.hidden = !pane.hidden;
     if (key === LOBBY_KEY) lobby();
   };
   window.addEventListener('keydown', onKey);

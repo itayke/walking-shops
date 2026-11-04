@@ -124,19 +124,23 @@ export function Lobby({ g, room, seats, onBegin, onRename, onRemove }: {
   const url = joinUrl(room);
   return (
     <div className="lobby">
+      <div className="lobby-side">
+        <div className="join-card">
+          <Qr text={url} />
+          <p className="join-url">{url.replace(/^https?:\/\//, '')}</p>
+          <button type="button" className="pill-button" onClick={onBegin}>
+            Begin <kbd>Enter</kbd>
+          </button>
+        </div>
+      </div>
       <header className="masthead">
         <h1 className="title">
           <PixelText text="Shop Shuffle" />
         </h1>
         <PixelText className="tagline" text="Get your business moving" />
       </header>
-      <Roster g={g} seats={seats} onRename={onRename} onRemove={onRemove} />
-      <div className="join-card">
-        <Qr text={url} />
-        <p className="join-url">{url.replace(/^https?:\/\//, '')}</p>
-        <button type="button" className="pill-button" onClick={onBegin}>
-          Begin <kbd>Enter</kbd>
-        </button>
+      <div className="lobby-side end">
+        <Roster g={g} seats={seats} onRename={onRename} onRemove={onRemove} />
       </div>
     </div>
   );

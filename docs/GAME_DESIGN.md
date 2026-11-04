@@ -24,7 +24,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ## 3. Flow
 
-1. **Lobby (≈40s):** the screen shows the title and a QR code over the street. Players scan it and set up their shop on the phone (see "Joining"), and each shop drops from the sky into a random column as it opens. From then on the phone is its controller, and the street is a brawl without consequences: every movement rule applies, but no customers come, nothing scores and shutters stay open. The street is laid out for `minPlayers` shops from the start and only widens past that, at its right edge, so nobody moves as others arrive. Only the lobby takes new players.
+1. **Lobby (≈40s):** the screen shows the title over the street, between a QR code on the left and the list of shops on the right. Players scan it and set up their shop on the phone (see "Joining"), and each shop drops from the sky into a random column as it opens. From then on the phone is its controller, and the street is a brawl without consequences: every movement rule applies, but no customers come, nothing scores and shutters stay open. The street is laid out for `minPlayers` shops from the start and only widens past that, at its right edge, so nobody moves as others arrive. Only the lobby takes new players.
 2. **Begin:** the presenter starts the round. The title and QR clear, bots drop into the widest empty gaps until there are `minPlayers` shops, then READY? GO! across the street: the street holds still until GO!, and the round clock starts with it. Shops start where the brawl left them.
 3. **Phase 1, walk-ins (≈40–60s):** the tutorial in disguise. Low stakes.
 4. **Phase 2, parachutes (≈60s):** the real game.
@@ -46,7 +46,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ### Presenter list
 
-- Next to the QR, the screen lists the shops that have joined, in the order they opened, and how many phones are still setting up. Clicking a name renames the shop (a name that doesn't fit the sign isn't taken); the × that shows on hover takes it off the street. That stands in for a profanity filter.
+- On the right, the screen lists the shops that have joined, in the order they opened, and how many phones are still setting up. Clicking a name renames the shop (a name that doesn't fit the sign isn't taken); the × that shows on hover takes it off the street. That stands in for a profanity filter.
 - A removed shop's phone goes back to the setup form, with what the player last typed still filled in, and can open it again.
 - A phone that disconnects in the lobby keeps its shop, marked offline in the list, until the presenter removes it.
 - The list only shows in the lobby, so names are settled before the round.

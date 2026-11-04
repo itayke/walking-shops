@@ -339,8 +339,19 @@ tr.closed td {
   pointer-events: none;
 }
 
+/* The join card on the left and the shop list on the right, in columns of equal width so the title between them is
+   centered on the screen */
+.lobby-side {
+  flex: 1 1 0;
+  display: flex;
+}
+
+.lobby-side.end {
+  justify-content: flex-end;
+}
+
 .lobby .masthead {
-  flex: 1;
+  flex: 0 1 auto;
   /* Free to shrink below the tagline's current width, so it can wrap */
   min-width: 0;
   text-align: center;

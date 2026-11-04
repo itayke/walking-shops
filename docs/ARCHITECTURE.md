@@ -31,7 +31,7 @@
 - **State is plain data.** Columns hold shop indices, RNG state is a number, and `step` returns the tick's events (topple, bump, pushback, closed, reopened, paid, lost) instead of keeping effects in the state. A JSON round trip of the state carries on identically.
 - **Two RNG streams:** world (placement, movement order, waves, trickle, parachuters) and bots. Human input can't change where customers appear.
 - **Inputs** are the held direction per human shop id. `setController` hands a shop between a phone and a bot mid-round (the network-down fallback).
-- **Config:** every tunable lives in `packages/sim/src/config.ts`, in named sections (`export const WAVES = { … }`). The game holds the config by reference, so the screen's tuning panel (Tweakpane, `T`) edits it live; sections read at round start (street size, bot mix) apply on restart (`R`). In dev, **Save to config.ts** posts the values to a Vite middleware (`packages/screen/tools/saveTuningPlugin.ts`) that rewrites the `key: value,` lines, so keep one key per line and keys unique across sections.
+- **Config:** every tunable lives in `packages/sim/src/config.ts`, in named sections (`export const WAVES = { … }`). The game holds the config by reference, so the screen's tuning panel (Tweakpane, hidden until `T`) edits it live; sections read at round start (street size, bot mix) apply on restart (`R`). In dev, **Save to config.ts** posts the values to a Vite middleware (`packages/screen/tools/saveTuningPlugin.ts`) that rewrites the `key: value,` lines, so keep one key per line and keys unique across sections.
 - Keep the bot players. They are the offline fallback, the load-test clients, and the balance harness.
 
 ## Reliability
