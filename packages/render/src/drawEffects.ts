@@ -1,4 +1,4 @@
-import { PALETTE, washOut, type Washed } from './colors.ts';
+import { fadeOut, PALETTE, washOut, washStep, type Washed } from './colors.ts';
 import { lane, PARA_TALL, PERSON_ROWS, sidewalkFeet } from './drawPeople.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { FX_LOOK, GRID, TAU } from './look.ts';
@@ -9,17 +9,6 @@ import { BANNERS, lifetime, type Banner, type CalloutColor, type StreetView } fr
 const CALLOUT_COLORS: Record<CalloutColor, string> = { danger: PALETTE.danger, ok: PALETTE.ok, muted: PALETTE.grey };
 // The countdown goes amber to green, like a starting light
 const BANNER_COLORS: Record<Banner, string> = { ready: PALETTE.yellow, walkIns: PALETTE.ok, phase2: PALETTE.blue };
-
-/** The wash keyframe to draw, 0 at full strength: steps through every keyframe over the last `span` before `left` runs out. */
-function washStep(left: number, span: number): number {
-  const n = FX_LOOK.wash.length;
-  return left >= span ? 0 : n - Math.floor((left / span) * n);
-}
-
-/** Full strength, then washing out over the end of its life. u runs 0 to 1. */
-function fadeOut(u: number): number {
-  return washStep(1 - u, 1 - FX_LOOK.fadeHold);
-}
 
 // Text is measured at this size, then scaled to fit
 const MEASURE_PX = 100;
@@ -82,10 +71,13 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
       case 'coin': {
         const u = e.age / look.coinTime;
         const w = washOut(PALETTE.yellow, fadeOut(u));
-        const x = e.shopper === null ? e.x : e.x + lane(e.shopper);
-        const head = e.shopper === null ? floorY(e.y) - PARA_TALL : sidewalkFeet(L) - PERSON_ROWS;
-        const y = head - look.coinAbove + floorY(u * look.coinRise);
-        small(ctx, L, e.text, colX(x), y, look.coinCap, look.coinRing, w);
+        const x = e.from === 'walkIn' ? e.x + lane(e.shopper) : e.x;
+        // Its baseline: over the walk-in's head or the canopy, or centered on the shop it rises from
+        const base =
+          e.from === 'shop'
+            ? floorY(e.y) + look.coinCap / 2
+            : (e.from === 'para' ? floorY(e.y) - PARA_TALL : sidewalkFeet(L) - PERSON_ROWS) - look.coinAbove;
+        small(ctx, L, e.text, colX(x), base + floorY(u * look.coinRise), look.coinCap, look.coinRing, w);
         break;
       }
       case 'burst': {

@@ -146,6 +146,17 @@ export function washOut(fill: string, step: number): Washed {
   return w;
 }
 
+/** The wash keyframe to draw, 0 at full strength: steps through every keyframe over the last `span` before `left` runs out. */
+export function washStep(left: number, span: number): number {
+  const n = FX_LOOK.wash.length;
+  return left >= span ? 0 : n - Math.floor((left / span) * n);
+}
+
+/** Full strength, then washing out over the end of its life. u runs 0 to 1. */
+export function fadeOut(u: number): number {
+  return washStep(1 - u, 1 - FX_LOOK.fadeHold);
+}
+
 export const SHIRTS_FOR_SKIN = SKIN.map((s) => SHIRT.filter((c) => colorDistance(c, s) >= SHIRT_SKIN_MIN));
 
 /** Colors for a person's pixel map, keyed by map letter: hair, skin, eyes, clothes, pants, feet. */

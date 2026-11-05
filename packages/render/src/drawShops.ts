@@ -1,5 +1,5 @@
 import { shutterDrop, type GameState, type Shop } from '@walking-shops/sim';
-import { PALETTE, shopHue, shopTint, undiesFor } from './colors.ts';
+import { fadeOut, PALETTE, shopHue, shopTint, undiesFor, washOut } from './colors.ts';
 import { drawLegs, legPose, strideFrame, type ClimbStep, type LegPose } from './legs.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { GRID, MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
@@ -138,9 +138,8 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
   drawSignName(ctx, s.label, X, Y, P);
 
   if (a.flash > 0) {
-    ctx.globalAlpha = a.flash / SHOP_LOOK.flashTime;
-    frame(px, x0 - 1, y0 - 1, SHOP.spriteW + 2, SHOP.spriteH + 1, PALETTE.accent);
-    ctx.globalAlpha = 1;
+    const ring = washOut(PALETTE.yellow, fadeOut(1 - a.flash / SHOP_LOOK.flashTime)).fill;
+    for (let k = 0; k < SHOP_LOOK.flashRing; k++) frame(px, x0 - 1 - k, y0 - 1 - k, SHOP.spriteW + 2 + 2 * k, SHOP.spriteH + 1 + 2 * k, ring);
   }
   ctx.restore();
 }

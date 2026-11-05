@@ -119,7 +119,9 @@ export const SHOP_LOOK = {
   climbShare: 0.5,
   // Standing up or sitting down takes this long
   standTime: 0.125,
-  flashTime: 0.4,
+  // A shop taking a customer is ringed in coin yellow this many art pixels thick, washing out like a coin over flashTime
+  flashTime: 0.5,
+  flashRing: 2,
   pushMeterHeight: 0.07,
   minPushMeter: 2,
   pushMeterGap: 0.14,

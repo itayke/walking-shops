@@ -49,8 +49,9 @@ export type CalloutColor = 'danger' | 'ok' | 'muted';
 // Effects live in world units (columns, floors), so they stay put while the view zooms
 export type Effect =
   | { kind: 'callout'; text: string; color: CalloutColor; x: number; y: number; age: number }
-  // A coin rises from the customer who paid: a walk-in on the sidewalk in its lane (shopper), or a parachuter (null)
-  | { kind: 'coin'; text: string; x: number; y: number; shopper: number | null; age: number }
+  // A coin rises from the customer who paid: a walk-in on the sidewalk in its lane, or a parachuter at its canopy. A
+  // walk-in that climbed past shuttered shops paid one up the stack, so its coin rises on that shop instead
+  | { kind: 'coin'; text: string; x: number; y: number; from: 'walkIn' | 'para' | 'shop'; shopper: number; age: number }
   | { kind: 'burst'; x: number; y: number; age: number }
   | { kind: 'leaver'; x: number; shopper: number; age: number }
   // A customer who just paid, flashing out where it stood: a walk-in, or a parachuter at its feet's height
@@ -186,7 +187,10 @@ export class StreetView {
           const a = byId(e.shop);
           a.flash = SHOP_LOOK.flashTime;
           this.add({ kind: 'buyer', x: e.x, y: e.y, who: e.who, para: e.kind === 'para', age: 0 });
-          this.add({ kind: 'coin', text: `+${scoreText(e.value)}`, x: e.x, y: e.y, shopper: e.kind === 'ground' ? e.who : null, age: 0 });
+          const text = `+${scoreText(e.value)}`;
+          const climbed = e.kind === 'ground' && g.shops.find((s) => s.id === e.shop)!.level > 0;
+          if (climbed) this.add({ kind: 'coin', text, x: a.x, y: this.bodyMid(g, a), from: 'shop', shopper: e.who, age: 0 });
+          else this.add({ kind: 'coin', text, x: e.x, y: e.y, from: e.kind === 'para' ? 'para' : 'walkIn', shopper: e.who, age: 0 });
           break;
         }
         case 'lost':

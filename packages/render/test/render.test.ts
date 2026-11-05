@@ -100,6 +100,17 @@ describe('view', () => {
     expect(view.effects.filter((e) => e.kind === 'leaver')).toHaveLength(0);
   });
 
+  it('raises a walk-in coin on the sidewalk, or on the shop it climbed to past a shuttered one', () => {
+    const g = street([['A', 'B'], ['C']]);
+    const view = new StreetView();
+    view.reset(g);
+    const paid = (id: string, x: number): SimEvent => ({ type: 'paid', shop: id, value: 1, kind: 'ground', who: 0, x, y: 0 });
+    view.onEvents(g, [paid('C', 1), paid('B', 0)]);
+    const coins = view.effects.filter((e) => e.kind === 'coin');
+    expect(coins.map((e) => e.from)).toEqual(['walkIn', 'shop']);
+    expect(coins[1].y).toBeGreaterThan(1);
+  });
+
   it('announces phase 2 once, as it starts', () => {
     const g = street([['A']], { ROUND: { paraStart: 1 } });
     const view = new StreetView();

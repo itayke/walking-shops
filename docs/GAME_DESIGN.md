@@ -142,7 +142,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 ## 9. Scoring
 
 - **A customer pays the shop they enter. Nothing is shared.** Shared tower revenue was tested and rejected: it balanced the bots but is invisible to players.
-- **A walk-in pays `walkInValue` (5), a parachuter `paraValue` (10), the same in both phases (decided after M2).** Every coin on the street shows exactly what it added, so the final score adds up from what players saw. Whole numbers, no decimals. Phase 1 weighs less through timing and the walk-in to parachuter ratio, not a hidden multiplier.
+- **A walk-in pays `walkInValue` (5), a parachuter `paraValue` (10), the same in both phases (decided after M2).** Every coin on the street shows exactly what it added, so the final score adds up from what players saw. A coin rises from the customer who paid, or, for a walk-in that climbed past shuttered shops, from the shop it entered; the shop that got paid flashes a thick yellow ring that washes out like the coin. Whole numbers, no decimals. Phase 1 weighs less through timing and the walk-in to parachuter ratio, not a hidden multiplier.
 
 ## 10. Tunables (starting values from the prototype)
 
