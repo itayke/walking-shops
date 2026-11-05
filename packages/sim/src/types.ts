@@ -68,6 +68,9 @@ export interface Shop {
   closedTicks: number;
   sitGround: number;
   ticks: number;
+  // This round's customers served and towers toppled, for the player's end card
+  served: number;
+  topples: number;
   mind: BotMind;
 }
 
@@ -132,7 +135,28 @@ export type SimEvent =
   | { type: 'paid'; shop: string; value: number; kind: 'ground' | 'para'; who: number; x: number; y: number }
   | { type: 'lost'; x: number; shopper: number }
   // A parachuter that found no open shop, touching down at x and walking on as a shopper from column col
-  | { type: 'landed'; para: number; shopper: number; x: number; col: number };
+  | { type: 'landed'; para: number; shopper: number; x: number; col: number }
+  // The end card moved on to its next stage
+  | { type: 'podium'; stage: PodiumStage };
+
+/**
+ * The end card's stages: everyone walks to the sides, the blocks drop into the cleared middle, the winners walk up
+ * (third first), the winner stands crowned, then play is free again until the next round.
+ */
+export type PodiumStage = 'clear' | 'blocks' | 'winners' | 'crowned' | 'free';
+
+export interface Podium {
+  stage: PodiumStage;
+  // Seconds since the stage began
+  t: number;
+  // The top shops by money, first place first, and the column each one's place stands in
+  top: string[];
+  cols: number[];
+  // Immovable floors at the bottom of each column: the podium's blocks
+  blocks: number[];
+  // Where each shop the sim is walking is headed, by id, until it's there
+  targets: Record<string, number>;
+}
 
 /**
  * The whole game. Plain data: shops are referenced by index into `shops`, so the state survives JSON round trips.
@@ -160,6 +184,8 @@ export interface GameState {
   rng: { world: RngState; bots: RngState };
   // This tick's events, also returned by step()
   events: SimEvent[];
+  // The end card, once the round is over
+  podium: Podium | null;
 }
 
 /** Held direction per human shop id; a missing id means no input. */

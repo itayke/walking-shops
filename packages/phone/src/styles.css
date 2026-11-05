@@ -60,7 +60,7 @@ body,
   align-items: center;
   justify-content: center;
   /* The arrows sit in the middle of the space between the card and the bottom of the screen */
-  padding: var(--card-bottom, 0) 0 env(safe-area-inset-bottom);
+  padding: var(--card-bottom, 0) 0 max(var(--foot-top, 0px), env(safe-area-inset-bottom));
   touch-action: none;
 }
 
@@ -356,4 +356,64 @@ body,
   padding: 10px 16px max(10px, env(safe-area-inset-bottom));
   background: var(--shade);
   font-size: 13px;
+}
+
+/* The end card: how the round went under the shop, and who made the game in a frame of its own along the bottom, like
+   the card on top, with a button for each way to reach them */
+.status .stats {
+  margin: 0;
+  font-size: 14px;
+}
+
+.contact-frame {
+  position: absolute;
+  inset: auto 16px max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 2px solid var(--shade);
+  background-clip: padding-box;
+  color: var(--on-sky);
+  text-align: center;
+  pointer-events: none;
+}
+
+.contact-frame p {
+  margin: 0;
+}
+
+.contact-name {
+  font-weight: 600;
+}
+
+/* A little more room under it, so the buttons stand apart from the details */
+.contact-frame .contact-email {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.contact-links a {
+  pointer-events: auto;
+  font: 600 14px var(--font-body);
+  color: var(--on-sky);
+  text-decoration: none;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+
+.contact-links .contact-save {
+  background: var(--on-sky);
+  border-color: var(--on-sky);
+  color: #fff;
 }

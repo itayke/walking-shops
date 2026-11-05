@@ -4,12 +4,13 @@ import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
 import { COPY } from '@walking-shops/render/copy.ts';
 import { PixelText } from '@walking-shops/render/PixelText.tsx';
 import { lookOf } from '@walking-shops/render/shopArt.ts';
+import type { CSSProperties } from 'react';
+import { encode } from 'uqr';
 import type { SoundState } from '../sound/synth.ts';
+import { Qr, qrSpan } from './Qr.tsx';
 
 const SECONDS_PER_MINUTE = 60;
 const PERCENT = 100;
-// Rows on the results card; the shop list shows everyone
-const RESULTS_SHOWN = 10;
 
 function clock(seconds: number): string {
   const s = Math.max(0, Math.ceil(seconds));
@@ -94,38 +95,39 @@ export function Hud({ g, you, room, sound, onUnlock }: { g: GameState; you?: str
   );
 }
 
-/** The winner in banner type over the top of the ranking, and a way back to the lobby for another round. */
-export function Results({ g, you, onReplay }: { g: GameState; you?: string; onReplay: () => void }) {
-  const rows = ranked(g);
-  const myRank = rows.findIndex((r) => r.s.id === you);
-  const [best] = rows;
+/**
+ * The end card, over the podium and laid out like the lobby: who to reach and the way back to the lobby where the join
+ * card was, the winner's banner where the title was once the winner is up, and the ranking (the shop list) on the right.
+ */
+export function Results({ g, onReplay }: { g: GameState; onReplay: () => void }) {
+  const p = g.podium;
+  const up = p && (p.stage === 'crowned' || p.stage === 'free');
+  const index = up ? g.shops.findIndex((s) => s.id === p.top[0]) : -1;
+  const best = index >= 0 ? g.shops[index] : null;
+  const c = COPY.contact;
+  const qr = c.site ? encode(c.site) : null;
   return (
-    <div className="overlay dim results">
-      <h2 className="banner winner" style={best ? { color: shopTint(shopHue(lookOf(best.s, best.index).hue)).base } : undefined}>
-        <PixelText text={best ? COPY.results.wins(best.s.label) : COPY.results.noWinner} />
-      </h2>
-      <div className="card">
-        <table>
-          <tbody>
-            {rows.slice(0, RESULTS_SHOWN).map(({ s, index }, i) => (
-              <tr key={s.id} className={s.id === you ? 'me' : undefined}>
-                <td className="num">{i + 1}</td>
-                <td>
-                  <span className="swatch" style={{ background: shopTint(shopHue(lookOf(s, index).hue)).base }} />
-                  {s.label}
-                </td>
-                <td className="num">{scoreText(s.income)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {myRank >= RESULTS_SHOWN && (
-          <p>{COPY.results.you(myRank + 1, scoreText(rows[myRank].s.income))}</p>
-        )}
-        <button type="button" className="pill-button" onClick={onReplay}>
-          {COPY.results.again} <kbd>R</kbd>
-        </button>
+    <div className="lobby end" style={qr ? ({ '--qr-modules': qrSpan(qr) } as CSSProperties) : undefined}>
+      <div className="lobby-side">
+        <div className="join-card contact">
+          {qr && <Qr text={c.site} qr={qr} />}
+          {c.site && <p className="join-url">{c.site.replace(/^https?:\/\//, '')}</p>}
+          <p className="contact-name">{[c.name, c.company].filter(Boolean).join(' · ')}</p>
+          {c.email && <p>{c.email}</p>}
+          <button type="button" className="pill-button" onClick={onReplay}>
+            {COPY.results.again} <kbd>R</kbd>
+          </button>
+        </div>
       </div>
+      <header className="masthead">
+        {best && (
+          <h2 className="title" style={{ color: shopTint(shopHue(lookOf(best, index).hue)).base }}>
+            <PixelText text={COPY.results.wins(best.label)} />
+          </h2>
+        )}
+      </header>
+      {/* Where the ranking sits, kept as wide as the contact card's side so the banner stays centered */}
+      <div className="lobby-side" />
     </div>
   );
 }

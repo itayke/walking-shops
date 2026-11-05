@@ -1,5 +1,5 @@
 import { rand } from './rng.ts';
-import { NONE, reindex, shopAt } from './street.ts';
+import { baseOf, floorOf, NONE, reindex, shopAt } from './street.ts';
 import type { Dir, GameState, Shop } from './types.ts';
 
 // Past this much of a cell, a step moves the shop (and what it carries) into the next column
@@ -13,30 +13,33 @@ export type MoveResult =
   | { type: 'bump'; other: Shop }
   | { type: 'push'; B: Shop; t: number; f: number };
 
-// Heights are measured from the surface S the walker stands on (its level). Neighbor column height H:
+// Heights are measured from the surface S the walker stands on (its floor). Neighbor column height H:
 //   H <= S      step down / walk across  (land on top)
 //   H == S + 1  climb                    (land on top)
 //   H >= S + 2  push the shops at S+1 and above; a sustained push topples them to the far column
 // Walkers heading toward each other within one floor bump (so a pushed shop can bump its attacker below it).
+// The podium's blocks count as floors that can be climbed and stood on, never pushed.
 export function classify(g: GameState, s: Shop, d: Dir): MoveResult {
   const t = s.col + d;
   if (t < 0 || t >= g.C) return { type: 'wall' };
-  const S = s.level;
+  const S = floorOf(g, s);
   const colT = g.cols[t];
-  const H = colT.length;
+  const base = baseOf(g, t);
+  const H = base + colT.length;
 
   // Head-on: someone in the target column pressing toward us, bodies overlapping
   for (const i of colT) {
     const x = g.shops[i];
-    if (x.pressing && x.stepDir === -d && Math.abs(x.level - S) <= 1) {
+    if (x.pressing && x.stepDir === -d && Math.abs(base + x.level - S) <= 1) {
       const gap = Math.abs(t + x.off - (s.col + s.off));
       return gap <= g.config.MOVEMENT.bumpGap ? { type: 'bump', other: x } : { type: 'wait' };
     }
   }
   if (H <= S) return { type: 'free' };
-  if (shopAt(g, t, S).walking) return { type: 'wait' };
+  if (S >= base && shopAt(g, t, S - base).walking) return { type: 'wait' };
   if (H === S + 1) return { type: 'free' };
-  const B = shopAt(g, t, S + 1);
+  if (S + 1 < base) return { type: 'wall' };
+  const B = shopAt(g, t, S + 1 - base);
   if (B.walking || B.immuneT > 0) return { type: 'wait' };
   const f = t + d;
   // Edge towers can't be toppled: nowhere to fall
@@ -54,10 +57,10 @@ function doMove(g: GameState, s: Shop, d: Dir): void {
   reindex(g, to);
 }
 
-function topple(g: GameState, s: Shop, c: { t: number; f: number }): void {
+function topple(g: GameState, s: Shop, c: { B: Shop; t: number; f: number }): void {
   const { MOVEMENT } = g.config;
-  const S = s.level;
-  const fallen = g.cols[c.t].splice(S + 1);
+  const level = floorOf(g, c.B);
+  const fallen = g.cols[c.t].splice(c.B.level);
   for (const i of fallen) {
     const x = g.shops[i];
     x.off = 0;
@@ -72,8 +75,9 @@ function topple(g: GameState, s: Shop, c: { t: number; f: number }): void {
   reindex(g, c.t);
   reindex(g, c.f);
   g.stats.topples++;
+  s.topples++;
   s.contest = false;
-  g.events.push({ type: 'topple', by: s.id, col: c.t, level: S + 1, fallen: fallen.map((i) => g.shops[i].id), to: c.f });
+  g.events.push({ type: 'topple', by: s.id, col: c.t, level, fallen: fallen.map((i) => g.shops[i].id), to: c.f });
 }
 
 function bump(g: GameState, s: Shop, x: Shop, d: Dir): void {
@@ -83,7 +87,7 @@ function bump(g: GameState, s: Shop, x: Shop, d: Dir): void {
   if (real) {
     s.contest = x.contest = false;
     g.stats.pushbacks++;
-    g.events.push({ type: 'pushback', by: x.id, col: x.col, level: x.level });
+    g.events.push({ type: 'pushback', by: x.id, col: x.col, level: floorOf(g, x) });
   } else {
     if (s.contest) {
       s.contest = false;

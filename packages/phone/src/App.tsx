@@ -7,6 +7,7 @@ import { scoreText, type Dir } from '@walking-shops/sim';
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { Arrow } from './Arrow.tsx';
 import { Badge } from './Badge.tsx';
+import { Contact, RoundStats } from './EndCard.tsx';
 import { Setup, type Draft } from './Setup.tsx';
 import { BACKDROP } from './shop.ts';
 
@@ -89,18 +90,25 @@ function useWakeLock(): () => void {
   return request;
 }
 
-/** Where an element's bottom edge is, kept current as it changes size: the controller's card, for the arrows to clear. */
-function useBottom(): [(el: HTMLElement | null) => void, number] {
-  const [bottom, setBottom] = useState(0);
+/**
+ * How far an element reaches into the page, kept current as it changes size: down from the top for the controller's
+ * card, up from the bottom for the contact frame. The arrows sit in the middle of the space between them.
+ */
+function useReach(from: 'top' | 'bottom'): [(el: HTMLElement | null) => void, number] {
+  const [reach, setReach] = useState(0);
   const watch = useRef<ResizeObserver | null>(null);
   const ref = useCallback((el: HTMLElement | null) => {
     watch.current?.disconnect();
     watch.current = null;
-    if (!el) return setBottom(0);
-    watch.current = new ResizeObserver(() => setBottom(el.getBoundingClientRect().bottom));
+    if (!el) return setReach(0);
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setReach(from === 'top' ? r.bottom : el.parentElement!.getBoundingClientRect().bottom - r.top);
+    };
+    watch.current = new ResizeObserver(measure);
     watch.current.observe(el);
-  }, []);
-  return [ref, bottom];
+  }, [from]);
+  return [ref, reach];
 }
 
 /** One line on the phone, kept short: the screen carries the game. */
@@ -150,7 +158,8 @@ export function App() {
   const [draft, setDraft] = useState<Draft | null>(storedDraft);
   const fontReady = useFontReady();
   const wake = useWakeLock();
-  const [card, cardBottom] = useBottom();
+  const [card, cardBottom] = useReach('top');
+  const [foot, footTop] = useReach('bottom');
 
   const send = () => link.current?.send({ t: 'input', seq: ++seq.current, dir: dir.current });
 
@@ -194,7 +203,7 @@ export function App() {
     update();
   };
   const down = (e: PointerEvent) => {
-    if ((e.target as Element).closest('button')) return;
+    if ((e.target as Element).closest('button, a')) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     wake();
     press(e.pointerId, sideOf(e.clientX, e.currentTarget.clientWidth, 0));
@@ -281,7 +290,7 @@ export function App() {
   return (
     <main
       className="pad"
-      style={{ background: state?.tint, '--card-bottom': `${cardBottom}px` } as CSSProperties}
+      style={{ background: state?.tint, '--card-bottom': `${cardBottom}px`, '--foot-top': `${footTop}px` } as CSSProperties}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
@@ -306,11 +315,17 @@ export function App() {
             )}
             <Badge name={state.label} look={state.look} closed={state.closed} />
             <span>{status(online, host, state)}</span>
+            {state.phase === 'results' && <RoundStats served={state.served} topples={state.topples} />}
           </div>
         ) : (
           <span>{status(online, host, state)}</span>
         )}
       </header>
+      {state?.phase === 'results' && state.label && (
+        <footer ref={foot} className="contact-frame" style={{ backgroundColor: BACKDROP }}>
+          <Contact />
+        </footer>
+      )}
     </main>
   );
 }

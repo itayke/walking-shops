@@ -54,11 +54,20 @@ export const COPY = {
   results: {
     // In capitals
     wins: (name: string) => `${name} wins!`,
-    noWinner: 'Round over',
-    // The screen's own shop, when it places below the card
-    you: (place: number, money: string) => `You: #${place} with ${money}`,
     // In capitals
-    again: 'Play again',
+    again: 'Replay',
+  },
+
+  // Who to reach after the game: the big screen shows the short version beside the ranking, every phone all of it.
+  // Fill these in; an empty one is left out everywhere
+  contact: {
+    name: 'Itay Keren',
+    company: 'Untame',
+    role: '',
+    site: 'https://untame.com',
+    email: 'itay@untame.com',
+    linkedin: '',
+    phone: '',
   },
 
   phone: {
@@ -70,7 +79,7 @@ export const COPY = {
     setup: 'Set up your shop!',
     waiting: "Game running: you're in the next one!",
     lobby: 'Warm up! Game starting soon...',
-    over: 'Game over',
+    over: 'Thanks for playing!',
     playing: 'Tap to step · hold to walk',
     closed: 'Shutters down: tap to open',
     // Setting up, or editing, a shop
@@ -85,5 +94,13 @@ export const COPY = {
     // Over the shop while playing and in the lobby
     place: (place: number, of: number) => `#${place} of ${of}`,
     edit: 'Edit shop',
+    // The end card: how the round went, then the contact buttons
+    served: (n: number) => `${n} ${n === 1 ? 'customer' : 'customers'} served`,
+    toppled: (n: number) => `${n} ${n === 1 ? 'tower' : 'towers'} toppled`,
+    saveContact: 'Save contact',
+    site: 'Website',
+    email: 'Email',
+    linkedin: 'LinkedIn',
+    call: 'Call',
   },
 };

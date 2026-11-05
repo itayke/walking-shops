@@ -11,7 +11,8 @@ export type Phase = 'setup' | 'waiting' | 'lobby' | 'walk-ins' | 'parachutes' | 
 /**
  * What a phone shows. setup: the lobby is open and the phone hasn't opened its shop; waiting: the round started
  * without it. look is the phone's shop type and color (assigned before it opens, so the preview shows it), tint the
- * color as CSS. ack is the last input seq the sim has read.
+ * color as CSS. rank is shared on a tie during play; on the results it's the podium's order. ack is the last input seq
+ * the sim has read.
  */
 export interface PhoneState {
   label: string;
@@ -22,6 +23,9 @@ export interface PhoneState {
   rank: number;
   of: number;
   closed: boolean;
+  // The round so far: customers served and towers toppled, for the end card
+  served: number;
+  topples: number;
   ack: number;
 }
 

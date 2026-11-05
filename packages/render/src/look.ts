@@ -129,6 +129,19 @@ export const SHOP_LOOK = {
   spriteCache: 512,
 };
 
+// The podium's blocks: stone the width of a shop's roof ledge, a floor per block, capped in its place's medal color
+// with the place's number on a plaque on the top block
+export const PODIUM_LOOK = {
+  // Art pixels each place's blocks (and whoever stands on them) sit below their floor, first to third: places of the
+  // same height still read in order
+  placeSink: [0, 0, 2],
+  shadeW: 2,
+  capH: 3,
+  plaquePad: 2,
+  // The plaque's top, below the cap
+  plaqueDrop: 4,
+};
+
 // Thin ink legs: two equal segments with the knees bent outward, so sitting down folds the knees out sideways
 export const LEG_LOOK = {
   // Leg width as a share of a column; hips and knees as a share of the body width
@@ -194,6 +207,8 @@ export const MOTION_LOOK = {
   dropAbove: 1,
   dropTime: 0.6,
   dropStagger: 0.05,
+  // The podium's blocks drop the same way, a column at a time
+  blockStagger: 0.25,
 };
 
 export const PEOPLE_LOOK = {
@@ -250,6 +265,8 @@ export const FX_LOOK = {
   burstRays: 8,
   // A burst's rays start this far out and grow to full length
   burstStart: 0.4,
+  // The winner, up on the podium, gets a burst this many columns out either side
+  crownSpread: 0.5,
   bannerTime: 2.5,
   // A round opens with the street held for readyHold, READY? showing over the start of it, then WALK-INS! as play
   // starts, naming the phase as PARACHUTES! names the second

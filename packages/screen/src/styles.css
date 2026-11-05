@@ -275,100 +275,16 @@ kbd {
   image-rendering: pixelated;
 }
 
-/* The results: the winner in banner type high over the street, the ranking centered under it and taking clicks for Play again */
-.results {
-  flex-direction: column;
+/* The end card, over the podium: laid out like the lobby. The contact card where the join card was, the winner's
+   banner where the title was (in the winner's color, once it's up), and the ranking where the shop list sits */
+.lobby.end {
+  /* A smaller code than the lobby's: it's for later, not for now */
+  --qr-target: clamp(120px, 20vh, 240px);
 }
 
-.results .card {
-  pointer-events: auto;
-}
-
-/* The winner's banner sits near the top, clear of the ranking, in the winner's color */
-.results .winner {
-  position: absolute;
-  top: 10vh;
-}
-
-.card {
-  pointer-events: auto;
-}
-
-/* Like the street's banners (READY?, WALK-INS!): title type, hard-edged, with a round ink outline like the lobby title's; in the winner's color, yellow without one */
-.results .winner {
-  /* Screen pixels per font pixel, whole so it stays crisp */
-  --winner-pixel: round(down, clamp(2px, 8vw / var(--title-grid), 5px), 1px);
-  --winner-outline: 1.6;
-  /* Near the top, clear of the ranking; full width rather than shrunk to its text, which wraps to it */
-  position: absolute;
-  top: 10vh;
-  width: 90%;
-  text-align: center;
-  font-family: var(--font-title);
-  font-size: calc(var(--winner-pixel) * var(--title-grid));
-  line-height: 1;
-  color: #f5c746;
-  --pixel-outline: calc(var(--winner-pixel) * var(--winner-outline));
-  --pixel-outline-color: #1c1a26;
-  --pixel-outline-join: round;
-}
-
-.results .winner canvas {
-  display: block;
-  margin: 0 auto;
-  image-rendering: pixelated;
-}
-
-.card {
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 20px 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  max-height: 90%;
-  overflow: auto;
-}
-
-.card p {
-  margin: 0;
-  color: var(--muted);
-}
-
-table {
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-th {
-  font: 600 11px var(--font-body);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  text-align: left;
-  padding: 3px 8px;
-  border-bottom: 1px solid var(--line);
-}
-
-td {
-  padding: 3px 8px;
-  white-space: nowrap;
-}
-
-td.num,
-th.num {
-  text-align: right;
-}
-
-tr.me td {
-  color: var(--accent);
+.end .contact .contact-name {
   font-weight: 600;
-}
-
-tr.closed td {
-  opacity: 0.45;
+  color: var(--ink);
 }
 
 .swatch {
@@ -500,6 +416,8 @@ tr.closed td {
   gap: 8px;
   /* A fixed height, so a bigger label doesn't grow the pill */
   height: 36px;
+  /* One line, even on a card narrower than its label */
+  white-space: nowrap;
   font: 700 20px/1 var(--font-body);
   text-transform: uppercase;
   letter-spacing: 0.04em;

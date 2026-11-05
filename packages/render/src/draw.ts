@@ -1,6 +1,7 @@
 import type { GameState } from '@walking-shops/sim';
 import { drawEffects } from './drawEffects.ts';
 import { drawParachuters, drawShoppers } from './drawPeople.ts';
+import { drawPodium } from './drawPodium.ts';
 import { drawShops } from './drawShops.ts';
 import { drawStreet } from './drawStreet.ts';
 import { layoutStreet, type Layout } from './layout.ts';
@@ -14,6 +15,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, g: GameState, view: Str
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, width, height);
   drawStreet(ctx, g, L, now);
+  drawPodium(ctx, g, view, L);
   drawShops(ctx, g, view, L, now);
   drawShoppers(ctx, g, view, L, now);
   drawParachuters(ctx, g, view, L, now);

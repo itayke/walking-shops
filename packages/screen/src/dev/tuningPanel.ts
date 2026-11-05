@@ -7,7 +7,7 @@ const LOBBY_KEY = 'r';
 // Sections read only at some point, not every tick: when that is, for the folder's title
 const READ_AT: Partial<Record<SectionName, string>> = { STREET: 'on a new street', BOT_MIX: 'on begin' };
 // Counts, edited in whole steps
-const INTEGER_KEYS = new Set(['minPlayers', 'colsMin', 'colsCap', 'colsExtra', 'sidestep', 'waveWidth', 'waveLines', 'waveSize', 'huntMinHeight', ...Object.keys(CONFIG.BOT_MIX)]);
+const INTEGER_KEYS = new Set(['minPlayers', 'colsMin', 'colsCap', 'colsExtra', 'sidestep', 'waveWidth', 'waveLines', 'waveSize', 'huntMinHeight', 'firstBlocks', 'secondBlocks', 'thirdBlocks', ...Object.keys(CONFIG.BOT_MIX)]);
 const INTEGER_STEP = 1;
 
 /**

@@ -1,6 +1,6 @@
 # Shop Shuffle: Game Design
 
-The opening game of the Untame pitch. A room of 10–30 potential clients (mostly local business owners) joins from their phones. Each person's business becomes a shop on a shared Main Street on the big screen. Shops grow legs and walk to where the customers are. Then the town becomes the hub for the rest of the talk.
+The opening game of the Untame pitch. A room of 10–30 potential clients (mostly local business owners) joins from their phones. Each person's business becomes a shop on a shared Main Street on the big screen. Shops grow legs and walk to where the customers are. The talk ends on the game: the presenter says thank you over its end card.
 
 Status: rules locked after a prototype and bot testing (see `reference/`). Numbers are starting values, not final.
 
@@ -28,9 +28,15 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 2. **Begin:** the presenter starts the round. The title and QR clear, bots drop into the widest empty gaps until there are `minPlayers` shops, then READY? WALK-INS! across the street: the street holds still until WALK-INS!, and the round clock starts with it. The second banner names the phase, as PARACHUTES! names the second. Shops start where the brawl left them.
 3. **Phase 1, walk-ins (≈40–60s):** the tutorial in disguise. Low stakes.
 4. **Phase 2, parachutes (≈60s):** the real game.
-5. **Results (≈20s):** leaderboard on screen; each phone shows its shop's money and final place. A replay goes back to the lobby: the bots leave, the QR comes back, new players join, and everyone else keeps their shop.
-6. **Town hub:** shops walk back and settle into Main Street. Untame's own buildings (Workshop = client work, Arcade = original games) are stops for the rest of the talk.
-7. **Close:** every phone shows a contact card: site, LinkedIn, Save contact (vCard), a shareable image of their shop, and a permanent URL that works tomorrow.
+5. **End card (stays until the next round):** the street becomes a podium (see "End card"), with the ranking top right and the contact card top left. Each phone shows its shop's money, final place, how the round went and the full contact card. Play again (`R`) goes back to the lobby: the bots leave, the QR comes back, new players join, and everyone else keeps their shop.
+
+### End card
+
+- **Takeover:** when the clock runs out, the customers and the crosswalk go and the sim takes the controls. Every shop walks to the sides, keeping its order along the street so nobody crosses anyone; with more shops than side columns, they stack. A walker climbs over whatever is in its way and is never pushed or bumped.
+- **The podium:** once the middle is clear (or after `clearMax` anyway), its blocks drop in, lowest place first: three columns in the middle of the street, second, first and third left to right, with `secondBlocks`, `firstBlocks` and `thirdBlocks` stone floors capped silver, gold and bronze, each with its number on a plaque. The podium is kept low, so the winners can be bumped and toppled: second and third stand at the same height, with third's block drawn a few pixels lower so the places still read in order. Then the winners walk up, third first, `winnerGap` apart. As the winner reaches the top, its banner (in its color) and the winner's sound come in.
+- **Free play:** `freeAfter` later the phones have their shops back, and the street is a brawl without consequences, like the lobby, until the presenter starts the next round. Bots stay put, so the room has the podium to itself. Blocks are floors that can be climbed and stood on, never pushed: a winner can be toppled off its podium, the podium can't.
+- **The big screen:** the ranking, always shown, where the shop list sits; the contact card where the join card was (a QR to the site, the site, name and company, email, Replay); the winner's banner where the title was.
+- **The phone:** the card over the controller adds the round's customers served and towers toppled. The contact gets a frame of its own along the bottom, with the controller's arrows between the two: name and company, Save contact (a vCard) and a button for each filled-in way to reach Untame (site, LinkedIn, email, phone). The contact lives in the copy file; an empty field is left out everywhere.
 
 ## 4. Phone
 
@@ -47,7 +53,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 ### Presenter list
 
-- On the right, the screen lists the shops that have joined, in the order they opened, and how many phones are still setting up. Clicking a name renames the shop (a name that doesn't fit the sign isn't taken); the × that shows on hover takes it off the street. That stands in for a profanity filter. Once the round begins, the same list becomes the live ranking by money (bots tagged, closed shops dimmed), hidden unless the presenter calls it up with `B`.
+- On the right, the screen lists the shops that have joined, in the order they opened, and how many phones are still setting up. Clicking a name renames the shop (a name that doesn't fit the sign isn't taken); the × that shows on hover takes it off the street. That stands in for a profanity filter. Once the round begins, the same list becomes the live ranking by money (bots tagged, closed shops dimmed), hidden unless the presenter calls it up with `B`; the end card always shows it.
 - A removed shop's phone goes back to the setup form, with what the player last typed still filled in, and can open it again.
 - A phone that disconnects in the lobby keeps its shop, marked offline in the list, until the presenter removes it.
 - Names can only be changed in the lobby, so they are settled before the round.
@@ -68,7 +74,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 
 - A side view of one street, divided into **columns** (a grid). Each column holds a stack of shops.
 - Logic is grid-based; animation is smooth (walk cycles, squash on landing, tumbles on scripted arcs). No physics engine.
-- Column count: `max(players + 4, 1.5 × players)`, capped by readability (about 18 on a 1080p screen). At 30 players the street is full and stacking is forced. That is accepted.
+- Column count: `max(players + 4, 1.5 × players)`, capped by readability (about 17 on a 1080p screen), then made odd so the street has a middle column (the end card's first place stands in it). At 30 players the street is full and stacking is forced. That is accepted.
 - Shop size is uniform: every shop is one floor tall.
 
 ### Look (pixel art, decided)
@@ -92,7 +98,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 - **Sound effects only, no music,** and only from the big screen: thirty phones beeping would drown it, and the phone is a controller nobody looks at, so phones keep their buzz and stay silent. Every sound is synthesized live from NES-style channels (three pulse widths, a triangle, noise), with no sound files; pitch slides and fades move in frame steps, which is what makes them sound 8-bit.
 - **What makes a sound:** footfalls (two per column, alternating two tones, higher up a tower), a soft thud as a walk ends and the legs fold, a grunt per wobble of a tower under a push (rising as the topple nears), the topple's falling whistle and the crash as it lands, bumps, the push-back (a rough two-note reject), walk-in and parachuter coins, a lost customer, a shop dropping in to join, the shutter clicking down one row at a time and hitting the sill as it closes, the shutter snapping up, one beep per crosswalk bar (higher on the last, as the wave steps off), READY?, WALK-INS!, PARACHUTES!, a tick for each of the round's last five seconds, and a short run up to a held note for the winner. No sound for climbing.
 - **A crowd stays listenable:** footfalls are capped across the whole street per second (one walking shop still sounds every one), each sound has a minimum gap, at most a couple of topples ring at once, only the furthest-along push grunts, and a few coins can ring at once. Coins keep one pitch. The crosswalk beeps are kept low: a cue to look, not an alarm. Each sound pans to its column.
-- **After the win, the street goes quiet:** the winner's run plays, and shops keep their idle animations without a sound.
+- **The winner's run** plays as the winner reaches the top of the podium. The end card's walking, drops and free play sound like the rest of the game.
 - **Sound starts at load where the browser allows it, otherwise on the presenter's first key or click;** until then the HUD shows CLICK FOR SOUND, so a phone joining a silent lobby gets noticed. It pauses with the game, and `M` mutes it (the HUD shows MUTED). A fast-forward or a restart makes no sound for the part skipped.
 
 ## 6. Movement rules (locked)
@@ -112,6 +118,7 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 - **Push-back defense:** a shop being pushed can walk into the attacker. That is a bump (the pushed shop stands one floor above its attacker, which is why bumps reach one floor), which resets the push. It always bounces both, even though the attacker moved first. This is the only defense.
 - **After a topple:** fallen shops are stunned for `stunTime` and immune to being pushed for `immuneTime` (shown by a dizzy wobble).
 - **Edge towers can't be toppled** (nowhere to fall).
+- **Podium blocks** (the end card only) are floors under a column's stack: a walker climbs onto one a floor up, and one two or more floors up is a wall, never a push.
 - **Carrying:** a walking shop carries everything above it. Carried shops count as sitting, so they can still catch parachuters, but walk-ins can't get past the walker's legs to reach them. A rider can step off at any time.
 - **Strain telegraph:** a tower being pushed wobbles visibly before it goes. That wobble is also the cue for the defender to look up.
 
@@ -183,6 +190,11 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 | idleWarn | 4 s | Visible shutter drop before closing |
 | walkInValue | 5 | A walk-in's pay |
 | paraValue | 10 | A parachuter's pay |
+| firstBlocks / secondBlocks / thirdBlocks | 2 / 1 / 1 | Podium blocks under each place |
+| clearMax | 6 s | Longest the takeover waits for the middle to clear before the blocks drop |
+| blockSettle | 1 s | From the blocks dropping to the winners setting off |
+| winnerGap | 1.2 s | Between one winner setting off and the next |
+| freeAfter | 3 s | From the winner reaching the top to free play |
 
 All tunables live in `packages/sim/src/config.ts`, together with the constants the prototype hard-coded (lean, bump gap, speeds, bot timings). The screen's tuning panel edits them live and, in dev, saves them back into that file.
 

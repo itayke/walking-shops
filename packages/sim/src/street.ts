@@ -7,6 +7,16 @@ export function shopAt(g: GameState, col: number, level: number): Shop {
   return g.shops[g.cols[col][level]];
 }
 
+/** Immovable floors at the bottom of a column: the podium's blocks, once the round is over. */
+export function baseOf(g: GameState, col: number): number {
+  return g.podium?.blocks[col] ?? 0;
+}
+
+/** The floor a shop stands on: its place in its column, over any blocks. */
+export function floorOf(g: GameState, s: Shop): number {
+  return baseOf(g, s.col) + s.level;
+}
+
 /** Sync each shop's col/level with its place in the column. */
 export function reindex(g: GameState, c: number): void {
   const col = g.cols[c];
@@ -30,10 +40,10 @@ export function entryShop(g: GameState, c: number): Shop | null {
   return null;
 }
 
-/** The tallest column's height. */
+/** The tallest column's height, blocks and all. */
 export function maxHeight(g: GameState): number {
   let h = 0;
-  for (const col of g.cols) h = Math.max(h, col.length);
+  for (let c = 0; c < g.C; c++) h = Math.max(h, baseOf(g, c) + g.cols[c].length);
   return h;
 }
 

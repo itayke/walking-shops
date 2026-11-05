@@ -4,6 +4,7 @@ import {
   botPlayers,
   createLobby,
   isPhase2,
+  ranking,
   removeShop,
   setController,
   skipTo,
@@ -311,9 +312,11 @@ export class Host {
       tint: this.opts.tint(seat.look),
       phase,
       income: shop ? shop.income : 0,
-      rank: shop ? 1 + g.shops.filter((s) => s.income > shop.income).length : 0,
+      rank: !shop ? 0 : g.over ? ranking(g).indexOf(shop) + 1 : 1 + g.shops.filter((s) => s.income > shop.income).length,
       of: g.shops.length,
       closed: shop ? shop.closed : false,
+      served: shop ? shop.served : 0,
+      topples: shop ? shop.topples : 0,
       ack: seat.ack,
     };
   }

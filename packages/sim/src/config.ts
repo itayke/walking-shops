@@ -12,7 +12,8 @@ export const ROUND = {
   minPlayers: 12,
 };
 
-// Column count is max(players + colsExtra, players × colsPerPlayer), clamped to [colsMin, colsCap].
+// Column count is max(players + colsExtra, players × colsPerPlayer), clamped to [colsMin, colsCap], then made odd
+// (one less, or one more at colsMin) so the street has a middle column for the podium's first place.
 // Read when a game is created; changes apply on restart
 export const STREET = {
   colsMin: 6,
@@ -147,7 +148,21 @@ export const BOTS = {
   towerJitter: 0.3,
 };
 
-export const CONFIG = { ROUND, STREET, MOVEMENT, WALK_INS, WAVES, PARACHUTES, IDLE, SCORING, BOT_MIX, BOTS };
+// The end card: when the round ends the street becomes a podium. The sim takes the controls: everyone walks to the
+// sides, the blocks drop into the middle once it's clear (or after clearMax anyway), then the winners walk up from
+// third to first, winnerGap apart. Play comes back freeAfter the winner is up, until the presenter starts the next
+// round. Blocks are floors under each place, first to third
+export const PODIUM = {
+  firstBlocks: 2,
+  secondBlocks: 1,
+  thirdBlocks: 1,
+  clearMax: 6,
+  blockSettle: 1,
+  winnerGap: 1.2,
+  freeAfter: 3,
+};
+
+export const CONFIG = { ROUND, STREET, MOVEMENT, WALK_INS, WAVES, PARACHUTES, IDLE, SCORING, BOT_MIX, BOTS, PODIUM };
 export type Config = typeof CONFIG;
 export type SectionName = keyof Config;
 export type ConfigOverrides = { [S in SectionName]?: Partial<Config[S]> };
@@ -159,8 +174,10 @@ export function makeConfig(overrides: ConfigOverrides = {}, base: Config = CONFI
   return copy;
 }
 
-/** Columns for a street of `players` shops. */
+/** Columns for a street of `players` shops: always odd, so there's a middle column. */
 export function columnCount(street: Config['STREET'], players: number): number {
   const wanted = Math.max(players + street.colsExtra, Math.round(players * street.colsPerPlayer));
-  return Math.max(street.colsMin, Math.min(street.colsCap, wanted));
+  const n = Math.max(street.colsMin, Math.min(street.colsCap, wanted));
+  if (n % 2 === 1) return n;
+  return n - 1 >= street.colsMin ? n - 1 : n + 1;
 }

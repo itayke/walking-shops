@@ -46,6 +46,7 @@ export function beginRound(g: GameState, bots: readonly PlayerSpec[]): void {
   g.t = 0;
   g.lobby = false;
   g.over = false;
+  g.podium = null;
   g.wave = freshWave(g.config);
   g.stats = freshStats();
   g.shoppers = [];
@@ -67,6 +68,7 @@ export function toLobby(g: GameState): void {
   for (const s of g.shops.filter((x) => x.controller !== 'human')) removeShop(g, s.id);
   g.lobby = true;
   g.over = false;
+  g.podium = null;
   g.shoppers = [];
   g.paras = [];
   for (const s of g.shops) resetRound(s);
@@ -77,6 +79,7 @@ function resetRound(s: Shop): void {
   s.idleT = 0;
   s.closed = false;
   s.closedTicks = s.sitGround = s.ticks = 0;
+  s.served = s.topples = 0;
   s.mind = freshMind();
 }
 

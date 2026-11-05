@@ -62,6 +62,8 @@ export function makeShop(p: PlayerSpec): Shop {
     closedTicks: 0,
     sitGround: 0,
     ticks: 0,
+    served: 0,
+    topples: 0,
     mind: freshMind(),
   };
 }
@@ -103,6 +105,7 @@ export function createGame(config: Config, players: readonly PlayerSpec[], seed:
     stats: freshStats(),
     rng: { world: makeRng(seed), bots: makeRng((seed ^ BOT_STREAM_SALT) >>> 0) },
     events: [],
+    podium: null,
   };
   const order = shuffle(shops.map((_, i) => i), g.rng.world);
   order.forEach((shop, i) => {

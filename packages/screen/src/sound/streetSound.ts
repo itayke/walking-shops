@@ -27,7 +27,6 @@ export class StreetSound {
   private readonly rows = new Map<string, number>();
   private bars = 0;
   private secondsLeft = 0;
-  private over = false;
   private pulse: number | null = null;
   private readonly play: Play;
 
@@ -66,6 +65,10 @@ export class StreetSound {
           break;
         case 'landed':
           break;
+        case 'podium':
+          // The winner has the stage once it's up on the podium
+          if (e.stage === 'crowned') this.emit(g, 'winner', null, t);
+          break;
       }
     }
   }
@@ -73,13 +76,6 @@ export class StreetSound {
   /** Once a frame, after the view has updated: its cues, then what changed on the street. */
   update(g: GameState, view: StreetView, t: number): void {
     const cues = view.cues.splice(0);
-    // Once the round is over the winner has the stage: the street keeps moving, but quietly
-    if (g.over) {
-      if (this.primed && !this.over) this.emit(g, 'winner', null, t);
-      this.primed = true;
-      this.over = true;
-      return;
-    }
     for (const c of cues) this.cue(g, c, t);
     const quiet = !this.primed;
     this.primed = true;
@@ -91,7 +87,6 @@ export class StreetSound {
     const left = Math.ceil(g.config.ROUND.roundTime - g.t);
     if (!quiet && !g.lobby && left !== this.secondsLeft && left > 0 && left <= TICK_FROM) this.emit(g, 'tick', null, t);
     this.secondsLeft = left;
-    this.over = false;
   }
 
   private cue(g: GameState, c: Cue, t: number): void {

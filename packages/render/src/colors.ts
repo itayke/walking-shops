@@ -42,6 +42,13 @@ export const PALETTE = {
   ok: '#52a65e',
   grey: '#9a9ca6',
   greyLo: '#6f717b',
+  // The podium's places: gold, silver and bronze
+  gold: '#f5c746',
+  goldLo: '#c9952c',
+  silver: '#d3d8e0',
+  silverLo: '#9aa2b0',
+  bronze: '#d08a4e',
+  bronzeLo: '#9a5e30',
   line: '#f4f4f4',
 };
 

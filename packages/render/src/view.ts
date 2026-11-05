@@ -1,8 +1,8 @@
-import { isPhase2, scoreText, type Dir, type GameState, type Shop, type SimEvent } from '@walking-shops/sim';
+import { baseOf, isPhase2, scoreText, type Dir, type GameState, type Shop, type SimEvent } from '@walking-shops/sim';
 import { COPY } from './copy.ts';
 import { floorsNeeded } from './layout.ts';
 import { climbEase } from './legs.ts';
-import { FX_LOOK, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
+import { FX_LOOK, GRID, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, PODIUM_LOOK, SHOP_LOOK, STREET_LOOK } from './look.ts';
 
 /** A toppled shop flying from where it was drawn to its new place. */
 interface Arc {
@@ -44,6 +44,12 @@ export interface ShopAnim {
   drop: { from: number; age: number } | null;
   // Strides taken, counted along its facing: each new one is a footfall
   stride: number;
+}
+
+/** A column's podium blocks as drawn: the bottom of the stack in floors, falling in from above the sky when they appear. */
+export interface BlockAnim {
+  y: number;
+  drop: { from: number; age: number } | null;
 }
 
 export type CalloutColor = 'danger' | 'ok' | 'muted';
@@ -93,6 +99,14 @@ export function lifetime(e: Effect): number {
   return e.kind === 'banner' ? BANNERS[e.banner].time : LIFETIME[e.kind];
 }
 
+/** Where a column's stack stands, in floors: on its podium blocks, sunk a little for a lower place of the same height. */
+export function standOn(g: GameState, c: number): number {
+  const base = baseOf(g, c);
+  if (base === 0 || !g.podium) return 0;
+  const sink = PODIUM_LOOK.placeSink[g.podium.cols.indexOf(c)] ?? 0;
+  return base - sink / GRID.cellH;
+}
+
 /** Fraction of the way from a to b, eased to slow into the landing. */
 function easeOut(u: number): number {
   return 1 - (1 - u) * (1 - u);
@@ -114,6 +128,8 @@ export class StreetView {
   cues: Cue[] = [];
   // Shoppers who came down by parachute, by shopper id: they walk on from where they touched down, in the parachuter's look
   readonly landed = new Map<number, { offset: number; para: number }>();
+  // The podium's blocks by column, once the round is over
+  readonly blocks = new Map<number, BlockAnim>();
   // Floors of sky shown, eased toward what the street needs
   floors = 0;
   private phase2 = false;
@@ -128,6 +144,8 @@ export class StreetView {
     this.effects = [];
     this.cues = [];
     this.landed.clear();
+    this.blocks.clear();
+    for (let c = 0; c < g.C; c++) if (baseOf(g, c) > 0) this.blocks.set(c, { y: 0, drop: null });
     this.floors = floorsNeeded(g);
     this.phase2 = isPhase2(g);
     this.readyLeft = 0;
@@ -228,6 +246,13 @@ export class StreetView {
         case 'reopened':
           // The shutters snapping up says it
           break;
+        case 'podium':
+          // The winner is up: a burst either side of it
+          if (e.stage === 'crowned' && g.podium && g.podium.top.length > 0) {
+            const a = byId(g.podium.top[0]);
+            for (const side of [-1, 1]) this.add({ kind: 'burst', x: a.x + side * FX_LOOK.crownSpread, y: this.bodyMid(g, a), age: 0 });
+          }
+          break;
       }
     }
   }
@@ -247,11 +272,14 @@ export class StreetView {
       const on = new Set(g.shops.map((s) => s.id));
       for (const id of this.anims.keys()) if (!on.has(id)) this.anims.delete(id);
     }
+    this.updateBlocks(g, dt);
     for (let c = 0; c < g.C; c++) {
-      // Riders move with the walker under them, and stand on its legs
+      // Riders move with the walker under them, and stand on its legs; the stack stands on the column's blocks
       let offSum = 0;
       let carried = 0;
-      for (const [ty, i] of g.cols[c].entries()) {
+      const base = standOn(g, c);
+      for (const [level, i] of g.cols[c].entries()) {
+        const ty = base + level;
         const s = g.shops[i];
         const a = this.anim(s);
         offSum += s.off;
@@ -328,5 +356,33 @@ export class StreetView {
     this.phase2 = phase2;
 
     this.floors += (floorsNeeded(g) - this.floors) * follow(STREET_LOOK.zoomRate, dt);
+  }
+
+  /** New podium blocks fall in from above the sky, one column after another, lowest place first. */
+  private updateBlocks(g: GameState, dt: number): void {
+    for (let c = 0; c < g.C; c++) {
+      if (baseOf(g, c) === 0) {
+        this.blocks.delete(c);
+        continue;
+      }
+      let b = this.blocks.get(c);
+      if (!b) {
+        // Lowest place first, so the winner's stack lands last
+        const order = g.podium ? g.podium.cols.length - 1 - g.podium.cols.indexOf(c) : 0;
+        b = { y: this.floors + MOTION_LOOK.dropAbove, drop: { from: this.floors + MOTION_LOOK.dropAbove, age: -order * MOTION_LOOK.blockStagger } };
+        this.blocks.set(c, b);
+      }
+      if (!b.drop) continue;
+      const was = b.drop.age;
+      b.drop.age += dt;
+      if (was <= 0 && b.drop.age > 0) this.cue({ kind: 'drop', x: c });
+      const u = Math.max(0, Math.min(1, b.drop.age / MOTION_LOOK.dropTime));
+      b.y = b.drop.from * (1 - u * u);
+      if (u >= 1) {
+        b.drop = null;
+        b.y = 0;
+        this.cue({ kind: 'land', x: c });
+      }
+    }
   }
 }

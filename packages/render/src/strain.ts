@@ -1,6 +1,6 @@
-import type { Dir, GameState } from '@walking-shops/sim';
+import { baseOf, floorOf, type Dir, type GameState } from '@walking-shops/sim';
 
-/** A tower under a push: everything from `level` up in its column, how far along the push is, and where it falls. */
+/** A tower under a push: everything from `level` (its place in the column) up, how far along the push is, and where it falls. */
 export interface Strain {
   level: number;
   amount: number;
@@ -16,7 +16,8 @@ export function strainsByColumn(g: GameState): Map<number, Strain> {
     const amount = Math.min(1, a.pushT / pushTime);
     const prev = out.get(a.pushCol);
     if (prev && prev.amount >= amount) continue;
-    out.set(a.pushCol, { level: a.level + 1, amount, dir: a.pushCol > a.col ? 1 : -1 });
+    // The tower starts a floor above the pusher's, over any blocks under it
+    out.set(a.pushCol, { level: floorOf(g, a) + 1 - baseOf(g, a.pushCol), amount, dir: a.pushCol > a.col ? 1 : -1 });
   }
   return out;
 }

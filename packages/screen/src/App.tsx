@@ -233,7 +233,8 @@ export function App() {
           // Taps during the countdown are dropped, so play starts on what's held at WALK-INS!
           host.current.inputs();
           keyboard.dir();
-        } else if (!g.over) {
+        } else {
+          // Through the round, then its end card: the podium plays on until the next round
           acc += dt;
           for (let n = 0; acc >= TICK && n < MAX_TICKS_PER_FRAME; n++) {
             const inputs = host.current.inputs();
@@ -293,7 +294,8 @@ export function App() {
       <div className="stage">
         <canvas ref={canvasRef} />
         {g.lobby && <Lobby room={net.current.room.code} onBegin={() => begin.current()} />}
-        {!g.over && shops[g.lobby ? 'lobby' : 'round'] && (
+        {/* The end card always shows the ranking */}
+        {(g.over || shops[g.lobby ? 'lobby' : 'round']) && (
           <Shops
             g={g}
             seats={host.current.seats}
@@ -305,7 +307,7 @@ export function App() {
             }}
           />
         )}
-        {g.over ? <Results g={g} you={SCREEN_SHOP?.id} onReplay={() => replay.current()} /> : paused.current && <Paused />}
+        {g.over ? <Results g={g} onReplay={() => replay.current()} /> : paused.current && <Paused />}
       </div>
     </div>
   );

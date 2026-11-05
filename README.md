@@ -61,7 +61,7 @@ Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:
 | `F` | Bots play the phones' shops for the round, or hand them back (also on its own when the relay is out of reach) |
 | `M` | Mute or unmute the sound. Sound starts at load where the browser allows it, otherwise on the first key or click; the HUD shows CLICK FOR SOUND until then, and MUTED while muted |
 | `T` | Show or hide the tuning panel, hidden at first (its New street button lays the street out again) |
-| `R` | Back to the lobby (or Play again on the results): the bots leave, everyone else stays put |
+| `R` | Back to the lobby (or Play again on the end card): the bots leave, everyone else stays put |
 
 URL parameters: `?screenShop=NAME` seats a shop played from the screen's keyboard under that name (`?screenShop` alone names it YOU; without it there is none), `?seed=N` replays the same round, `?at=S` skips the lobby and fast-forwards the first round to S seconds (for example `http://localhost:7320/?seed=7&at=70`).
 

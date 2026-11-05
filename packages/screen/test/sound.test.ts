@@ -139,16 +139,18 @@ describe('street sound', () => {
     expect(heard.filter((h) => h.id === 'shutRow').length).toBeLessThanOrEqual(1);
   });
 
-  it('ticks through the last seconds, then plays the winner and nothing more', () => {
+  it('ticks through the last seconds, then plays the winner once it is up on the podium', () => {
     const roundTime = 8;
+    // Long enough for a small street's takeover
+    const takeover = 15;
     const g = street([['A'], ['B'], []], { ROUND: { roundTime } });
     const { ids, play } = listen(g);
     // The round ends on the tick after its clock runs out
     play(roundTime + 2 * TICK);
     expect(ids().filter((id) => id === 'tick')).toHaveLength(TICK_FROM);
-    expect(ids().at(-1)).toBe('winner');
-    const heard = ids().length;
-    play(1, { A: 1 });
-    expect(ids()).toHaveLength(heard);
+    expect(ids()).not.toContain('winner');
+    play(takeover);
+    expect(g.podium?.stage).toBe('free');
+    expect(ids().filter((id) => id === 'winner')).toHaveLength(1);
   });
 });

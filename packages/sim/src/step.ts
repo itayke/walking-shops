@@ -3,6 +3,7 @@ import { TICK } from './config.ts';
 import { spawnParachuters, spawnWalkIns, updateParachuters, updateShoppers } from './customers.ts';
 import { updateShutters } from './idle.ts';
 import { moveShop } from './movement.ts';
+import { startPodium, stepPodium } from './podium.ts';
 import { shuffle } from './rng.ts';
 import { isPhase2, maxHeight } from './street.ts';
 import type { GameState, Inputs, SimEvent } from './types.ts';
@@ -10,7 +11,10 @@ import type { GameState, Inputs, SimEvent } from './types.ts';
 /** Advance the game one tick in place. Callers pass the fixed TICK; returns this tick's events. */
 export function step(g: GameState, inputs: Inputs, dt: number = TICK): SimEvent[] {
   g.events = [];
-  if (g.over) return g.events;
+  if (g.over) {
+    if (g.podium) stepPodium(g, inputs, dt);
+    return g.events;
+  }
   const { ROUND, WALK_INS } = g.config;
   // The lobby's clock still runs, for who started walking first; the round rebases it to zero
   g.t += dt;
@@ -45,5 +49,7 @@ export function step(g: GameState, inputs: Inputs, dt: number = TICK): SimEvent[
     s.ticks++;
     if (s.level === 0 && !s.walking) s.sitGround++;
   }
+  // The round's last tick is played out, then the street turns into the end card
+  if (g.over) startPodium(g);
   return g.events;
 }
