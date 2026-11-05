@@ -59,6 +59,7 @@ Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:
 | `S` | Skip ahead: from the walk-ins to the parachutes, from the parachutes to the results |
 | `N` | Restart: a fresh round straight away, shops where they stand, bots filled in again |
 | `F` | Bots play the phones' shops for the round, or hand them back (also on its own when the relay is out of reach) |
+| `M` | Mute or unmute the sound (sound starts on the first key or click) |
 | `T` | Show or hide the tuning panel, hidden at first (its New street button lays the street out again) |
 | `R` | Back to the lobby (or Play again on the results): the bots leave, everyone else stays put |
 

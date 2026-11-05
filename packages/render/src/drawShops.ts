@@ -1,10 +1,10 @@
-import { shutterDrop, type GameState, type Shop } from '@walking-shops/sim';
+import type { GameState, Shop } from '@walking-shops/sim';
 import { fadeOut, PALETTE, shopHue, shopTint, undiesFor, washOut } from './colors.ts';
 import { drawLegs, legPose, strideFrame, type ClimbStep, type LegPose } from './legs.ts';
 import { colX, device, floorY, type Layout } from './layout.ts';
 import { GRID, MOTION_LOOK, SHOP_LOOK, TAU } from './look.ts';
 import { Pix } from './pix.ts';
-import { lookOf, SHOP, shopSprite, shutterRows } from './shopArt.ts';
+import { lookOf, SHOP, shopSprite, shutterShown } from './shopArt.ts';
 import { drawSignName } from './signs.ts';
 import { strainsByColumn, type Strain } from './strain.ts';
 import type { ShopAnim, StreetView } from './view.ts';
@@ -126,7 +126,7 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
   const sprite = shopSprite({
     design: look.design,
     tint: shopTint(shopHue(look.hue)),
-    shutter: Math.round(shutterRows() * Math.min(1, shutterDrop(g, s))),
+    shutter: shutterShown(g, s),
     danger: it.danger,
     t: now,
   });

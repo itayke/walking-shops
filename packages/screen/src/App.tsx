@@ -7,6 +7,9 @@ import { Hud, Paused, Results } from './hud/Hud.tsx';
 import { Lobby } from './hud/Lobby.tsx';
 import { Shops } from './hud/Shops.tsx';
 import { createKeyboard } from './input/keyboard.ts';
+import { soundTones } from './sound/sounds.ts';
+import { StreetSound } from './sound/streetSound.ts';
+import { Synth } from './sound/synth.ts';
 import { currentRoom, isRoomTaken, newRoom, PARTY_HOST, type RoomInfo } from './net/room.ts';
 import { HUES, shopHue, shopTint } from '@walking-shops/render/colors.ts';
 import { drawFrame } from '@walking-shops/render/draw.ts';
@@ -29,6 +32,7 @@ const BEGIN_KEY = 'enter';
 const SKIP_KEY = 's';
 const RESTART_KEY = 'n';
 const FALLBACK_KEY = 'f';
+const MUTE_KEY = 'm';
 // URL parameters for debugging: ?seed=N replays a round, ?at=S skips the lobby and fast-forwards the round to S seconds
 const params = new URLSearchParams(location.search);
 const SEED_PARAM = params.get('seed');
@@ -58,6 +62,8 @@ function fastForward(g: GameState, view: StreetView, seconds: number): void {
     view.onEvents(g, step(g, {}, TICK));
     view.update(g, TICK);
   }
+  // Nothing is heard from the part skipped
+  view.cues = [];
 }
 
 /** The big screen, offline: the street on a canvas, the HUD above it. */
@@ -90,6 +96,9 @@ export function App() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const view = new StreetView();
+    // Sound starts on the presenter's first key or click, as browsers require
+    const synth = new Synth();
+    const sound = new StreetSound((id, o, pan) => synth.play(soundTones(id, o), pan));
     // A fast-forwarded round is already under way, so it skips the lobby and the countdown
     if (START_AT > 0) host.current.begin();
     view.reset(host.current.game);
@@ -132,6 +141,8 @@ export function App() {
     const refresh = () => {
       acc = 0;
       paused.current = false;
+      synth.pause(false);
+      sound.prime();
       setHudTick((t) => t + 1);
     };
     begin.current = () => {
@@ -167,12 +178,15 @@ export function App() {
     };
     const disposePanel = createTuningPanel(lobby, newStreet);
     const keyboard = createKeyboard();
+    const unlock = () => synth.unlock();
     const onKey = (e: KeyboardEvent) => {
+      unlock();
       if (e.target instanceof HTMLInputElement) return;
       const key = e.key.toLowerCase();
       if (key === PAUSE_KEY) {
         e.preventDefault();
         paused.current = !paused.current;
+        synth.pause(paused.current);
         setHudTick((t) => t + 1);
       }
       if (key === SHOPS_KEY) {
@@ -182,12 +196,14 @@ export function App() {
       if (key === BEGIN_KEY) begin.current();
       if (key === SKIP_KEY) skip();
       if (key === RESTART_KEY) restart();
+      if (key === MUTE_KEY) synth.toggleMute();
       if (key === FALLBACK_KEY) {
         manualFallback = !manualFallback;
         setHudTick((t) => t + 1);
       }
     };
     window.addEventListener('keydown', onKey);
+    window.addEventListener('pointerdown', unlock);
 
     let last = performance.now();
     let lastHud = last;
@@ -214,13 +230,16 @@ export function App() {
             const inputs = host.current.inputs();
             const dir = keyboard.dir();
             if (SCREEN_SHOP) inputs[SCREEN_SHOP.id] = dir;
-            view.onEvents(g, step(g, inputs, TICK));
+            const events = step(g, inputs, TICK);
+            view.onEvents(g, events);
+            sound.onEvents(g, events, clock);
             acc -= TICK;
           }
           acc = Math.min(acc, TICK);
         }
         view.update(g, dt);
         clock += dt;
+        sound.update(g, view, clock);
       }
       draw();
       if (now - lastFlush >= NET.stateInterval * MS_PER_SECOND) {
@@ -246,6 +265,7 @@ export function App() {
       net.current.link?.close();
       net.current.link = null;
       window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', unlock);
     };
   }, []);
 

@@ -42,6 +42,8 @@ export interface ShopAnim {
   arc: Arc | null;
   // A shop that just joined, falling from above the sky into its place
   drop: { from: number; age: number } | null;
+  // Strides taken, counted along its facing: each new one is a footfall
+  stride: number;
 }
 
 export type CalloutColor = 'danger' | 'ok' | 'muted';
@@ -66,6 +68,16 @@ export const BANNERS = {
   phase2: { text: COPY.street.parachutes, time: FX_LOOK.bannerTime },
 };
 export type Banner = keyof typeof BANNERS;
+
+/** Moments only the animation knows, for the screen's sound. x in columns, level in floors. */
+export type Cue =
+  | { kind: 'footfall'; x: number; level: number; foot: number }
+  | { kind: 'drop'; x: number }
+  | { kind: 'land'; x: number }
+  | { kind: 'banner'; banner: Banner };
+
+// Unread cues are dropped past this many, so a view nobody listens to doesn't grow
+const MAX_CUES = 64;
 
 const LIFETIME: Record<Exclude<Effect['kind'], 'banner'>, number> = {
   callout: FX_LOOK.calloutTime,
@@ -96,6 +108,8 @@ function follow(rate: number, dt: number): number {
 export class StreetView {
   readonly anims = new Map<string, ShopAnim>();
   effects: Effect[] = [];
+  // Cues since the screen last read them; it empties the list as it plays them
+  cues: Cue[] = [];
   // Shoppers who came down by parachute, by shopper id: they walk on from where they touched down, in the parachuter's look
   readonly landed = new Map<number, { offset: number; para: number }>();
   // Floors of sky shown, eased toward what the street needs
@@ -110,6 +124,7 @@ export class StreetView {
   reset(g: GameState, countdown = false): void {
     this.anims.clear();
     this.effects = [];
+    this.cues = [];
     this.landed.clear();
     this.floors = floorsNeeded(g);
     this.phase2 = isPhase2(g);
@@ -140,7 +155,7 @@ export class StreetView {
 
   private placed(s: Shop, drop: ShopAnim['drop']): ShopAnim {
     const y = drop ? drop.from : s.level;
-    return { x: s.col, y, level: s.level, climb: null, carried: 0, legs: 0, dir: 1, moving: false, spin: 0, flash: 0, squash: 0, arc: null, drop };
+    return { x: s.col, y, level: s.level, climb: null, carried: 0, legs: 0, dir: 1, moving: false, spin: 0, flash: 0, squash: 0, arc: null, drop, stride: 0 };
   }
 
   /** The middle of a shop's body, in floors, for effects that start on it. A shop with its roof is one floor tall. */
@@ -155,6 +170,12 @@ export class StreetView {
   private add(e: Effect): void {
     this.effects.push(e);
     if (this.effects.length > FX_LOOK.maxEffects) this.effects.splice(0, this.effects.length - FX_LOOK.maxEffects);
+    if (e.kind === 'banner') this.cue({ kind: 'banner', banner: e.banner });
+  }
+
+  private cue(c: Cue): void {
+    this.cues.push(c);
+    if (this.cues.length > MAX_CUES) this.cues.splice(0, this.cues.length - MAX_CUES);
   }
 
   /** Turn one tick's sim events into animation. */
@@ -246,7 +267,9 @@ export class StreetView {
         a.level = ty;
         if (a.drop) {
           // Falls straight down, speeding up, and squashes as it lands
+          const waited = a.drop.age;
           a.drop.age += dt;
+          if (waited <= 0 && a.drop.age > 0) this.cue({ kind: 'drop', x: tx });
           // Waits at the top until its turn
           const u = Math.max(0, Math.min(1, a.drop.age / MOTION_LOOK.dropTime));
           a.x = tx;
@@ -254,6 +277,7 @@ export class StreetView {
           if (u >= 1) {
             a.drop = null;
             a.squash = MOTION_LOOK.squashTime;
+            this.cue({ kind: 'land', x: tx });
           }
         } else if (a.arc) {
           a.arc.age += dt;
@@ -266,6 +290,7 @@ export class StreetView {
             a.arc = null;
             a.spin = 0;
             a.squash = MOTION_LOOK.squashTime;
+            this.cue({ kind: 'land', x: tx });
           }
         } else if (a.climb) {
           const c = a.climb;
@@ -277,6 +302,10 @@ export class StreetView {
           a.x += (tx - a.x) * xK;
           a.y += (ty - a.y) * yK;
         }
+        // A footfall each time the legs plant a new stride, so it keeps time with the drawn stride
+        const stride = Math.floor(a.x * a.dir * LEG_LOOK.stridesPerCell);
+        if (a.moving && stride !== a.stride) this.cue({ kind: 'footfall', x: a.x, level: ty, foot: stride & 1 });
+        a.stride = stride;
         a.flash = Math.max(0, a.flash - dt);
         a.squash = Math.max(0, a.squash - dt);
       }

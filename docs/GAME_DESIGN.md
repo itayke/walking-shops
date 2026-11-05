@@ -86,6 +86,14 @@ The mockup is `reference/pixel-street.html`, and the screen renderer draws it. V
 - **Scale:** the street scales by whatever fits every column and the sky (centered when the height is what limits it), and eases as towers grow. At a scale that isn't a whole number, some art pixels are a device pixel wider than others.
 - **Open:** whether to step the zoom between whole-number scales instead.
 
+### Sound (8-bit, decided)
+
+- **Sound effects only, no music,** and only from the big screen: thirty phones beeping would drown it, and the phone is a controller nobody looks at, so phones keep their buzz and stay silent. Every sound is synthesized live from NES-style channels (three pulse widths, a triangle, noise), with no sound files; pitch slides and fades move in frame steps, which is what makes them sound 8-bit.
+- **What makes a sound:** footfalls (two per column, alternating two tones, higher up a tower), a grunt per wobble of a tower under a push (rising as the topple nears), the topple's falling whistle and the crash as it lands, bumps, the push-back (a rough two-note reject), walk-in and parachuter coins, a lost customer, a shop dropping in to join, the shutter clicking down one row at a time and hitting the sill as it closes, the shutter snapping up, one beep per crosswalk bar (higher on the last, as the wave steps off), READY?, WALK-INS!, PARACHUTES!, a tick for each of the round's last five seconds, and a short run up to a held note for the winner. No sound for climbing.
+- **A crowd stays listenable:** footfalls are capped across the whole street per second (one walking shop still sounds every one), each sound has a minimum gap, at most a couple of topples ring at once, only the furthest-along push grunts, and a few coins can ring at once. Coins keep one pitch. The crosswalk beeps are kept low: a cue to look, not an alarm. Each sound pans to its column.
+- **After the win, the street goes quiet:** the winner's run plays, and shops keep their idle animations without a sound.
+- **Sound starts on the presenter's first key or click** (browsers require one), pauses with the game, and `M` mutes it. A fast-forward or a restart makes no sound for the part skipped.
+
 ## 6. Movement rules (locked)
 
 **Your height:** a sitting shop is 1 floor. A walking shop stands on legs one floor tall, so it is 2 floors high and carries everything stacked on its roof. Heights are measured from the surface under your feet.
@@ -191,7 +199,7 @@ From the prototype's headless bot runs (`reference/bench.js`). Bots are not peop
 
 1. **Phase 2 balance with top-only pay.** Climbing and towers don't pay enough yet, and stopping walk-ins in phase 2 swings the advantage to constant walking. Levers to test: more parachuters, higher `paraValue`, walk-ins stopping in phase 2, wider parachute drift, a shorter walking height in phase 2. `reference/bench.js` has a section for this.
 2. **Wreck-then-climb.** Holding into a tall tower knocks the top off, then climbs what is left. Probably the strongest single move. Watch it in playtests.
-3. **Idle warning visibility.** Players watch the big screen, not their phone. Is a 4s shutter drop on screen enough? Consider a phone buzz.
+3. **Idle warning visibility.** Players watch the big screen, not their phone. Is a 4s shutter drop on screen enough, now that each row clicks as it drops? Consider a phone buzz.
 4. **Shop readability at 30 players** on a real projector from the back of the room.
 
 ## 13. Rejected (don't reintroduce without a reason)

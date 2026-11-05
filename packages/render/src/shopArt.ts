@@ -1,4 +1,4 @@
-import type { Look, Shop } from '@walking-shops/sim';
+import { shutterDrop, type GameState, type Look, type Shop } from '@walking-shops/sim';
 import { PALETTE, type PaletteColor, type Tint } from './colors.ts';
 import { GRID, SHOP_LOOK } from './look.ts';
 import { Pix, scratch } from './pix.ts';
@@ -111,6 +111,11 @@ export interface ShopLook {
 /** How many rows the shutters cover when fully down. */
 export function shutterRows(): number {
   return SHOP.H - 1 - SHOP.lowTop;
+}
+
+/** How many rows of a shop's shutters are down right now, as drawn. */
+export function shutterShown(g: GameState, s: Shop): number {
+  return Math.round(shutterRows() * Math.min(1, shutterDrop(g, s)));
 }
 
 /** Where a design's window and awning are in their animations at time t; 0 for parts that don't animate. */
