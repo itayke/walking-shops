@@ -266,7 +266,7 @@ export function App() {
           </div>
           <p className="credit">
             <span>{COPY.credit.by}</span>
-            <span>{COPY.credit.rights}</span>
+            <span>{COPY.credit.who}</span>
           </p>
         </footer>
       </main>

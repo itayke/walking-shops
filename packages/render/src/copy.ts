@@ -23,7 +23,7 @@ export const COPY = {
   },
 
   // Under the phone's shop setup, one line each
-  credit: { by: 'A game by Itay Keren', rights: '© 2026 Untame' },
+  credit: { by: 'A party mini-game by', who: 'Itay Keren © 2026 Untame' },
 
   // The bar along the top of the big screen
   hud: {
