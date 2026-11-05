@@ -13,8 +13,10 @@
   --held: rgb(255 255 255 / 0.22);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Press Start 2P', 'Arial Black', Impact, sans-serif;
-  /* Font pixels per em of the display font: a size with whole screen pixels per font pixel stays crisp */
+  --font-title: 'Jersey 15', 'Arial Black', Impact, sans-serif;
+  /* Font pixels per em of each display font: a size with whole screen pixels per font pixel stays crisp */
   --display-grid: 8;
+  --title-grid: 27;
   --display-pixel: 3px;
   --display-size: calc(var(--display-grid) * var(--display-pixel));
   --field: rgb(255 255 255 / 0.92);
@@ -23,6 +25,8 @@
   --coin: #f5c746;
   --coin-edge: #1c1a26;
   --on-sky: #1f3a5f;
+  /* Dark text straight on the shop's tint, which is always the same lightness whatever its hue */
+  --on-tint: #1c1a26;
   color-scheme: dark;
 }
 
@@ -180,6 +184,8 @@ body,
 /* Setting up a shop: the preview on top, the name under it, all above where the keyboard comes up */
 .setup-page {
   position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: auto;
   transition: background 0.3s;
@@ -279,4 +285,75 @@ body,
   background: transparent;
   color: var(--ink);
   font-size: 18px;
+}
+
+/* Registered, so PixelText reads it as a computed length rather than the expression that sets it */
+@property --pixel-outline {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* Under the form: the title and tagline at the bottom of the room left, over the credit on a shade like the status */
+.brand {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  /* Device pixels per font pixel of the title, whole so it stays crisp (--device-px is set from the pixel ratio); the
+     tagline's at a share of it */
+  --title-pixel: round(down, clamp(2px, 17vw / var(--title-grid), 4px), var(--device-px, 1px));
+  --tagline-scale: 0.5;
+  --tagline-pixel: max(var(--device-px, 1px), round(down, var(--title-pixel) * var(--tagline-scale), var(--device-px, 1px)));
+  /* The title's outline, and the room between title and tagline, in title pixels */
+  --title-outline: 2.6;
+  --tagline-gap: 5;
+}
+
+.brand .masthead {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px;
+}
+
+.brand .title {
+  margin: 0;
+  align-self: stretch;
+  text-align: center;
+  font-family: var(--font-title);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: calc(var(--title-pixel) * var(--title-grid));
+  line-height: 1;
+  color: var(--coin);
+  --pixel-outline: calc(var(--title-pixel) * var(--title-outline));
+  --pixel-outline-color: var(--coin-edge);
+  --pixel-outline-join: round;
+}
+
+.brand canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+}
+
+.brand .tagline {
+  margin-top: calc(var(--title-pixel) * var(--tagline-gap));
+  font-family: var(--font-title);
+  font-size: calc(var(--tagline-pixel) * var(--title-grid));
+  line-height: 1;
+  color: var(--on-tint);
+}
+
+.credit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 16px max(10px, env(safe-area-inset-bottom));
+  background: var(--shade);
+  font-size: 13px;
 }

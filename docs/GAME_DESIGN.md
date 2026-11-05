@@ -43,6 +43,7 @@ Status: rules locked after a prototype and bot testing (see `reference/`). Numbe
 - **Editing:** until the round begins, a player can go back to the form. The shop stays on the street with its current name and type, and an edit applies only when confirmed. If the round begins mid-edit, the edit is dropped and the phone becomes the controller.
 - A player who hasn't opened their shop by the time the round begins waits for the replay. They can set it up meanwhile, and it drops in when the lobby reopens.
 - **The sign fills up:** once a letter doesn't fit, nothing more is taken until something is deleted, so a narrower letter can't slip in after a wider one was refused.
+- **Branding:** the form stays at the top, above where the keyboard comes up. The room under it shows the game's title and tagline, with the credit along the bottom.
 
 ### Presenter list
 

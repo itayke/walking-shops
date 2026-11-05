@@ -2,9 +2,9 @@ import type { Seat } from '@walking-shops/net';
 import { isPhase2, scoreText, type GameState, type Shop } from '@walking-shops/sim';
 import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
 import { COPY } from '@walking-shops/render/copy.ts';
+import { PixelText } from '@walking-shops/render/PixelText.tsx';
 import { lookOf } from '@walking-shops/render/shopArt.ts';
 import type { SoundState } from '../sound/synth.ts';
-import { PixelText } from './PixelText.tsx';
 
 const SECONDS_PER_MINUTE = 60;
 const PERCENT = 100;

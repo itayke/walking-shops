@@ -2,6 +2,7 @@ import { DEV_PORTS, isRoomCode, randomId, type PhoneMsg, type PhoneState } from 
 import { connectPhone, type Link } from '@walking-shops/net/client';
 import { COPY } from '@walking-shops/render/copy.ts';
 import { FX_LOOK } from '@walking-shops/render/look.ts';
+import { PixelText } from '@walking-shops/render/PixelText.tsx';
 import { scoreText, type Dir } from '@walking-shops/sim';
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { Arrow } from './Arrow.tsx';
@@ -255,6 +256,19 @@ export function App() {
             onCancel={() => setEditing(false)}
           />
         )}
+        {/* The room under the form, where the keyboard comes up: the title, and who made it */}
+        <footer className="brand">
+          <div className="masthead">
+            <h1 className="title">
+              <PixelText text={COPY.game} />
+            </h1>
+            <PixelText className="tagline" text={COPY.lobby.tagline} />
+          </div>
+          <p className="credit">
+            <span>{COPY.credit.by}</span>
+            <span>{COPY.credit.rights}</span>
+          </p>
+        </footer>
       </main>
     );
   }

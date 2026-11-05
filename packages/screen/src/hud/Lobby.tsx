@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react';
 import { COPY } from '@walking-shops/render/copy.ts';
+import { PixelText } from '@walking-shops/render/PixelText.tsx';
 import { encode } from 'uqr';
 import { joinUrl } from '../net/room.ts';
-import { PixelText } from './PixelText.tsx';
 
 // Light modules around the code, so a scanner finds its edge against the card, with corners rounded inside that margin
 const QR_QUIET = 2;

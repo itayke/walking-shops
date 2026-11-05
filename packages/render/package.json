@@ -10,5 +10,11 @@
   },
   "dependencies": {
     "@walking-shops/sim": "*"
+  },
+  "peerDependencies": {
+    "react": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0"
   }
 }

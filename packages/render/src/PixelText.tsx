@@ -71,7 +71,8 @@ export function PixelText({ text, className }: { text: string; className?: strin
       const ratio = devicePixelRatio || 1;
       const shown = css.textTransform === 'uppercase' ? text.toUpperCase() : text;
       const pad = Math.round((parseFloat(css.getPropertyValue('--pixel-outline')) || 0) * ratio);
-      const size = parseFloat(css.fontSize) * ratio;
+      // Whole device pixels, so a size snapped to them in CSS doesn't land a hair off
+      const size = Math.round(parseFloat(css.fontSize) * ratio);
       // Resizing the canvas resets its state, so the font is set again after
       const setFont = () => {
         ctx.font = `${css.fontWeight} ${size}px ${css.fontFamily}`;
