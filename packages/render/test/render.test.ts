@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { run, shop, street } from '../../sim/test/helpers.ts';
 import { colorDistance, SHIRT_SKIN_MIN, SHIRTS_FOR_SKIN, SKIN, undiesFor, type Undies } from '../src/colors.ts';
 import { drawLegs, kneeIK, legPose, strideFrame, type LegPose } from '../src/legs.ts';
+import { lane } from '../src/drawPeople.ts';
 import { floorsNeeded, layoutStreet } from '../src/layout.ts';
 import { FX_LOOK, GRID, LEG_LOOK, MOTION_LOOK, PEOPLE_LOOK, SHOP_LOOK, UNDIES_LOOK } from '../src/look.ts';
 import { Pix } from '../src/pix.ts';
@@ -109,6 +110,20 @@ describe('view', () => {
     const coins = view.effects.filter((e) => e.kind === 'coin');
     expect(coins.map((e) => e.from)).toEqual(['walkIn', 'shop']);
     expect(coins[1].y).toBeGreaterThan(1);
+  });
+
+  it('walks a parachuter with no open shop on from right where it touched down', () => {
+    const touchdown = 1.3;
+    const g = street([[], [], []], { ROUND: { paraStart: 0 } });
+    const view = new StreetView();
+    view.reset(g);
+    g.paras.push({ id: g.nextPara++, x: touchdown, y: 0.1, vx: 0 });
+    const landed = play(g, view, PEOPLE_LOOK.leaveTime / 2).find((e) => e.type === 'landed');
+    if (landed?.type !== 'landed') throw new Error('never landed');
+    // No shop on the street, so it gives up and walks back from right where it came down
+    const leaver = view.effects.find((e) => e.kind === 'leaver' && e.shopper === landed.shopper);
+    if (leaver?.kind !== 'leaver') throw new Error('never left');
+    expect(leaver.x + lane(view, leaver.shopper)).toBeCloseTo(touchdown);
   });
 
   it('announces phase 2 once, as it starts', () => {

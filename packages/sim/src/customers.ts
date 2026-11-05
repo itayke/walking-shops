@@ -1,7 +1,7 @@
 import { rand } from './rng.ts';
 import { pay } from './scoring.ts';
 import { entryShop, maxHeight, NONE } from './street.ts';
-import type { GameState, Shop } from './types.ts';
+import type { GameState, Parachuter, Shop } from './types.ts';
 
 // Attempts to place a crosswalk at least one width from the last before settling for wherever it lands
 const PLACE_TRIES = 30;
@@ -19,10 +19,11 @@ function crossShopper(g: GameState, c: number): void {
   g.stats.spawned++;
 }
 
-/** A shopper already at street level in column c (a parachuter that found no open shop). */
-function landShopper(g: GameState, c: number): void {
+/** A shopper already at street level in column c: a parachuter that found no open shop. */
+function landShopper(g: GameState, c: number, pa: Parachuter): void {
   const { WALK_INS } = g.config;
   g.stats.spawned++;
+  g.events.push({ type: 'landed', para: pa.id, shopper: g.nextShopper, x: pa.x, col: c });
   g.shoppers.push({ id: g.nextShopper++, x: c, origin: c, rise: 0, cross: WALK_INS.crossTime, life: WALK_INS.shopperLife });
 }
 
@@ -178,11 +179,11 @@ export function updateParachuters(g: GameState, dt: number): void {
         }
         // Every shop in the column is shuttered: the parachuter lands on the sidewalk and walks
         if (catcher) pay(g, catcher, SCORING.paraValue, 'para', pa);
-        else landShopper(g, pc);
+        else landShopper(g, pc, pa);
         continue;
       }
     } else if (pa.y <= 0) {
-      landShopper(g, pc);
+      landShopper(g, pc, pa);
       continue;
     }
     keep.push(pa);

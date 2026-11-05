@@ -130,7 +130,9 @@ export type SimEvent =
   | { type: 'reopened'; shop: string }
   // who paid (the shopper's or parachuter's id) and where, in columns and floors
   | { type: 'paid'; shop: string; value: number; kind: 'ground' | 'para'; who: number; x: number; y: number }
-  | { type: 'lost'; x: number; shopper: number };
+  | { type: 'lost'; x: number; shopper: number }
+  // A parachuter that found no open shop, touching down at x and walking on as a shopper from column col
+  | { type: 'landed'; para: number; shopper: number; x: number; col: number };
 
 /**
  * The whole game. Plain data: shops are referenced by index into `shops`, so the state survives JSON round trips.

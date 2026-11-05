@@ -96,6 +96,8 @@ function follow(rate: number, dt: number): number {
 export class StreetView {
   readonly anims = new Map<string, ShopAnim>();
   effects: Effect[] = [];
+  // Shoppers who came down by parachute, by shopper id: they walk on from where they touched down, in the parachuter's look
+  readonly landed = new Map<number, { offset: number; para: number }>();
   // Floors of sky shown, eased toward what the street needs
   floors = 0;
   private phase2 = false;
@@ -108,6 +110,7 @@ export class StreetView {
   reset(g: GameState, countdown = false): void {
     this.anims.clear();
     this.effects = [];
+    this.landed.clear();
     this.floors = floorsNeeded(g);
     this.phase2 = isPhase2(g);
     this.readyLeft = 0;
@@ -193,6 +196,9 @@ export class StreetView {
           else this.add({ kind: 'coin', text, x: e.x, y: e.y, from: e.kind === 'para' ? 'para' : 'walkIn', shopper: e.who, age: 0 });
           break;
         }
+        case 'landed':
+          this.landed.set(e.shopper, { offset: e.x - e.col, para: e.para });
+          break;
         case 'lost':
           this.add({ kind: 'leaver', x: e.x, shopper: e.shopper, age: 0 });
           break;

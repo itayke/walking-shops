@@ -44,10 +44,18 @@ const PARA_LOOK_SALT = 0x5bd1e995;
 const LANE_HASH = 2654435761;
 const UINT_RANGE = 2 ** 32;
 
-/** A shopper's lane: a steady offset from its column's center, in columns. */
-export function lane(id: number): number {
-  return ((Math.imul(id, LANE_HASH) >>> 0) / UINT_RANGE - 0.5) * PEOPLE_LOOK.laneSpread;
+/** A shopper's lane: a steady offset from its column's center, in columns. One that landed keeps where it touched down. */
+export function lane(view: StreetView, id: number): number {
+  return view.landed.get(id)?.offset ?? ((Math.imul(id, LANE_HASH) >>> 0) / UINT_RANGE - 0.5) * PEOPLE_LOOK.laneSpread;
 }
+
+/** A shopper's clothes: its own, or the parachuter's it landed as. */
+function shopperColors(view: StreetView, id: number): PersonColors {
+  const landed = view.landed.get(id);
+  return landed ? paraColors(landed.para) : personColors(id);
+}
+
+const paraColors = (id: number) => personColors(id ^ PARA_LOOK_SALT);
 
 /** Where shoppers' feet are on the sidewalk, in art pixels below the ground line. */
 export function sidewalkFeet(L: Layout): number {
@@ -81,12 +89,12 @@ export function drawShoppers(ctx: CanvasRenderingContext2D, g: GameState, view: 
   for (const sh of g.shoppers) {
     const across = sh.cross > 0 ? Math.max(0, sh.rise) / sh.cross : 0;
     const y = sidewalk + across * (far - sidewalk);
-    people.push({ y, draw: () => drawPerson(px, 'back', frame(sh.id), colX(sh.x + lane(sh.id)), y, personColors(sh.id), PALETTE.ink) });
+    people.push({ y, draw: () => drawPerson(px, 'back', frame(sh.id), colX(sh.x + lane(view, sh.id)), y, shopperColors(view, sh.id), PALETTE.ink) });
   }
   for (const e of view.effects) {
     if (e.kind !== 'buyer' || e.para) continue;
     const look = buyLook(e.age / PEOPLE_LOOK.buyTime);
-    people.push({ y: sidewalk, draw: () => drawPerson(px, 'back', STAND, colX(e.x + lane(e.who)), sidewalk, solid(look.fill), look.outline) });
+    people.push({ y: sidewalk, draw: () => drawPerson(px, 'back', STAND, colX(e.x + lane(view, e.who)), sidewalk, solid(look.fill), look.outline) });
   }
   for (const e of view.effects) {
     if (e.kind !== 'leaver') continue;
@@ -96,7 +104,7 @@ export function drawShoppers(ctx: CanvasRenderingContext2D, g: GameState, view: 
       y,
       draw: () => {
         ctx.globalAlpha = look.leaveAlpha * (1 - u * look.leaveFade);
-        drawPerson(px, 'front', frame(e.shopper), colX(e.x + lane(e.shopper)), y, GREY_PERSON, PALETTE.greyLo);
+        drawPerson(px, 'front', frame(e.shopper), colX(e.x + lane(view, e.shopper)), y, GREY_PERSON, PALETTE.greyLo);
         ctx.globalAlpha = 1;
       },
     });
@@ -168,7 +176,7 @@ function drawParachuter(px: Pix, x: number, y: number, id: number, now: number, 
   px.line(ccx - R + 1, rimY, left, top + PARA_HAND, line);
   px.line(ccx + R - 1, rimY, left + w - 1, top + PARA_HAND, line);
   drawCanopy(px, ccx, rimY, CHUTES[id % CHUTES.length], look);
-  px.map(PARA, left, top, look ? solid(look.fill) : personColors(id ^ PARA_LOOK_SALT), look ? look.outline : PALETTE.ink);
+  px.map(PARA, left, top, look ? solid(look.fill) : paraColors(id), look ? look.outline : PALETTE.ink);
 }
 
 /** Parachuters: a canopy swaying over a person, feet at the height the sim tracks; and the ones who paid, flashing out. */

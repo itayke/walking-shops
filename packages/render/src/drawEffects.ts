@@ -71,7 +71,7 @@ export function drawEffects(ctx: CanvasRenderingContext2D, view: StreetView, L: 
       case 'coin': {
         const u = e.age / look.coinTime;
         const w = washOut(PALETTE.yellow, fadeOut(u));
-        const x = e.from === 'walkIn' ? e.x + lane(e.shopper) : e.x;
+        const x = e.from === 'walkIn' ? e.x + lane(view, e.shopper) : e.x;
         // Its baseline: over the walk-in's head or the canopy, or centered on the shop it rises from
         const base =
           e.from === 'shop'
