@@ -8,7 +8,7 @@ import { MIX, Mixer } from '../src/sound/mixer.ts';
 import { soundTones, type SoundId, type SoundOpts } from '../src/sound/sounds.ts';
 import { StreetSound, TICK_FROM } from '../src/sound/streetSound.ts';
 
-const IDS: SoundId[] = ['step', 'strain', 'topple', 'land', 'bump', 'pushback', 'coin', 'paraCoin', 'lost', 'drop', 'shutRow', 'shutDown', 'shutUp', 'bar', 'ready', 'walkIns', 'parachutes', 'tick', 'winner'];
+const IDS: SoundId[] = ['step', 'sit', 'strain', 'topple', 'land', 'bump', 'pushback', 'coin', 'paraCoin', 'lost', 'drop', 'shutRow', 'shutDown', 'shutUp', 'bar', 'ready', 'walkIns', 'parachutes', 'tick', 'winner'];
 
 interface Heard {
   id: SoundId;
@@ -106,6 +106,15 @@ describe('street sound', () => {
     const steps = heard.filter((h) => h.id === 'step');
     expect(steps.length).toBeGreaterThanOrEqual(4);
     expect(steps.every((h, i) => i === 0 || h.o.foot !== steps[i - 1].o.foot)).toBe(true);
+  });
+
+  it('sits once a walk ends, after its last footfall', () => {
+    const g = street([['A'], [], []]);
+    const { ids, play } = listen(g);
+    play(TICK, { A: 1 });
+    play(g.config.MOVEMENT.cellTime * 2);
+    expect(ids().filter((id) => id === 'sit')).toHaveLength(1);
+    expect(ids().lastIndexOf('step')).toBeLessThan(ids().indexOf('sit'));
   });
 
   it('clicks once per shutter row as an idle shop closes, then snaps up on a press', () => {

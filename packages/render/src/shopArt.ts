@@ -127,7 +127,8 @@ interface Frames {
 function animFrames(design: number, t: number): Frames {
   const D = DESIGNS[design];
   const L = SHOP_LOOK;
-  const step = (rate: number, frames: number) => Math.floor(t * rate) % frames;
+  // Never negative, so any time picks a frame (a clock can start a hair below zero)
+  const step = (rate: number, frames: number) => ((Math.floor(t * rate) % frames) + frames) % frames;
   let window = 0;
   if (D.window === 'pole') window = step(L.poleRate, POLE_PERIOD);
   if (D.window === 'bar') window = step(L.steamRate, STEAM_FRAMES);

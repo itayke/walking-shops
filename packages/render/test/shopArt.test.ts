@@ -70,6 +70,11 @@ describe('shop art', () => {
     }
   });
 
+  it('draws every design at a time just below zero', () => {
+    const justBefore = -0.01;
+    for (const design of DESIGNS) expect(() => drawn({ design, tint, shutter: 0, danger: false, t: justBefore }), `design ${design + 1}`).not.toThrow();
+  });
+
   it('pulls the shutters over the whole front of every design', () => {
     const top = SHOP.roof + SHOP.lowTop;
     for (const design of DESIGNS) {

@@ -72,6 +72,8 @@ export type Banner = keyof typeof BANNERS;
 /** Moments only the animation knows, for the screen's sound. x in columns, level in floors. */
 export type Cue =
   | { kind: 'footfall'; x: number; level: number; foot: number }
+  // A walk ended: the legs have folded and the shop sits
+  | { kind: 'sit'; x: number }
   | { kind: 'drop'; x: number }
   | { kind: 'land'; x: number }
   | { kind: 'banner'; banner: Banner };
@@ -253,7 +255,9 @@ export class StreetView {
         const s = g.shops[i];
         const a = this.anim(s);
         offSum += s.off;
+        const stood = a.legs > 0;
         a.legs = s.walking ? Math.min(1, a.legs + stand) : Math.max(0, a.legs - stand);
+        if (stood && a.legs === 0) this.cue({ kind: 'sit', x: a.x });
         a.carried = carried;
         carried += a.legs * MOVEMENT.walkLift;
         const tx = c + offSum;

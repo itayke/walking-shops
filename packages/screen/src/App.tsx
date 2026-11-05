@@ -213,7 +213,8 @@ export function App() {
     let raf = 0;
     const draw = () => drawFrame(ctx, host.current.game, view, canvas.width, canvas.height, clock);
     const frame = (now: number) => {
-      const dt = Math.min(MAX_FRAME_SECONDS, (now - last) / MS_PER_SECOND);
+      // The first frame's timestamp can come before the loop started, so time never runs backward
+      const dt = Math.max(0, Math.min(MAX_FRAME_SECONDS, (now - last) / MS_PER_SECOND));
       last = now;
       const g = host.current.game;
       if (net.current.online) offlineSince = null;

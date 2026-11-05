@@ -5,6 +5,7 @@ import type { Channel, Tone } from './synth.ts';
 
 export type SoundId =
   | 'step'
+  | 'sit'
   | 'strain'
   | 'topple'
   | 'land'
@@ -79,6 +80,11 @@ const SOUNDS: Record<SoundId, (o: SoundOpts) => Tone[]> = {
       { ch: 'noise', f: f.noise, d: 0.018, v: 0.08, decay: true },
     ];
   },
+  // Subtle, and softer than a landing: the shop settles as its legs fold
+  sit: () => [
+    { ch: 'triangle', f: note('A2'), f2: note('D2'), d: 0.06, v: 0.25, decay: true },
+    { ch: 'noise', f: 0.07, d: 0.04, v: 0.12, decay: true },
+  ],
   strain: ({ step = 0 }) => [
     { ch: 'pulse25', f: note('F2') * semi(step * STRAIN_STEP), d: 0.1, v: 0.2, decay: true },
     { ch: 'noise', short: true, f: 0.3, d: 0.05, v: 0.08, decay: true },
