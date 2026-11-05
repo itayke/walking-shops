@@ -83,6 +83,9 @@ export function App() {
     send: (m) => net.current.link?.send(m),
   });
   const paused = useRef(false);
+  // Sound tries to start at load; a browser that holds it starts it on the presenter's first key or click
+  const synth = useRef<Synth>(null!);
+  synth.current ??= new Synth();
   // Set once the frame loop is running: starts the round from a button or a key
   const begin = useRef<() => void>(() => {});
   const replay = useRef<() => void>(() => {});
@@ -96,9 +99,8 @@ export function App() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const view = new StreetView();
-    // Sound starts on the presenter's first key or click, as browsers require
-    const synth = new Synth();
-    const sound = new StreetSound((id, o, pan) => synth.play(soundTones(id, o), pan));
+    const sound = new StreetSound((id, o, pan) => synth.current.play(soundTones(id, o), pan));
+    synth.current.unlock();
     // A fast-forwarded round is already under way, so it skips the lobby and the countdown
     if (START_AT > 0) host.current.begin();
     view.reset(host.current.game);
@@ -141,7 +143,7 @@ export function App() {
     const refresh = () => {
       acc = 0;
       paused.current = false;
-      synth.pause(false);
+      synth.current.pause(false);
       sound.prime();
       setHudTick((t) => t + 1);
     };
@@ -178,7 +180,7 @@ export function App() {
     };
     const disposePanel = createTuningPanel(lobby, newStreet);
     const keyboard = createKeyboard();
-    const unlock = () => synth.unlock();
+    const unlock = () => synth.current.unlock();
     const onKey = (e: KeyboardEvent) => {
       unlock();
       if (e.target instanceof HTMLInputElement) return;
@@ -186,7 +188,7 @@ export function App() {
       if (key === PAUSE_KEY) {
         e.preventDefault();
         paused.current = !paused.current;
-        synth.pause(paused.current);
+        synth.current.pause(paused.current);
         setHudTick((t) => t + 1);
       }
       if (key === SHOPS_KEY) {
@@ -196,7 +198,10 @@ export function App() {
       if (key === BEGIN_KEY) begin.current();
       if (key === SKIP_KEY) skip();
       if (key === RESTART_KEY) restart();
-      if (key === MUTE_KEY) synth.toggleMute();
+      if (key === MUTE_KEY) {
+        synth.current.toggleMute();
+        setHudTick((t) => t + 1);
+      }
       if (key === FALLBACK_KEY) {
         manualFallback = !manualFallback;
         setHudTick((t) => t + 1);
@@ -213,6 +218,9 @@ export function App() {
     let raf = 0;
     const draw = () => drawFrame(ctx, host.current.game, view, canvas.width, canvas.height, clock);
     const frame = (now: number) => {
+      // The next frame is asked for first: an error in this one is logged, but never stops the screen, or the sound
+      // and the phones' updates that run on it
+      raf = requestAnimationFrame(frame);
       // The first frame's timestamp can come before the loop started, so time never runs backward
       const dt = Math.max(0, Math.min(MAX_FRAME_SECONDS, (now - last) / MS_PER_SECOND));
       last = now;
@@ -251,7 +259,6 @@ export function App() {
         lastHud = now;
         setHudTick((t) => t + 1);
       }
-      raf = requestAnimationFrame(frame);
     };
     // First frame now, not on the next animation frame (a headless screenshot may never get one)
     draw();
@@ -273,7 +280,16 @@ export function App() {
   const g = host.current.game;
   return (
     <div className="screen">
-      <Hud g={g} you={SCREEN_SHOP?.id} room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats, fallback: host.current.fallback }} />
+      <Hud
+        g={g}
+        you={SCREEN_SHOP?.id}
+        room={{ code: net.current.room.code, online: net.current.online, phones: host.current.seats, fallback: host.current.fallback }}
+        sound={synth.current.state}
+        onUnlock={() => {
+          synth.current.unlock();
+          setHudTick((t) => t + 1);
+        }}
+      />
       <div className="stage">
         <canvas ref={canvasRef} />
         {g.lobby && <Lobby room={net.current.room.code} onBegin={() => begin.current()} />}

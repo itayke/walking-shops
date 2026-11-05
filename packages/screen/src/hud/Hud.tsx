@@ -3,6 +3,7 @@ import { isPhase2, scoreText, type GameState, type Shop } from '@walking-shops/s
 import { shopHue, shopTint } from '@walking-shops/render/colors.ts';
 import { COPY } from '@walking-shops/render/copy.ts';
 import { lookOf } from '@walking-shops/render/shopArt.ts';
+import type { SoundState } from '../sound/synth.ts';
 import { PixelText } from './PixelText.tsx';
 
 const SECONDS_PER_MINUTE = 60;
@@ -49,8 +50,11 @@ function Join({ room, round }: { room: RoomStatus; round: boolean }) {
   );
 }
 
-/** Phase, clock, round progress with the phase 2 mark, connected phones, and the screen shop's score if there is one. */
-export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomStatus }) {
+/**
+ * Phase, clock, round progress with the phase 2 mark, connected phones, the screen shop's score if there is one, and a
+ * tag while the sound is waiting for a click or muted.
+ */
+export function Hud({ g, you, room, sound, onUnlock }: { g: GameState; you?: string; room: RoomStatus; sound: SoundState; onUnlock: () => void }) {
   const { ROUND } = g.config;
   const phase2 = isPhase2(g);
   // The lobby's clock isn't the round's
@@ -66,6 +70,12 @@ export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomSt
         <b style={{ left: `${Math.min(PERCENT, (PERCENT * ROUND.paraStart) / ROUND.roundTime)}%` }} />
       </div>
       <Join room={room} round={!g.lobby && !g.over} />
+      {sound === 'locked' && (
+        <button type="button" className="sound locked" onClick={onUnlock}>
+          {COPY.hud.sound.locked}
+        </button>
+      )}
+      {sound === 'muted' && <span className="sound muted">{COPY.hud.sound.muted}</span>}
       {mine && (
         <span className="you">
           {mine.label} <strong>{scoreText(mine.income)}</strong>
@@ -78,7 +88,7 @@ export function Hud({ g, you, room }: { g: GameState; you?: string; room: RoomSt
           </>
         )}
         <kbd>Enter</kbd> {keys.begin} · <kbd>Space</kbd> {keys.pause} · <kbd>S</kbd> {keys.skip} · <kbd>N</kbd> {keys.restart} · <kbd>F</kbd> {keys.bots} ·{' '}
-        <kbd>B</kbd> {keys.shops} · <kbd>T</kbd> {keys.tuning} · <kbd>R</kbd> {keys.lobby}
+        <kbd>B</kbd> {keys.shops} · <kbd>M</kbd> {keys.mute} · <kbd>T</kbd> {keys.tuning} · <kbd>R</kbd> {keys.lobby}
       </span>
     </header>
   );

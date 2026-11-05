@@ -86,7 +86,14 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
     }
   }
   items.sort((p, q) => p.layer - q.layer);
-  for (const it of items) drawShop(ctx, g, it, L, now);
+  for (const it of items) {
+    // A shop that fails to draw is left out of the frame, not the whole street with it
+    try {
+      drawShop(ctx, g, it, L, now);
+    } catch (e) {
+      reportOnce(e);
+    }
+  }
   // Meters and dizzy stars stay upright, over every shop
   const px = new Pix(ctx, L.P, L.ox, L.groundY);
   for (const it of items) {
@@ -96,10 +103,29 @@ export function drawShops(ctx: CanvasRenderingContext2D, g: GameState, view: Str
   }
 }
 
+const reported = new Set<string>();
+
+/** Log a drawing error the first time it happens, not on every frame after. */
+function reportOnce(e: unknown): void {
+  const key = String(e);
+  if (reported.has(key)) return;
+  reported.add(key);
+  console.error(e);
+}
+
 function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, now: number): void {
+  ctx.save();
+  try {
+    drawPlaced(ctx, g, it, L, now);
+  } finally {
+    ctx.restore();
+  }
+}
+
+/** A shop at its place, with the canvas already saved for it. */
+function drawPlaced(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layout, now: number): void {
   const { s, a, lean, pose, dir } = it;
   const { P } = L;
-  ctx.save();
   if (lean) {
     const [x, y] = device(L, lean.x, lean.y);
     ctx.translate(x, y);
@@ -141,7 +167,6 @@ function drawShop(ctx: CanvasRenderingContext2D, g: GameState, it: Item, L: Layo
     const ring = washOut(PALETTE.yellow, fadeOut(1 - a.flash / SHOP_LOOK.flashTime)).fill;
     for (let k = 0; k < SHOP_LOOK.flashRing; k++) frame(px, x0 - 1 - k, y0 - 1 - k, SHOP.spriteW + 2 + 2 * k, SHOP.spriteH + 1 + 2 * k, ring);
   }
-  ctx.restore();
 }
 
 /** A one-pixel ring just inside the box. */

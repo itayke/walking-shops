@@ -15,6 +15,8 @@ const TAIL = 0.02;
 const VOLUME = 0.6;
 
 export type Channel = 'pulse12' | 'pulse25' | 'pulse50' | 'triangle' | 'noise';
+// Playing, waiting for a key or click before the browser lets it start, or muted
+export type SoundState = 'on' | 'locked' | 'muted';
 
 const DUTY: Record<Exclude<Channel, 'triangle' | 'noise'>, number> = { pulse12: 0.125, pulse25: 0.25, pulse50: 0.5 };
 
@@ -41,13 +43,18 @@ interface Voices {
   noise: { long: AudioBuffer; short: AudioBuffer };
 }
 
-/** The screen's sound output. Silent until a key or click unlocks it, as browsers require. */
+/** The screen's sound output. Browsers may hold it silent until a key or click; it starts on the first one. */
 export class Synth {
   private v: Voices | null = null;
   private paused = false;
   muted = false;
 
-  /** Start audio; call from a key or click handler. */
+  get state(): SoundState {
+    if (this.muted) return 'muted';
+    return this.v && (this.paused || this.v.ctx.state === 'running') ? 'on' : 'locked';
+  }
+
+  /** Start audio: at load (the browser may allow it then) and again from every key or click until it runs. */
   unlock(): void {
     this.v ??= voices();
     if (!this.paused && this.v.ctx.state === 'suspended') void this.v.ctx.resume();
