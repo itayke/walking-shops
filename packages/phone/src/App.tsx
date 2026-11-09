@@ -2,7 +2,6 @@ import { DEV_PORTS, isRoomCode, randomId, type PhoneMsg, type PhoneState } from 
 import { connectPhone, type Link } from '@walking-shops/net/client';
 import { COPY } from '@walking-shops/render/copy.ts';
 import { FX_LOOK } from '@walking-shops/render/look.ts';
-import { PixelText } from '@walking-shops/render/PixelText.tsx';
 import { scoreText, type Dir } from '@walking-shops/sim';
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { Arrow } from './Arrow.tsx';
@@ -18,7 +17,9 @@ const DRAFT_KEY = 'walking-shops.draft';
 // The size the display font is loaded at before signs are measured; any size loads it
 const FONT_PROBE = `16px ${FX_LOOK.displayFont}`;
 const ROOM = new URLSearchParams(location.search).get('room')?.toUpperCase() ?? '';
-const PARTY_HOST: string = import.meta.env.VITE_PARTY_HOST || `${location.hostname}:${DEV_PORTS.server}`;
+// Deployed, the relay shares the phone's own host; in dev it's this machine's dev relay
+const PARTY_HOST: string =
+  import.meta.env.VITE_PARTY_HOST || (import.meta.env.DEV ? `${location.hostname}:${DEV_PORTS.server}` : location.host);
 // Short buzzes where supported (not iOS): a press, and the shutters coming down
 const PRESS_BUZZ_MS = 12;
 const CLOSED_BUZZ = [80, 60, 80];
@@ -26,6 +27,8 @@ const CLOSED_BUZZ = [80, 60, 80];
 const CROSS_MARGIN = 0.04;
 // Phases with a street to be ranked on: the money made so far and the place it puts the shop
 const SCORED: PhoneState['phase'][] = ['walk-ins', 'parachutes', 'results'];
+// Phases the shops are out on the street playing, the only ones the contact stays out of the way in
+const PLAYING: PhoneState['phase'][] = ['walk-ins', 'parachutes'];
 
 function token(): string {
   try {
@@ -131,11 +134,12 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
   }
 }
 
-/** Who made the game, on a card of its own along the bottom, the same on every page it shows on. */
-function ContactFrame({ frame }: { frame?: (el: HTMLElement | null) => void }) {
+/** Who made the game, on a card of its own along the bottom, the same on every page it shows on (brief, with no
+ * buttons, while the player's attention belongs to the game). */
+function ContactFrame({ brief, frame }: { brief: boolean; frame?: (el: HTMLElement | null) => void }) {
   return (
-    <footer ref={frame} className="contact-frame">
-      <Contact />
+    <footer ref={frame} className={brief ? 'contact-frame brief' : 'contact-frame'}>
+      <Contact brief={brief} />
     </footer>
   );
 }
@@ -257,9 +261,15 @@ export function App() {
       </main>
     );
   }
-  // The contact stays in reach once a round is over, and while there's no big screen (before the talk, or after it),
-  // whether or not this phone has a shop
-  const showContact = (online && host === false) || !!state?.over;
+  // The contact is in reach on every page but the round being played: in the lobby, while setting up, once the round is
+  // over, and while there's no big screen (before the talk, or after it). Until the phone hears which, it waits, so the
+  // card never flashes in over a round under way
+  const playing = !!state && PLAYING.includes(state.phase) && !state.over;
+  // All of it, buttons included, once the round is over or there's no big screen; the short card while setting up or
+  // in the lobby, where the player has the game to attend to
+  const fullContact = (online && host === false) || !!state?.over;
+  const showContact = fullContact || (!!state && !playing);
+  const brief = !fullContact;
   const settingUp = state && (state.phase === 'setup' || (state.phase === 'waiting' && !state.label) || editing);
   if (state && settingUp) {
     return (
@@ -278,23 +288,8 @@ export function App() {
             onCancel={() => setEditing(false)}
           />
         )}
-        {/* The room under the form, where the keyboard comes up: the title, and who made it (the full contact when it shows) */}
-        <div className="brand">
-          <div className="masthead">
-            <h1 className="title">
-              <PixelText text={COPY.game} />
-            </h1>
-            <PixelText className="tagline" text={COPY.lobby.tagline} />
-          </div>
-          {showContact ? (
-            <ContactFrame />
-          ) : (
-            <footer className="credit">
-              <span>{COPY.credit.by}</span>
-              <span>{COPY.credit.who}</span>
-            </footer>
-          )}
-        </div>
+        {/* The room under the form, where the keyboard comes up: who made the game, along the bottom */}
+        <div className="brand">{showContact && <ContactFrame brief={brief} />}</div>
       </main>
     );
   }
@@ -338,7 +333,7 @@ export function App() {
           <span>{status(online, !!host, state)}</span>
         )}
       </header>
-      {showContact && <ContactFrame frame={foot} />}
+      {showContact && <ContactFrame brief={brief} frame={foot} />}
     </main>
   );
 }

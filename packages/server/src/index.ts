@@ -144,8 +144,81 @@ export class Room extends Server {
   }
 }
 
+interface Env {
+  Room: DurableObjectNamespace;
+  // The built screen and phone apps, served from the same host as the relay
+  ASSETS: Fetcher;
+  // The presenter's password for the screen, a Worker secret. Unset (in dev), the screen is open to anyone
+  SCREEN_PASSWORD?: string;
+}
+
+// The screen app's path; the phone app is at the root
+const SCREEN_PATH = '/screen';
+// Set once the password is given, so the screen's own socket gets through and the browser isn't asked again
+const SCREEN_COOKIE = 'screen';
+const SCREEN_COOKIE_DAYS = 30;
+// The password in a screen socket's URL, from a screen outside a browser (the load test)
+const SCREEN_PASSWORD_PARAM = 'password';
+const SECONDS_PER_DAY = 86400;
+const UNAUTHORIZED = 401;
+
+async function sha256(text: string): Promise<ArrayBuffer> {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+}
+
+/** Compares in constant time, hashing first so the lengths always match. */
+async function same(a: string, b: string): Promise<boolean> {
+  return crypto.subtle.timingSafeEqual(await sha256(a), await sha256(b));
+}
+
+/** The cookie's value: a hash of the password, so changing the password signs every screen out. */
+async function screenToken(password: string): Promise<string> {
+  return [...new Uint8Array(await sha256(`${SCREEN_COOKIE}:${password}`))].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function cookie(request: Request, name: string): string {
+  for (const part of (request.headers.get('Cookie') ?? '').split(';')) {
+    const [key, ...value] = part.trim().split('=');
+    if (key === name) return value.join('=');
+  }
+  return '';
+}
+
+/** The password from the browser's own prompt (HTTP Basic); the user name is ignored. */
+function basicPassword(request: Request): string {
+  const [scheme, encoded] = (request.headers.get('Authorization') ?? '').split(' ');
+  if (scheme !== 'Basic' || !encoded) return '';
+  try {
+    const decoded = atob(encoded);
+    return decoded.slice(decoded.indexOf(':') + 1);
+  } catch {
+    return '';
+  }
+}
+
+/** Only the presenter opens the screen or connects as one: the page asks for the password, and the relay refuses a
+ * screen socket without its cookie (or, from outside a browser, the password itself). */
+async function guardScreen(request: Request, env: Env): Promise<Response | null> {
+  const password = env.SCREEN_PASSWORD;
+  if (!password) return null;
+  const url = new URL(request.url);
+  const page = url.pathname === SCREEN_PATH || url.pathname.startsWith(`${SCREEN_PATH}/`);
+  const socket = url.searchParams.get('role') === 'screen';
+  if (!page && !socket) return null;
+  const token = await screenToken(password);
+  if (await same(cookie(request, SCREEN_COOKIE), token)) return null;
+  if (socket) return (await same(url.searchParams.get(SCREEN_PASSWORD_PARAM) ?? '', password)) ? null : new Response('Unauthorized', { status: UNAUTHORIZED });
+  if (!(await same(basicPassword(request), password))) {
+    return new Response('Unauthorized', { status: UNAUTHORIZED, headers: { 'WWW-Authenticate': 'Basic realm="Shop Shuffle screen"' } });
+  }
+  const res = await env.ASSETS.fetch(request);
+  const out = new Response(res.body, res);
+  out.headers.append('Set-Cookie', `${SCREEN_COOKIE}=${token}; Path=/; Max-Age=${SCREEN_COOKIE_DAYS * SECONDS_PER_DAY}; HttpOnly; Secure; SameSite=Strict`);
+  return out;
+}
+
 export default {
-  async fetch(request: Request, env: Record<string, unknown>): Promise<Response> {
-    return (await routePartykitRequest(request, env)) ?? new Response('Not found', { status: 404 });
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return (await guardScreen(request, env)) ?? (await routePartykitRequest(request, env as unknown as Record<string, unknown>)) ?? env.ASSETS.fetch(request);
   },
-} satisfies ExportedHandler<Record<string, unknown>>;
+} satisfies ExportedHandler<Env>;

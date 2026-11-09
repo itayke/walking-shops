@@ -1,6 +1,6 @@
 // Load test: a headless screen (the real Host and sim) plus N scripted phones, all through the relay.
 // Reports how many phones got seated and the input-to-sim latency each phone sees (send -> the screen's ack).
-//   npm run loadtest -w @walking-shops/net -- [--phones 50] [--seconds 30] [--host localhost:7322]
+//   npm run loadtest -w @walking-shops/net -- [--phones 50] [--seconds 30] [--host localhost:7322] [--password PASS]
 import { makeConfig, step, TICK, type Dir } from '@walking-shops/sim';
 import { parseArgs } from 'node:util';
 import { connectPhone, connectScreen, type Link } from '../src/client.ts';
@@ -30,6 +30,8 @@ const { values } = parseArgs({
     phones: { type: 'string', default: '50' },
     seconds: { type: 'string', default: '30' },
     host: { type: 'string', default: `localhost:${DEV_PORTS.server}` },
+    // The deployed screen's password; a local relay has none
+    password: { type: 'string' },
   },
 });
 const PHONES = Number(values.phones);
@@ -49,6 +51,7 @@ screenLink = connectScreen({
   host: HOST,
   room,
   key: randomId(),
+  password: values.password,
   id: randomId(),
   onStatus: (up) => (screenUp = up),
   onMessage: (m) => {

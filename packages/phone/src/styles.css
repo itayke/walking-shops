@@ -13,10 +13,8 @@
   --held: rgb(255 255 255 / 0.22);
   --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Press Start 2P', 'Arial Black', Impact, sans-serif;
-  --font-title: 'Jersey 15', 'Arial Black', Impact, sans-serif;
-  /* Font pixels per em of each display font: a size with whole screen pixels per font pixel stays crisp */
+  /* Font pixels per em of the display font: a size with whole screen pixels per font pixel stays crisp */
   --display-grid: 8;
-  --title-grid: 27;
   --display-pixel: 3px;
   --display-size: calc(var(--display-grid) * var(--display-pixel));
   --field: rgb(255 255 255 / 0.92);
@@ -294,75 +292,12 @@ body,
   font-size: 18px;
 }
 
-/* Registered, so PixelText reads it as a computed length rather than the expression that sets it */
-@property --pixel-outline {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0px;
-}
-
-/* Under the form: the title and tagline at the bottom of the room left, over the credit on a shade like the status */
+/* Under the form: the room left, with who made the game along the bottom */
 .brand {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  /* Device pixels per font pixel of the title, whole so it stays crisp (--device-px is set from the pixel ratio); the
-     tagline's at a share of it */
-  --title-pixel: round(down, clamp(2px, 17vw / var(--title-grid), 4px), var(--device-px, 1px));
-  --tagline-scale: 0.5;
-  --tagline-pixel: max(var(--device-px, 1px), round(down, var(--title-pixel) * var(--tagline-scale), var(--device-px, 1px)));
-  /* The title's outline, and the room between title and tagline, in title pixels */
-  --title-outline: 2.6;
-  --tagline-gap: 5;
-}
-
-.brand .masthead {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: flex-end;
-  padding: 16px;
-}
-
-.brand .title {
-  margin: 0;
-  align-self: stretch;
-  text-align: center;
-  font-family: var(--font-title);
-  font-weight: 400;
-  text-transform: uppercase;
-  font-size: calc(var(--title-pixel) * var(--title-grid));
-  line-height: 1;
-  color: var(--coin);
-  --pixel-outline: calc(var(--title-pixel) * var(--title-outline));
-  --pixel-outline-color: var(--coin-edge);
-  --pixel-outline-join: round;
-}
-
-.brand canvas {
-  display: block;
-  margin: 0 auto;
-  image-rendering: pixelated;
-}
-
-.brand .tagline {
-  margin-top: calc(var(--title-pixel) * var(--tagline-gap));
-  font-family: var(--font-title);
-  font-size: calc(var(--tagline-pixel) * var(--title-grid));
-  line-height: 1;
-  color: var(--on-tint);
-}
-
-.credit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  margin: 0;
-  padding: 10px 16px max(10px, env(safe-area-inset-bottom));
-  background: var(--shade);
-  font-size: 13px;
 }
 
 /* The end card: how the round went under the shop, and who made the game on a card of its own along the bottom, with a
@@ -392,7 +327,7 @@ body,
   margin: 0;
 }
 
-/* Under the setup form it takes the credit's place, in the flow, at the same distance from the edges */
+/* Under the setup form it sits in the flow, at the same distance from the edges */
 .brand .contact-frame {
   position: static;
   margin: 0 var(--contact-gap) max(var(--contact-gap), env(safe-area-inset-bottom));
@@ -408,6 +343,33 @@ body,
   font-size: 14px;
   color: var(--contact-muted);
   margin-bottom: 10px;
+}
+
+/* The short card: no buttons under it, so it's as tight at the bottom as at the top */
+.contact-frame.brief {
+  gap: 2px;
+  padding: 14px 20px 16px;
+}
+
+.contact-frame.brief .contact-name {
+  font-size: 15px;
+}
+
+/* The game's name in the display type, small but at whole device pixels per font pixel on 2x and 3x screens */
+.contact-game {
+  --contact-game-pixel: 2px;
+  font-family: var(--font-display);
+  font-size: calc(var(--display-grid) * var(--contact-game-pixel));
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.contact-frame.brief .contact-email {
+  margin-bottom: 0;
+}
+
+.contact-by {
+  font-weight: 400;
 }
 
 .contact-links {

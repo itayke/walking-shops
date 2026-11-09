@@ -9,7 +9,7 @@ The opening game of the Untame pitch. 10–30 people join from their phones and 
 | Path | What |
 |---|---|
 | `packages/sim` | The game simulation: pure, deterministic TypeScript. All tunables in `src/config.ts` |
-| `packages/render` | The Canvas 2D street renderer and shop art, shared by the screen and the phone's shop preview. Visual-only constants in `src/look.ts`; every text the screen and the phone show in `src/copy.ts`; `PixelText`, the hard-edged title type both apps set |
+| `packages/render` | The Canvas 2D street renderer and shop art, shared by the screen and the phone's shop preview. Visual-only constants in `src/look.ts`; every text the screen and the phone show in `src/copy.ts`; `PixelText`, the hard-edged title type the screen sets |
 | `packages/screen` | Big-screen app (Vite + React). Hosts the room: runs the game and draws the street; phones open their shops in the lobby, and `?screenShop` adds one played from the keyboard |
 | `packages/phone` | Phone controller (Vite + React): your shop with its money and place on top, over two tap-to-step, hold-to-walk halves in its tint |
 | `packages/net` | Shared networking: message protocol, the screen's `Host` (seats phones in shops), the PartySocket client, the load test and bot phones |
@@ -34,6 +34,8 @@ npm run dev:phone              # http://localhost:7321 (also on the LAN, for a r
 npm run loadtest               # a headless screen and 50 fake phones through the relay; -- --phones N --seconds S
 npm run bots -- --room ABCD    # bot phones join the room your screen hosts and play at random; --phones N --flaky --host H
 npm run build
+npm run build:site             # both apps into dist/, as deployed: the phone at the root, the screen under /screen
+npm run deploy                 # typecheck, build:site, then deploy the Worker (see Deploying)
 ```
 
 ## Playing with phones (local)
@@ -46,7 +48,11 @@ Without the relay, the screen still plays offline: bots, plus a keyboard shop wi
 
 ## Deploying
 
-Everything runs on Cloudflare's free plan, with no card needed. `npm run deploy:server` deploys the relay (run `npx wrangler login` once first). The screen and phone are static builds, so they can go on Cloudflare Pages, which is also free. Build the apps with `VITE_PARTY_HOST` (the relay's host, e.g. `walking-shops.<account>.workers.dev`) and, for the screen, `VITE_PHONE_URL` (where the phone app is served).
+Everything runs on Cloudflare's free plan as one Worker on https://shopshuffle.untame.com: the phone app at the root (where the QR code points), the screen at `/screen`, and the relay at `/parties/…`. The deployed apps find the relay at their own host, so the domain is set only in `packages/server/wrangler.jsonc`.
+
+Once: run `npx wrangler login` with the Cloudflare account that holds untame.com, then set the presenter's password with `npx wrangler secret put SCREEN_PASSWORD -c packages/server/wrangler.jsonc`. After that, `npm run deploy` builds and deploys everything.
+
+The screen asks for that password (the browser's own prompt; any user name), then keeps a cookie for a month, so the presenter's laptop isn't asked again. The relay refuses a screen without the cookie, so only the presenter can host a room; phones need nothing. With no password set, as in dev, the screen is open. To load test the deployed room, pass it: `npm run loadtest -- --host shopshuffle.untame.com --password PASS`.
 
 ## Keys on the screen
 

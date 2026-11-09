@@ -23,7 +23,6 @@ export const COPY = {
   },
 
   // Under the phone's shop setup, one line each
-  credit: { by: 'A party mini-game by', who: 'Itay Keren © 2026 Untame' },
 
   // The bar along the top of the big screen
   hud: {
@@ -98,6 +97,8 @@ export const COPY = {
     served: (n: number) => `${n} ${n === 1 ? 'customer' : 'customers'} served`,
     toppled: (n: number) => `${n} ${n === 1 ? 'tower' : 'towers'} toppled`,
     saveContact: 'Save contact',
+    // Before the name on the short card, shown while a player's attention belongs to the game
+    madeBy: 'A party game by',
     site: 'Website',
     email: 'Email',
     linkedin: 'LinkedIn',

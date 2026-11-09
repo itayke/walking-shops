@@ -15,7 +15,8 @@
     "dev:server": "npm run dev -w @walking-shops/server",
     "loadtest": "npm run loadtest -w @walking-shops/net --",
     "bots": "npm run bots -w @walking-shops/net --",
-    "deploy:server": "npm run deploy -w @walking-shops/server",
+    "build:site": "npm run build:site -w @walking-shops/phone && npm run build:site -w @walking-shops/screen",
+    "deploy": "npm run typecheck && npm run build:site && npm run deploy -w @walking-shops/server",
     "dev": "concurrently -k -n server,screen,phone -c magenta,cyan,yellow \"npm:dev:server\" \"npm:dev:screen\" \"npm:dev:phone\""
   },
   "devDependencies": {

@@ -54,9 +54,10 @@ function connect<In extends { t: string }, Out>(role: Role, opts: LinkOptions<In
   };
 }
 
-/** The big screen: the room's host. key proves it is the screen that opened the room. */
-export function connectScreen(opts: LinkOptions<ToScreen> & { key: string }): Link<ScreenMsg> {
-  return connect<ToScreen, ScreenMsg>('screen', opts, parseToScreen, { key: opts.key });
+/** The big screen: the room's host. key proves it is the screen that opened the room. password is the presenter's, for
+ * a screen outside a browser (the load test); a browser that opened the screen page already holds its cookie. */
+export function connectScreen(opts: LinkOptions<ToScreen> & { key: string; password?: string }): Link<ScreenMsg> {
+  return connect<ToScreen, ScreenMsg>('screen', opts, parseToScreen, { key: opts.key, ...(opts.password ? { password: opts.password } : {}) });
 }
 
 /** A phone. id is its reconnect token: the same id reclaims the same shop. */

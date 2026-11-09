@@ -10,12 +10,15 @@ export interface RoomInfo {
   key: string;
 }
 
-/** The relay's host:port: VITE_PARTY_HOST when deployed, else this machine's dev relay. */
-export const PARTY_HOST: string = import.meta.env.VITE_PARTY_HOST || `${location.hostname}:${DEV_PORTS.server}`;
+/** The relay's host:port: deployed, the screen's own host (or VITE_PARTY_HOST); in dev, this machine's dev relay. */
+export const PARTY_HOST: string =
+  import.meta.env.VITE_PARTY_HOST || (import.meta.env.DEV ? `${location.hostname}:${DEV_PORTS.server}` : location.host);
 
-/** Where phones open the controller: VITE_PHONE_URL when deployed, else the dev phone app on this machine's LAN address. */
+/** Where phones open the controller: deployed, the root of the screen's own site (or VITE_PHONE_URL); in dev, the dev
+ * phone app on this machine's LAN address. */
 export function joinUrl(code: string): string {
-  const base: string = import.meta.env.VITE_PHONE_URL || `http://${import.meta.env.VITE_LAN_HOST}:${DEV_PORTS.phone}`;
+  const base: string =
+    import.meta.env.VITE_PHONE_URL || (import.meta.env.DEV ? `http://${import.meta.env.VITE_LAN_HOST}:${DEV_PORTS.phone}` : location.origin);
   return `${base.replace(/\/$/, '')}/?${ROOM_PARAM}=${code}`;
 }
 

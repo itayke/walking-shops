@@ -22,27 +22,35 @@ export function RoundStats({ served, topples }: { served: number; topples: numbe
   );
 }
 
-/** Who made the game and every way to reach them, in its own frame along the bottom of the end card. */
-export function Contact() {
+/** Who made the game and every way to reach them, in its own frame along the bottom. brief is the quiet version for
+ * pages that need the player's attention: the game's name, who made it and the email, with no buttons. */
+export function Contact({ brief = false }: { brief?: boolean }) {
   const c = COPY.contact;
   const url = useVCardUrl();
+  const name = [c.name, c.company].filter(Boolean).join(' · ');
   return (
     <>
-      <p className="contact-name">{[c.name, c.company].filter(Boolean).join(' · ')}</p>
+      {brief && <p className="contact-game">{COPY.game}</p>}
+      <p className="contact-name">
+        {brief && <span className="contact-by">{COPY.phone.madeBy} </span>}
+        {name}
+      </p>
       {c.role && <p>{c.role}</p>}
       {c.email && <p className="contact-email">{c.email}</p>}
-      <div className="contact-links">
-        {url && (
-          <a className="contact-save" href={url} download={vCardName()}>
-            {COPY.phone.saveContact}
-          </a>
-        )}
-        {contactLinks().map((l) => (
-          <a key={l.label} href={l.href} target="_blank" rel="noopener">
-            {l.label}
-          </a>
-        ))}
-      </div>
+      {!brief && (
+        <div className="contact-links">
+          {url && (
+            <a className="contact-save" href={url} download={vCardName()}>
+              {COPY.phone.saveContact}
+            </a>
+          )}
+          {contactLinks().map((l) => (
+            <a key={l.label} href={l.href} target="_blank" rel="noopener">
+              {l.label}
+            </a>
+          ))}
+        </div>
+      )}
     </>
   );
 }
