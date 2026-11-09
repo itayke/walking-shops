@@ -27,6 +27,13 @@
   --on-sky: #1f3a5f;
   /* Dark text straight on the shop's tint, which is always the same lightness whatever its hue */
   --on-tint: #1c1a26;
+  /* The contact: a plain card, dark on white, apart from the game's sky. Its corners follow a modern phone's rounded
+     screen, less the gap to its edges, so the two curves run side by side */
+  --contact-paper: #ffffff;
+  --contact-ink: #17202b;
+  --contact-muted: rgb(23 32 43 / 0.62);
+  --contact-gap: 16px;
+  --contact-radius: 32px;
   color-scheme: dark;
 }
 
@@ -358,8 +365,8 @@ body,
   font-size: 13px;
 }
 
-/* The end card: how the round went under the shop, and who made the game in a frame of its own along the bottom, like
-   the card on top, with a button for each way to reach them */
+/* The end card: how the round went under the shop, and who made the game on a card of its own along the bottom, with a
+   button for each way to reach them */
 .status .stats {
   margin: 0;
   font-size: 14px;
@@ -367,16 +374,16 @@ body,
 
 .contact-frame {
   position: absolute;
-  inset: auto 16px max(14px, env(safe-area-inset-bottom));
+  inset: auto var(--contact-gap) max(var(--contact-gap), env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 2px solid var(--shade);
-  background-clip: padding-box;
-  color: var(--on-sky);
+  gap: 6px;
+  padding: 20px 24px 22px;
+  border-radius: var(--contact-radius);
+  background: var(--contact-paper);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  color: var(--contact-ink);
   text-align: center;
   pointer-events: none;
 }
@@ -385,14 +392,22 @@ body,
   margin: 0;
 }
 
+/* Under the setup form it takes the credit's place, in the flow, at the same distance from the edges */
+.brand .contact-frame {
+  position: static;
+  margin: 0 var(--contact-gap) max(var(--contact-gap), env(safe-area-inset-bottom));
+}
+
 .contact-name {
+  font-size: 17px;
   font-weight: 600;
 }
 
 /* A little more room under it, so the buttons stand apart from the details */
 .contact-frame .contact-email {
   font-size: 14px;
-  margin-bottom: 6px;
+  color: var(--contact-muted);
+  margin-bottom: 10px;
 }
 
 .contact-links {
@@ -405,15 +420,15 @@ body,
 .contact-links a {
   pointer-events: auto;
   font: 600 14px var(--font-body);
-  color: var(--on-sky);
+  color: var(--contact-ink);
   text-decoration: none;
   border: 1.5px solid currentColor;
   border-radius: 999px;
-  padding: 6px 14px;
+  padding: 8px 16px;
 }
 
 .contact-links .contact-save {
-  background: var(--on-sky);
-  border-color: var(--on-sky);
-  color: #fff;
+  background: var(--contact-ink);
+  border-color: var(--contact-ink);
+  color: var(--contact-paper);
 }

@@ -131,6 +131,15 @@ function status(online: boolean, host: boolean, s: PhoneState | null): string {
   }
 }
 
+/** Who made the game, on a card of its own along the bottom, the same on every page it shows on. */
+function ContactFrame({ frame }: { frame?: (el: HTMLElement | null) => void }) {
+  return (
+    <footer ref={frame} className="contact-frame">
+      <Contact />
+    </footer>
+  );
+}
+
 /** The direction a finger at clientX asks for: its own side of the middle, kept until it crosses well past it. */
 function sideOf(x: number, width: number, was: Dir): Dir {
   const off = x / width - 1 / 2;
@@ -151,7 +160,8 @@ export function App() {
   const seq = useRef(Date.now());
   const [held, setHeld] = useState<Dir>(0);
   const [online, setOnline] = useState(false);
-  const [host, setHost] = useState(false);
+  // Whether a big screen is in the room; unknown until the relay says, so the contact doesn't flash in while it does
+  const [host, setHost] = useState<boolean | null>(null);
   const [state, setState] = useState<PhoneState | null>(null);
   // Editing an open shop's name or type, in the lobby
   const [editing, setEditing] = useState(false);
@@ -247,12 +257,15 @@ export function App() {
       </main>
     );
   }
+  // The contact stays in reach once a round is over, and while there's no big screen (before the talk, or after it),
+  // whether or not this phone has a shop
+  const showContact = (online && host === false) || !!state?.over;
   const settingUp = state && (state.phase === 'setup' || (state.phase === 'waiting' && !state.label) || editing);
   if (state && settingUp) {
     return (
       <main className="setup-page" style={{ background: state.tint }}>
         <header className="status">
-          <span>{editing ? COPY.phone.editing : status(online, host, state)}</span>
+          <span>{editing ? COPY.phone.editing : status(online, !!host, state)}</span>
           {state.phase === 'waiting' && <span>{COPY.phone.nextRound}</span>}
         </header>
         {fontReady && (
@@ -265,19 +278,23 @@ export function App() {
             onCancel={() => setEditing(false)}
           />
         )}
-        {/* The room under the form, where the keyboard comes up: the title, and who made it */}
-        <footer className="brand">
+        {/* The room under the form, where the keyboard comes up: the title, and who made it (the full contact when it shows) */}
+        <div className="brand">
           <div className="masthead">
             <h1 className="title">
               <PixelText text={COPY.game} />
             </h1>
             <PixelText className="tagline" text={COPY.lobby.tagline} />
           </div>
-          <p className="credit">
-            <span>{COPY.credit.by}</span>
-            <span>{COPY.credit.who}</span>
-          </p>
-        </footer>
+          {showContact ? (
+            <ContactFrame />
+          ) : (
+            <footer className="credit">
+              <span>{COPY.credit.by}</span>
+              <span>{COPY.credit.who}</span>
+            </footer>
+          )}
+        </div>
       </main>
     );
   }
@@ -314,18 +331,14 @@ export function App() {
               </button>
             )}
             <Badge name={state.label} look={state.look} closed={state.closed} />
-            <span>{status(online, host, state)}</span>
+            <span>{status(online, !!host, state)}</span>
             {state.phase === 'results' && <RoundStats served={state.served} topples={state.topples} />}
           </div>
         ) : (
-          <span>{status(online, host, state)}</span>
+          <span>{status(online, !!host, state)}</span>
         )}
       </header>
-      {state?.phase === 'results' && state.label && (
-        <footer ref={foot} className="contact-frame" style={{ backgroundColor: BACKDROP }}>
-          <Contact />
-        </footer>
-      )}
+      {showContact && <ContactFrame frame={foot} />}
     </main>
   );
 }

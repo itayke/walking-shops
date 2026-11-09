@@ -317,6 +317,7 @@ export class Host {
       closed: shop ? shop.closed : false,
       served: shop ? shop.served : 0,
       topples: shop ? shop.topples : 0,
+      over: g.over,
       ack: seat.ack,
     };
   }

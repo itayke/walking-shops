@@ -251,6 +251,23 @@ describe('host', () => {
     expect(h.game.over).toBe(true);
   });
 
+  it('tells every phone the round is over, one still setting up included, until the next lobby', () => {
+    const { h } = host();
+    open(h, PHONE);
+    h.begin();
+    h.receive({ t: 'joined', phone: OTHER });
+    const over = () => [PHONE, OTHER].map((p) => h.phoneState(h.seats.get(p)!).over);
+    expect(over()).toEqual([false, false]);
+    h.skip();
+    step(h.game, h.inputs(), TICK);
+    h.skip();
+    step(h.game, h.inputs(), TICK);
+    expect(over()).toEqual([true, true]);
+    expect(h.phoneState(h.seats.get(OTHER)!).phase).toBe('waiting');
+    h.replay();
+    expect(over()).toEqual([false, false]);
+  });
+
   it('restarts the round straight away with the same shops, phones that waited included, and bots filled in', () => {
     const { h } = host();
     open(h, PHONE);

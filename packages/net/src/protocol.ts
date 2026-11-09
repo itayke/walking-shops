@@ -26,6 +26,8 @@ export interface PhoneState {
   // The round so far: customers served and towers toppled, for the end card
   served: number;
   topples: number;
+  // The round is over, for every phone in the room, with a shop or without
+  over: boolean;
   ack: number;
 }
 
