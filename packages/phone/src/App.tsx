@@ -261,14 +261,13 @@ export function App() {
       </main>
     );
   }
-  // The contact is in reach on every page but the round being played: in the lobby, while setting up, once the round is
-  // over, and while there's no big screen (before the talk, or after it). Until the phone hears which, it waits, so the
-  // card never flashes in over a round under way
+  // The contact is in reach on every page but the round being played: while connecting and joining, in the lobby, while
+  // setting up, once the round is over, and while there's no big screen (before the talk, or after it)
   const playing = !!state && PLAYING.includes(state.phase) && !state.over;
   // All of it, buttons included, once the round is over or there's no big screen; the short card while setting up or
   // in the lobby, where the player has the game to attend to
   const fullContact = (online && host === false) || !!state?.over;
-  const showContact = fullContact || (!!state && !playing);
+  const showContact = fullContact || !playing;
   const brief = !fullContact;
   const settingUp = state && (state.phase === 'setup' || (state.phase === 'waiting' && !state.label) || editing);
   if (state && settingUp) {

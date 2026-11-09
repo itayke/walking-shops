@@ -212,7 +212,6 @@ export function App() {
 
     let last = performance.now();
     let lastHud = last;
-    let lastFlush = last;
     // Animation clock: stands still while paused, so wobbles and bobs freeze too
     let clock = 0;
     let raf = 0;
@@ -252,15 +251,14 @@ export function App() {
         sound.update(g, view, clock);
       }
       draw();
-      if (now - lastFlush >= NET.stateInterval * MS_PER_SECOND) {
-        lastFlush = now;
-        host.current.flush();
-      }
       if (now - lastHud >= HUD_REFRESH_MS) {
         lastHud = now;
         setHudTick((t) => t + 1);
       }
     };
+    // Phones hear from the screen on a timer of their own, not the frame loop: a browser stops drawing a hidden or covered
+    // window (the presenter on another tab or app), and phones still have to get in
+    const flushTimer = setInterval(() => host.current.flush(), NET.stateInterval * MS_PER_SECOND);
     // First frame now, not on the next animation frame (a headless screenshot may never get one)
     draw();
     setHudTick((t) => t + 1);
@@ -268,6 +266,7 @@ export function App() {
 
     return () => {
       cancelAnimationFrame(raf);
+      clearInterval(flushTimer);
       observer.disconnect();
       disposePanel();
       keyboard.dispose();
