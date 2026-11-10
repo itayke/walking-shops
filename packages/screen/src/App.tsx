@@ -3,14 +3,14 @@ import { connectScreen, type Link } from '@walking-shops/net/client';
 import { CONFIG, step, TICK, type GameState, type PlayerSpec } from '@walking-shops/sim';
 import { useEffect, useRef, useState } from 'react';
 import { createTuningPanel } from './dev/tuningPanel.ts';
-import { Hud, Paused, Results } from './hud/Hud.tsx';
+import { Hud, Paused, Results, RoomLost } from './hud/Hud.tsx';
 import { Lobby } from './hud/Lobby.tsx';
 import { Shops } from './hud/Shops.tsx';
 import { createKeyboard } from './input/keyboard.ts';
 import { soundTones } from './sound/sounds.ts';
 import { StreetSound } from './sound/streetSound.ts';
 import { Synth } from './sound/synth.ts';
-import { currentRoom, isRoomTaken, newRoom, PARTY_HOST, type RoomInfo } from './net/room.ts';
+import { currentRoom, isReplaced, isRoomTaken, moveToNewRoom, newRoom, PARTY_HOST, type RoomInfo, type RoomLost as Lost } from './net/room.ts';
 import { HUES, shopHue, shopTint } from '@walking-shops/render/colors.ts';
 import { drawFrame } from '@walking-shops/render/draw.ts';
 import { DESIGN_COUNT } from '@walking-shops/render/shopArt.ts';
@@ -25,7 +25,7 @@ const HUD_REFRESH_MS = 100;
 // Drawn at CSS pixels at most: a retina screen scales it up hard-edged, rather than filling several times the pixels
 const MAX_PIXEL_RATIO = 1;
 const SEED_RANGE = 2 ** 32;
-const PAUSE_KEY = ' ';
+const PAUSE_KEY = 'p';
 const SHOPS_KEY = 'b';
 const BEGIN_KEY = 'enter';
 // The presenter's controls mid-round: skip to the next phase, restart the round, bots take the phones' shops
@@ -33,6 +33,9 @@ const SKIP_KEY = 's';
 const RESTART_KEY = 'n';
 const FALLBACK_KEY = 'f';
 const MUTE_KEY = 'm';
+// Reloads on a new room, in the lobby only so a stray key never cuts players off mid-round (or any time once another
+// tab has taken this one's room)
+const NEW_ROOM_KEY = 'o';
 // URL parameters for debugging: ?seed=N replays a round, ?at=S skips the lobby and fast-forwards the round to S seconds
 const params = new URLSearchParams(location.search);
 const SEED_PARAM = params.get('seed');
@@ -54,6 +57,8 @@ interface Net {
   link: Link<ScreenMsg> | null;
   room: RoomInfo;
   online: boolean;
+  // Cut off from the room (another tab took it, or it's another screen's) until this screen moves to a new one
+  lost: Lost | null;
 }
 
 /** Run the round (and its animations) ahead with no input, as if watched. */
@@ -70,7 +75,7 @@ function fastForward(g: GameState, view: StreetView, seconds: number): void {
 export function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const net = useRef<Net>(null!);
-  net.current ??= { link: null, room: currentRoom(), online: false };
+  net.current ??= { link: null, room: currentRoom(), online: false, lost: null };
   // The game holds CONFIG by reference, so tuning applies live
   const host = useRef<Host>(null!);
   // Phones get their shop's tint as a plain color, the same one the street draws it in
@@ -115,8 +120,14 @@ export function App() {
         onMessage: (m) => host.current.receive(m),
         onStatus: (online) => (n.online = online),
         onRefused: (code) => {
-          // Someone else's room under this code: open a new one
-          if (!isRoomTaken(code)) return;
+          // Someone else's room under a random code: open a new one. One asked for by URL is said, not swapped
+          const taken = isRoomTaken(code);
+          if (isReplaced(code) || (taken && n.room.asked)) {
+            n.lost = taken ? 'taken' : 'replaced';
+            setHudTick((t) => t + 1);
+            return;
+          }
+          if (!taken) return;
           n.room = newRoom();
           connect();
         },
@@ -186,7 +197,6 @@ export function App() {
       if (e.target instanceof HTMLInputElement) return;
       const key = e.key.toLowerCase();
       if (key === PAUSE_KEY) {
-        e.preventDefault();
         paused.current = !paused.current;
         synth.current.pause(paused.current);
         setHudTick((t) => t + 1);
@@ -198,6 +208,7 @@ export function App() {
       if (key === BEGIN_KEY) begin.current();
       if (key === SKIP_KEY) skip();
       if (key === RESTART_KEY) restart();
+      if (key === NEW_ROOM_KEY && (host.current.game.lobby || net.current.lost)) moveToNewRoom();
       if (key === MUTE_KEY) {
         synth.current.toggleMute();
         setHudTick((t) => t + 1);
@@ -307,6 +318,7 @@ export function App() {
           />
         )}
         {g.over ? <Results g={g} onReplay={() => replay.current()} /> : paused.current && <Paused />}
+        {net.current.lost && <RoomLost why={net.current.lost} />}
       </div>
     </div>
   );

@@ -28,13 +28,17 @@ export const COPY = {
   hud: {
     // In capitals
     phase: { lobby: 'Lobby', walkIns: 'Walk-ins', parachutes: 'Parachutes', results: 'Results' },
+    room: 'Room',
     phones: (n: number) => `${n} ${n === 1 ? 'phone' : 'phones'}`,
     // In capitals
     botsPlaying: 'bots playing',
     // In capitals: the sound waiting for the presenter's first click, or muted
     sound: { locked: 'click for sound', muted: 'muted' },
     // The presenter's keys, each after its key
-    keys: { walk: 'walk', begin: 'begin', pause: 'pause', skip: 'skip', restart: 'restart', bots: 'bots', shops: 'shops', mute: 'mute', tuning: 'tuning', lobby: 'lobby' },
+    keys: { walk: 'walk', begin: 'begin', pause: 'pause', skip: 'skip', restart: 'restart', bots: 'bots', shops: 'shops', mute: 'mute', lobby: 'lobby', newRoom: 'open new' },
+    // Over a screen that lost its room, in capitals: another tab took it, or the one asked for by URL is another
+    // screen's. Then the key that gives it a room of its own
+    lost: { replaced: 'Open in another tab', taken: 'Room is taken', hint: 'open a new room here' },
   },
 
   // The presenter's shop list

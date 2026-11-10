@@ -7,6 +7,7 @@ import { lookOf } from '@walking-shops/render/shopArt.ts';
 import type { CSSProperties } from 'react';
 import { encode } from 'uqr';
 import type { SoundState } from '../sound/synth.ts';
+import type { RoomLost as Lost } from '../net/room.ts';
 import { Qr, qrSpan } from './Qr.tsx';
 
 const SECONDS_PER_MINUTE = 60;
@@ -32,10 +33,10 @@ export interface RoomStatus {
 }
 
 /**
- * How many phones are connected, whether the relay is reachable, and whether bots have the phones' shops. The lobby
- * shows where to join.
+ * The room, whether the relay is reachable, how many phones are connected, and whether bots have the phones' shops. In
+ * the lobby, the key for a new room.
  */
-function Join({ room, round }: { room: RoomStatus; round: boolean }) {
+function Join({ room, round, lobby }: { room: RoomStatus; round: boolean; lobby: boolean }) {
   let phones = 0;
   let shops = 0;
   for (const s of room.phones.values()) {
@@ -45,6 +46,14 @@ function Join({ room, round }: { room: RoomStatus; round: boolean }) {
   return (
     <span className="join" title={room.online ? 'Connected to the relay' : 'Relay unreachable: keyboard and bots only'}>
       <i className={room.online ? 'dot on' : 'dot'} />
+      <span className="room">
+        {COPY.hud.room} <b>{room.code}</b>
+      </span>
+      {lobby && (
+        <span className="hint">
+          <kbd>O</kbd> {COPY.hud.keys.newRoom}
+        </span>
+      )}
       <span className="phones">{COPY.hud.phones(phones)}</span>
       {room.fallback && round && shops > 0 && <span className="fallback">{COPY.hud.botsPlaying}</span>}
     </span>
@@ -70,7 +79,7 @@ export function Hud({ g, you, room, sound, onUnlock }: { g: GameState; you?: str
         <i style={{ width: `${Math.min(PERCENT, (PERCENT * t) / ROUND.roundTime)}%` }} />
         <b style={{ left: `${Math.min(PERCENT, (PERCENT * ROUND.paraStart) / ROUND.roundTime)}%` }} />
       </div>
-      <Join room={room} round={!g.lobby && !g.over} />
+      <Join room={room} round={!g.lobby && !g.over} lobby={g.lobby} />
       {sound === 'locked' && (
         <button type="button" className="sound locked" onClick={onUnlock}>
           {COPY.hud.sound.locked}
@@ -88,8 +97,9 @@ export function Hud({ g, you, room, sound, onUnlock }: { g: GameState; you?: str
             <kbd>A</kbd> <kbd>D</kbd> {keys.walk} ·{' '}
           </>
         )}
-        <kbd>Enter</kbd> {keys.begin} · <kbd>Space</kbd> {keys.pause} · <kbd>S</kbd> {keys.skip} · <kbd>N</kbd> {keys.restart} · <kbd>F</kbd> {keys.bots} ·{' '}
-        <kbd>B</kbd> {keys.shops} · <kbd>M</kbd> {keys.mute} · <kbd>T</kbd> {keys.tuning} · <kbd>R</kbd> {keys.lobby}
+        {/* Enter as a symbol, to keep the bar short; T (tuning) works but isn't listed */}
+        <kbd title="Enter">⏎</kbd> {keys.begin} · <kbd>P</kbd> {keys.pause} · <kbd>S</kbd> {keys.skip} · <kbd>N</kbd> {keys.restart} ·{' '}
+        <kbd>F</kbd> {keys.bots} · <kbd>B</kbd> {keys.shops} · <kbd>M</kbd> {keys.mute} · <kbd>R</kbd> {keys.lobby}
       </span>
     </header>
   );
@@ -128,6 +138,22 @@ export function Results({ g, onReplay }: { g: GameState; onReplay: () => void })
       </header>
       {/* Where the ranking sits, kept as wide as the contact card's side so the banner stays centered */}
       <div className="lobby-side" />
+    </div>
+  );
+}
+
+/** Over a screen that lost its room (another tab took it, or the one asked for is another screen's): this one can
+ * start a room of its own. */
+export function RoomLost({ why }: { why: Lost }) {
+  const { lost } = COPY.hud;
+  return (
+    <div className="overlay dim replaced">
+      <h2 className="banner">
+        <PixelText text={why === 'replaced' ? lost.replaced : lost.taken} />
+      </h2>
+      <p className="hint">
+        <kbd>O</kbd> {lost.hint}
+      </p>
     </div>
   );
 }

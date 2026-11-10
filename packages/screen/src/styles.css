@@ -154,6 +154,10 @@ body {
   white-space: nowrap;
 }
 
+.join .room b {
+  letter-spacing: 0.08em;
+}
+
 .join .phones {
   color: var(--muted);
 }
@@ -267,6 +271,13 @@ kbd {
   --pixel-outline: calc(var(--banner-pixel) * var(--banner-outline));
   --pixel-outline-color: #1c1a26;
   --pixel-outline-join: round;
+}
+
+/* Another tab has the room: the banner over a dimmed street, the way out under it */
+.overlay.replaced {
+  flex-direction: column;
+  gap: 16px;
+  pointer-events: auto;
 }
 
 .overlay .banner canvas {

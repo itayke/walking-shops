@@ -42,7 +42,7 @@ npm run deploy                 # typecheck, build:site, then deploy the Worker (
 
 Run `npm run dev` (or `dev:server`, `dev:screen` and `dev:phone` separately), then open the screen at http://localhost:7320. It opens on the lobby over the street: a QR code for the join URL (this machine's LAN address and a room code) on the left, the title in the middle, and the shop list on the right. Phones on the same Wi-Fi scan it, and each one's shop drops onto the street, ready to walk. The list shows every shop: click a name to rename it, hover for × to take it off the street. `Enter` (or the Begin button) starts the round, with bots filling the street up to `minPlayers`; a phone that joins after that waits for the next lobby, which `R` opens. The HUD shows how many phones are connected; a green dot means the relay is reachable. A phone keeps its shop across a dropped connection or a reload.
 
-The screen keeps its room across reloads (`?room=CODE` picks one). Over plain http on the LAN, phones can't keep the screen awake (Wake Lock needs https); the deployed version can.
+The screen keeps its room per tab, shown in the HUD: a reload (or reopening a closed tab) keeps it, and another tab opens a room of its own (`?room=CODE` picks one). `?room=CODE` takes back a room this browser opened (its key is remembered), and the tab that had it says so, as it does when a duplicated tab takes its room; a room opened from another browser or machine can't be taken, and the screen says that too. `O` then opens a new room. Over plain http on the LAN, phones can't keep the screen awake (Wake Lock needs https); the deployed version can.
 
 Without the relay, the screen still plays offline: bots, plus a keyboard shop with `?screenShop`.
 
@@ -59,7 +59,7 @@ The screen asks for that password (the browser's own prompt; any user name), the
 | Key | Does |
 |---|---|
 | `A` / `D` or `←` / `→` | Tap to step the screen shop (with `?screenShop`) one column, hold to keep walking or to push |
-| `Space` | Pause |
+| `P` | Pause |
 | `B` | Show or hide the shop list: open in the lobby, the live ranking (hidden at first) in the round |
 | `Enter` | Begin the round (in the lobby) |
 | `S` | Skip ahead: from the walk-ins to the parachutes, from the parachutes to the results |
@@ -68,6 +68,7 @@ The screen asks for that password (the browser's own prompt; any user name), the
 | `M` | Mute or unmute the sound. Sound starts at load where the browser allows it, otherwise on the first key or click; the HUD shows CLICK FOR SOUND until then, and MUTED while muted |
 | `T` | Show or hide the tuning panel, hidden at first (its New street button lays the street out again) |
 | `R` | Back to the lobby (or Play again on the end card): the bots leave, everyone else stays put |
+| `O` | A new room (in the lobby, or on a screen another tab took the room from): the screen reloads on a new code, and phones in the old room stay behind |
 
 URL parameters: `?screenShop=NAME` seats a shop played from the screen's keyboard under that name (`?screenShop` alone names it YOU; without it there is none), `?seed=N` replays the same round, `?at=S` skips the lobby and fast-forwards the first round to S seconds (for example `http://localhost:7320/?seed=7&at=70`).
 
