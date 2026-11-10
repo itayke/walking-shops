@@ -52,7 +52,7 @@ Everything runs on Cloudflare's free plan as one Worker on https://shopshuffle.u
 
 Once: run `npx wrangler login` with the Cloudflare account that holds untame.com, then set the presenter's password with `npx wrangler secret put SCREEN_PASSWORD -c packages/server/wrangler.jsonc`. After that, `npm run deploy` builds and deploys everything.
 
-The screen asks for that password (the browser's own prompt; any user name), then keeps a cookie for a month, so the presenter's laptop isn't asked again. The relay refuses a screen without the cookie, so only the presenter can host a room; phones need nothing. With no password set, as in dev, the screen is open. To load test the deployed room, pass it: `npm run loadtest -- --host shopshuffle.untame.com --password PASS`.
+The screen asks for that password (the browser's own prompt; any user name), then keeps a cookie for a month, so the presenter's laptop isn't asked again. The relay refuses a screen without the cookie, so only the presenter can host a room; phones need nothing. With no password set, as in dev, the screen is open; `SCREEN_LOCK` in `wrangler.jsonc` set to `"false"` also opens it while keeping the password, and `"true"` locks it again on the next deploy. To load test the deployed room, pass it: `npm run loadtest -- --host shopshuffle.untame.com --password PASS`.
 
 ## Keys on the screen
 

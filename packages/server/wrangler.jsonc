@@ -14,6 +14,8 @@
     "binding": "ASSETS",
     "run_worker_first": ["/screen", "/screen/*"]
   },
+  // Whether the screen asks for its password: "false" opens it to anyone, "true" locks it again (then redeploy)
+  "vars": { "SCREEN_LOCK": "false" },
   "routes": [{ "pattern": "shopshuffle.untame.com", "custom_domain": true }],
   // Reachable from phones on the LAN in dev; the port matches DEV_PORTS.server in packages/net/src/config.ts
   "dev": { "ip": "0.0.0.0", "port": 7322 }

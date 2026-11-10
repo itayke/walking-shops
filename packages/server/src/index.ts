@@ -150,6 +150,8 @@ interface Env {
   ASSETS: Fetcher;
   // The presenter's password for the screen, a Worker secret. Unset (in dev), the screen is open to anyone
   SCREEN_PASSWORD?: string;
+  // "false" opens the screen to anyone while keeping the password set, for a session that needs it open
+  SCREEN_LOCK?: string;
 }
 
 // The screen app's path; the phone app is at the root
@@ -200,7 +202,7 @@ function basicPassword(request: Request): string {
  * screen socket without its cookie (or, from outside a browser, the password itself). */
 async function guardScreen(request: Request, env: Env): Promise<Response | null> {
   const password = env.SCREEN_PASSWORD;
-  if (!password) return null;
+  if (!password || env.SCREEN_LOCK === 'false') return null;
   const url = new URL(request.url);
   const page = url.pathname === SCREEN_PATH || url.pathname.startsWith(`${SCREEN_PATH}/`);
   const socket = url.searchParams.get('role') === 'screen';
